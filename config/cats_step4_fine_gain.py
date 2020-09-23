@@ -1,0 +1,9 @@
+#type	etaMin	etaMax	r9Min	r9Max	gain	etMin	etMax
+scale	0.	1.4442	-1	-1	12	-1	-1
+scale	1.566	2.5	-1	-1	12	-1	-1
+scale	0.	1.4442	-1	-1	6	-1	-1
+scale	1.566	2.5	-1	-1	6	-1	-1
+scale	0.	1.4442	-1	-1	1	-1	-1
+scale	1.566	2.5	-1	-1	1	-1	-1
+smear	0.	1.4442	-1	-1	12	-1	-1
+smear	1.566	2.5	-1	-1	12	-1	-1
