@@ -114,7 +114,7 @@ def extract_cats(__DATA__,__MC__):
             df = __MC__[entries_eta&entries_r9OrEt]
             mass_list_mc.append(np.array(df['invMass_ECAL_ele']))
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc[-1]) < 5000 and ((len(mass_list_mc[-1]) >= 1000 and index1 == index2) or (len(mass_list_mc[-1]) >= 2000 and index1 != index2)):
+            while len(mass_list_mc[-1]) < 7000 and ((len(mass_list_mc[-1]) >= 1000 and index1 == index2) or (len(mass_list_mc[-1]) >= 2000 and index1 != index2)):
                 mass_list_mc[-1] = np.append(mass_list_mc[-1],mass_list_mc[-1])
 
             #drop any "bad" entries
