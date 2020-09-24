@@ -205,8 +205,10 @@ def target_function(x, verbose=False):
         for j in range(i+1):
             mc_diag = len(__MASS_MC__[i][j]) > 1000 and i == j
             mc_offdiag = len(__MASS_MC__[i][j]) > 2000 and i != j
-            #bad_cat = sum([(i,j) == x for x in bad_et_cats_fine])
-            if len(__MASS_DATA__[i][j] > 10) and (mc_diag or mc_offdiag):
+            good_cat = True
+            if __IGNORE__ is not None:
+                good_cat = not sum([(i,j) == x for x in __IGNORE__]))
+            if len(__MASS_DATA__[i][j] > 10) and (mc_diag or mc_offdiag) and good_cat:
                 data_masses = apply_parameter( __MASS_DATA__[i][j], 1, 1, True)
                 mc_masses = apply_parameter( __MASS_MC__[i][j], 1/x[i], 1/x[j], True)
                 if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(i)], x[get_smearing_index(j)], False)
@@ -286,7 +288,7 @@ def smear_mc(__MC__,smearings):
     return __MC__
 
 ##################################################################################################################
-def minimize(data, mc, cats, hist_min=80, hist_max=100, hist_bin_size=0.25, scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kGuessRandom=False):
+def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kGuessRandom=False):
     #this is the main function used to handle the minimization
     global __CATS__
     global __num_scales__
@@ -295,6 +297,7 @@ def minimize(data, mc, cats, hist_min=80, hist_max=100, hist_bin_size=0.25, scan
     global __MIN_RANGE__
     global __MAX_RANGE__
     global __BIN_SIZE__
+    global __IGNORE__
 
     #2D array of all mass arrays using these categories
     global __MASS_MC__ 
@@ -305,6 +308,12 @@ def minimize(data, mc, cats, hist_min=80, hist_max=100, hist_bin_size=0.25, scan
     __MIN_RANGE__ = hist_min
     __MAX_RANGE__ = hist_max
     __BIN_SIZE__ = hist_bin_size
+    
+    if ingore_cats != '':
+        df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
+        __IGNORE__ = [(row[0],row[1]) for row in df_ignore.iterrows()]
+    else:
+        __IGNORE__ = None
 
     for i,row in cats.iterrows():
         if row[0] == 'scale':
