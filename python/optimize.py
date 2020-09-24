@@ -103,6 +103,7 @@ def main():
         else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
         new_scales = scales_out.replace("step", "onlystep")
         new_scales = new_scales.replace("scales", str(args.output+"_scales"))
+        scales_out = scales_out.replace("scales", str(args.output+"_scales"))
         print(new_scales, args.scales, scales_out)
         write_files.combine( new_scales, args.scales, scales_out )
         return

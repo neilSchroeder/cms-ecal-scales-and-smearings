@@ -4,9 +4,20 @@ A new python framework for deriving the residual scales and additional smearings
 
 ## Getting Started
 
+    Some basic instructions on how to get started:
+
 ### Prerequisites
 
+    The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
+
 ### Installing
+
+`cmsrel CMSSW_10_2_14`
+`git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git`
+Now you'll want to checkout your own branch
+`git branch myBranch` 
+And push it to your gitlab repo
+`git push --set-upstream origin myBranch`
 
 ## Running the Framework
 
@@ -18,4 +29,3 @@ A new python framework for deriving the residual scales and additional smearings
 
 ## To Do
 
-    2020_09_23: Need to add category ignore feature. Main idea is to provide a file with a list of categories to ignore. Edits required in optimize.py and nll.py

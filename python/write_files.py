@@ -42,8 +42,8 @@ def congruentCategories(last, this, nameLast, nameThis):
             return r9Ret and etaRet
 
     elif nameLast.find('step4') != -1 and nameThis.find('step4') != -1:
-        if float(round(last[2],4)) <= float(round(this[2],4)) and float(round(last[3],4)) >= float(round(this[3],4)):
-            if float(round(last[6],4)) <= float(round(this[6],4)) and float(round(last[7],4)) >= float(round(this[7],4)):
+        if float(round(this[2],4)) <= float(round(last[2],4)) and float(round(this[3],4)) >= float(round(last[3],4)):
+            if float(round(this[6],4)) <= float(round(last[6],4)) and float(round(this[7],4)) >= float(round(last[7],4)):
                 return True
 
         
