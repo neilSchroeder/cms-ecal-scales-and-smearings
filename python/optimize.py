@@ -46,6 +46,8 @@ def main():
                       help="path to file describing categories to use in minimization")
     parser.add_argument("-o","--output", default='',
                       help="output tag to add to file names")
+    parser.add_argument("--ingore", default='',
+                      help="list of categories to ignore for the current derivation")
     parser.add_argument("--hist_min", default=80, type=float,
                       help="Min of histogram for binned NLL evaluation")
     parser.add_argument("--hist_max", default=100, type=float,
@@ -178,7 +180,8 @@ def main():
 ###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = nll.minimize(data, mc, cats, round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
+    scales_smears = nll.minimize(data, mc, cats, args.ingore,
+                                 round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
                                  args.scan_min, args.scan_max, args.scan_step,
                                  args.closure, args.scales, 
                                  args.plot, 

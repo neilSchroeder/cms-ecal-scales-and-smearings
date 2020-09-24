@@ -193,11 +193,6 @@ def get_smearing_index(cat_index):
 ##################################################################################################################
 def target_function(x, verbose=False):
     #this uses the scales to build a global nll value, which is our minimization target
-    bad_et_cats_coarse=[(10,5),(10,10),(11,10),(14,5),(14,10),(15,5),(15,10),(15,15),(16,15),(17,5),(18,5),(19,5),(19,10),(20,1),(20,9),(20,10),(20,15),(20,20),(21,1),(21,9),(21,9),(22,1),(22,9),(23,9),(23,15),(24,9),(24,15)]
-    bad_et_cats_fine=[(10,2),(10,10),(11,3),(11,10),(12,9),(18,18),(19,2),(19,10),(19,11),(19,18),(19,19),(20,3),(20,9),(20,10),(20,12),(20,18),(20,19),(21,9),(21,18),(21,21),(27,9),(27,10),(27,11),(27,18),(27,19),(27,20),(27,27),(28,9),(28,10),(28,11),(28,18),(28,19),(28,20),(28,27),(28,28),(29,9),(29,18),(29,27),(29,28),(30,27),(36,9),(36,10),(36,18),(36,19),(36,20),(36,27),(36,28),(36,29),(36,36),(37,9),(37,18),(37,27),(37,28),(37,36),(37,37),(38,18),(38,27),(38,28),(38,30),(38,36),(38,37),(39,20),(39,39)]
-    """TO DO
-    Put bad cats into files and read bad cats from file via option handling
-    """
     ret_array = []
     data_masses = np.array([0])
     mc_masses = np.array([0])
@@ -205,8 +200,10 @@ def target_function(x, verbose=False):
         for j in range(i+1):
             mc_diag = len(__MASS_MC__[i][j]) > 1000 and i == j
             mc_offdiag = len(__MASS_MC__[i][j]) > 2000 and i != j
-            #bad_cat = sum([(i,j) == x for x in bad_et_cats_fine])
-            if len(__MASS_DATA__[i][j] > 10) and (mc_diag or mc_offdiag):
+            good_cat = True
+            if __IGNORE__ is not None:
+                good_cat = not sum([(i,j) == x for x in __IGNORE__])
+            if len(__MASS_DATA__[i][j] > 10) and (mc_diag or mc_offdiag) and good_cat:
                 data_masses = apply_parameter( __MASS_DATA__[i][j], 1, 1, True)
                 mc_masses = apply_parameter( __MASS_MC__[i][j], 1/x[i], 1/x[j], True)
                 if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(i)], x[get_smearing_index(j)], False)
@@ -286,7 +283,7 @@ def smear_mc(__MC__,smearings):
     return __MC__
 
 ##################################################################################################################
-def minimize(data, mc, cats, hist_min=80, hist_max=100, hist_bin_size=0.25, scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kGuessRandom=False):
+def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kGuessRandom=False):
     #this is the main function used to handle the minimization
     global __CATS__
     global __num_scales__
@@ -295,6 +292,7 @@ def minimize(data, mc, cats, hist_min=80, hist_max=100, hist_bin_size=0.25, scan
     global __MIN_RANGE__
     global __MAX_RANGE__
     global __BIN_SIZE__
+    global __IGNORE__
 
     #2D array of all mass arrays using these categories
     global __MASS_MC__ 
@@ -305,6 +303,12 @@ def minimize(data, mc, cats, hist_min=80, hist_max=100, hist_bin_size=0.25, scan
     __MIN_RANGE__ = hist_min
     __MAX_RANGE__ = hist_max
     __BIN_SIZE__ = hist_bin_size
+    
+    if ingore_cats != '':
+        df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
+        __IGNORE__ = [(row[0],row[1]) for row in df_ignore.iterrows()]
+    else:
+        __IGNORE__ = None
 
     for i,row in cats.iterrows():
         if row[0] == 'scale':
