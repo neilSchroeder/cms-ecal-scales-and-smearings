@@ -46,7 +46,7 @@ def main():
                       help="path to file describing categories to use in minimization")
     parser.add_argument("-o","--output", default='',
                       help="output tag to add to file names")
-    parser.add_agrument("--ingore", default='',
+    parser.add_argument("--ingore", default='',
                       help="list of categories to ignore for the current derivation")
     parser.add_argument("--hist_min", default=80, type=float,
                       help="Min of histogram for binned NLL evaluation")

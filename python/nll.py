@@ -207,7 +207,7 @@ def target_function(x, verbose=False):
             mc_offdiag = len(__MASS_MC__[i][j]) > 2000 and i != j
             good_cat = True
             if __IGNORE__ is not None:
-                good_cat = not sum([(i,j) == x for x in __IGNORE__]))
+                good_cat = not sum([(i,j) == x for x in __IGNORE__])
             if len(__MASS_DATA__[i][j] > 10) and (mc_diag or mc_offdiag) and good_cat:
                 data_masses = apply_parameter( __MASS_DATA__[i][j], 1, 1, True)
                 mc_masses = apply_parameter( __MASS_MC__[i][j], 1/x[i], 1/x[j], True)
