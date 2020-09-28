@@ -4,11 +4,11 @@ A new python framework for deriving the residual scales and additional smearings
 
 ## Getting Started
 
-    Some basic instructions on how to get started:
+Some basic instructions on how to get started:
 
 ### Prerequisites
 
-    The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
+The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 
 ### Installing
 
