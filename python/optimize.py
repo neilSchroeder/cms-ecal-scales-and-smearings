@@ -102,8 +102,8 @@ def main():
         if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
         else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
         new_scales = scales_out.replace("step", "onlystep")
-        new_scales = new_scales.replace("scales", str(args.output+"_scales"))
-        scales_out = scales_out.replace("scales", str(args.output+"_scales"))
+        new_scales = new_scales.replace("scales", str(args.output+"_scales") if args.output != '' else "scales")
+        scales_out = scales_out.replace("scales", str(args.output+"_scales") if args.output != '' else "scales")
         print(new_scales, args.scales, scales_out)
         write_files.combine( new_scales, args.scales, scales_out )
         return

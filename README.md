@@ -12,12 +12,18 @@ A new python framework for deriving the residual scales and additional smearings
 
 ### Installing
 
-`cmsrel CMSSW_10_2_14`
-`git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git`
-Now you'll want to checkout your own branch
-`git branch myBranch` 
+```
+cmsrel CMSSW_10_2_14
+git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git
+```
+Now you'll want to checkout your own branch (name it something useful)
+```
+git branch myBranch
+```
 And push it to your gitlab repo
-`git push --set-upstream origin myBranch`
+```
+git push --set-upstream origin myBranch
+```
 
 ## Running the Framework
 
