@@ -53,7 +53,7 @@ def congruentCategories(last, this, nameLast, nameThis):
                 return True
     else:
         print("[ERROR] function 'congruentCategories()' in module 'python/combineSteps.py' not configured for this setup.")
-        ret = False
+        ret = -999
     
     return ret
 
@@ -245,8 +245,13 @@ def combine(thisStep, lastStep, outFile):
     for iLast,rowLast in dfLastStep.iterrows():
         for iThis,rowThis in dfThisStep.iterrows():
             #only build an entry if the two categories are congruent
-            if congruentCategories(rowLast, rowThis, lastStep, thisStep):
+            kCongruent = congruentCategories(rowLast, rowThis, lastStep, thisStep)
+            if int(kCongruent) == -999:
+                #now you've done it
+                print("[FATAL ERROR][python/write_files][combine] Since this isn't working, let's just stop")
+                return
                 #builds the new categories by reference in dictForDf
+            if kCongruent:
                 addNewCategory(rowLast, rowThis, dictForDf, lastStep, thisStep)
 
 

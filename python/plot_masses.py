@@ -33,6 +33,6 @@ def plot_cats(data, mc, cats):
                 axs.set_ylabel("Events / 0.5 GeV")
                 axs.set_xlabel("M$_{ee}$ [GeV]")
                 axs.legend(loc='best')
-                fig.savefig("/eos/home-n/nschroed/ECALELF/ul17/step5/invMass_{}_{}.png".format(index1, index2))
+                fig.savefig("/eos/home-n/nschroed/ECALELF/ul18/step4/invMass_{}_{}.png".format(index1, index2))
                 plt.close(fig)
 

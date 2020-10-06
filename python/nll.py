@@ -15,6 +15,7 @@ from scipy.optimize import basinhopping as basinHop
 from scipy.optimize import  differential_evolution as diffEvolve
 from scipy.optimize import minimize as minz
 from scipy.special import xlogy
+from scipy import stats as scistat 
 
 import plot_masses
 
@@ -135,7 +136,17 @@ def extract_cats(__DATA__,__MC__):
 ##################################################################################################################
 def get_nll( data, mc):
     #this function takes in two numpy arrays and returns the binned negative log likelihood between the two
+    data = data[data>=__MIN_RANGE__] 
+    data = data[data<=__MAX_RANGE__]
+    mc = mc[mc>=__MIN_RANGE__]
+    mc = mc[mc<=__MAX_RANGE__]
+
     if len(data) < 10 or len(mc) < 1000: return 0
+    
+    if __AUTO_BIN__: 
+        data_width = 2*scistat.iqr(data, rng=(25, 75), scale="raw", nan_policy="omit")/np.power(len(data), 1./3.)
+        mc_width = 2*scistat.iqr(mc,rng=(25,75), scale="raw",nan_policy="omit")/np.power(len(mc), 1./3.)
+        __BIN_SIZE__ = max( data_width, mc_width)
     bins = np.arange(__MIN_RANGE__, __MAX_RANGE__, __BIN_SIZE__)
     mids = [(bins[i] + bins[i+1])/2 for i in range(len(bins)-1)]
 
@@ -283,7 +294,7 @@ def smear_mc(__MC__,smearings):
     return __MC__
 
 ##################################################################################################################
-def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kGuessRandom=False):
+def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kGuessRandom=False, _kAutoBin=True):
     #this is the main function used to handle the minimization
     global __CATS__
     global __num_scales__
@@ -293,6 +304,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     global __MAX_RANGE__
     global __BIN_SIZE__
     global __IGNORE__
+    global __AUTO_BIN__
 
     #2D array of all mass arrays using these categories
     global __MASS_MC__ 
@@ -303,6 +315,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     __MIN_RANGE__ = hist_min
     __MAX_RANGE__ = hist_max
     __BIN_SIZE__ = hist_bin_size
+    __AUTO_BIN__ = _kAutoBin
     
     if ingore_cats != '':
         df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)

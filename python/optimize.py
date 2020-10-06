@@ -86,6 +86,8 @@ def main():
                       help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
     parser.add_argument("--random_guess", default=False, action='store_true',
                       help="Option to start the minimizer at a random point in the phase space, default start is determined by a rough scan")
+    parser.add_argument("--no_auto_bin", default=False, action='store_true',
+                      help="Turns off the auto binning feature (using Freedman-Diaconis method)")
 
     args = parser.parse_args()
 
@@ -99,12 +101,12 @@ def main():
     # you can use this option to do so.
     if args.rewrite:
         scales_out = args.scales
+        if scales_out.find("closure") != -1: scales_out = scales_out.replace("closure","",1)
         if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
         else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
         new_scales = scales_out.replace("step", "onlystep")
         new_scales = new_scales.replace("scales", str(args.output+"_scales") if args.output != '' else "scales")
         scales_out = scales_out.replace("scales", str(args.output+"_scales") if args.output != '' else "scales")
-        print(new_scales, args.scales, scales_out)
         write_files.combine( new_scales, args.scales, scales_out )
         return
 
@@ -188,7 +190,7 @@ def main():
                                  args.plot, 
                                  args.test_method_accuracy,
                                  args.scan_nll, args.scan_scales,
-                                 args.random_guess)
+                                 args.random_guess, not args.no_auto_bin)
     if args.plot:
         print("[INFO] plotting is done, please review")
         return
