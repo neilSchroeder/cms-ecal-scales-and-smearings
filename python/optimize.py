@@ -52,8 +52,8 @@ def main():
                       help="Min of histogram for binned NLL evaluation")
     parser.add_argument("--hist_max", default=100, type=float,
                       help="Max of histogram for binned NLL evaluation")
-    parser.add_argument("--bin_size", default=0.25, type=float,
-                      help="Size of bins for binned NLL evaluation")
+    parser.add_argument("--start_style", default='scan', type=str,
+                      help="Determines how the minimizer chooses its starting location. Allowed options are 'scan', 'random', 'specify'. If using specify, used the scan_scales argument to provide the starting location")
     parser.add_argument("--scan_min", default=0.98, type=float,
                       help="Min value for scan start")
     parser.add_argument("--scan_max", default=1.02, type=float,
@@ -84,10 +84,10 @@ def main():
                       help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
     parser.add_argument("--scan_scales", default='', 
                       help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
-    parser.add_argument("--random_guess", default=False, action='store_true',
-                      help="Option to start the minimizer at a random point in the phase space, default start is determined by a rough scan")
     parser.add_argument("--no_auto_bin", default=False, action='store_true',
                       help="Turns off the auto binning feature (using Freedman-Diaconis method)")
+    parser.add_argument("--bin_size", default=0.25, type=float,
+                      help="Size of bins for binned NLL evaluation")
 
     args = parser.parse_args()
 
@@ -185,12 +185,13 @@ def main():
     print("[INFO] initiating minimization using scipy.optimize.minimize")
     scales_smears = nll.minimize(data, mc, cats, args.ingore,
                                  round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
+                                 args.start_style,
                                  args.scan_min, args.scan_max, args.scan_step,
                                  args.closure, args.scales, 
                                  args.plot, 
                                  args.test_method_accuracy,
                                  args.scan_nll, args.scan_scales,
-                                 args.random_guess, not args.no_auto_bin)
+                                 not args.no_auto_bin)
     if args.plot:
         print("[INFO] plotting is done, please review")
         return

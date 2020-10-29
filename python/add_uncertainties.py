@@ -19,7 +19,13 @@ def main():
     for i,row in unc.iterrows():
         eta_mask_low = scales.loc[:,2] >= row[2]
         eta_mask_high = scales.loc[:,3] <= row[3]
-        scales.loc[eta_mask_low&eta_mask_high,10] = row[9]*scales.loc[eta_mask_low&eta_mask_high,9]/100.
+        gain_mask = [True for x in eta_mask_high]
+        if row[6] != -1: #gain mask
+            gain_mask = scales.loc[:,8] == row[6]
+        print(gain_mask)
+
+        print(row[9])
+        scales.loc[eta_mask_low&eta_mask_high&gain_mask,10] = row[9]*scales.loc[eta_mask_low&eta_mask_high&gain_mask,9]/100.
 
     scales.to_csv(args.inputFile, sep='\t', header=False,index=False)
 

@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import pandas as pd
 from optparse import OptionParser
@@ -228,6 +229,42 @@ def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
         else:
             thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
 
+##################################################################################################################
+def writeJsonFromDF(thisDF,outFile):
+
+    #Takes the dictionary built in [combine] and writes a json file
+    outFile = outFile.replace('.dat','.json')
+    print("[INFO][python/write_files][writeJsonFromDF] producing json file in {}".format(outFile))
+    thisDict = {}
+
+    for i,row in thisDF.iterrows():
+        key_run = 'run:[{},{}]'.format(int(row['runMin']),int(row['runMax']))
+        if key_run not in thisDict: thisDict[key_run] = OrderedDict()
+        key_eta = 'eta:[{},{}]'.format(row['etaMin'],row['etaMax'])
+        if key_eta not in thisDict[key_run]: thisDict[key_run][key_eta] = OrderedDict()
+        key_r9 =  'r9:[{},{}]'.format(row['r9Min'],row['r9Max'])
+        if key_r9 not in thisDict[key_run][key_eta]: thisDict[key_run][key_eta][key_r9] = OrderedDict()
+        key_pt =  'pt:[{},{}]'.format(row['etMin'],row['etMax'])
+        if key_pt not in thisDict[key_run][key_eta][key_r9]: thisDict[key_run][key_eta][key_r9][key_pt] = OrderedDict()
+        key_gain = 'gain:{}'.format(int(row['gain']))
+        if key_gain not in thisDict[key_run][key_eta][key_r9][key_pt]: thisDict[key_run][key_eta][key_r9][key_pt][key_gain] = OrderedDict()
+
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['runMin'] = int(row['runMin'])
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['runMax'] = int(row['runMax'])
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['etaMin'] = row['etaMin']
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['etaMax'] = row['etaMax']
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['r9Min'] = row['r9Min']
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['r9Max'] = row['r9Max']
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['ptMin'] = row['etMin']
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['ptMax'] = row['etMax']
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['gain'] = int(row['gain'])
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['scale'] = row['scale']
+        thisDict[key_run][key_eta][key_r9][key_pt][key_gain]['scaleErr'] = row['err']
+
+    with open(outFile,'w') as out:
+        json.dump(thisDict,out,indent='\t')
+
+    return
 
 ##################################################################################################################
 def combine(thisStep, lastStep, outFile):
@@ -257,6 +294,10 @@ def combine(thisStep, lastStep, outFile):
 
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(outFile, sep='	', header=False,index=False)
+
+    writeJsonFromDF(dfOut,outFile)
+
+    return
 
 
 ##################################################################################################################

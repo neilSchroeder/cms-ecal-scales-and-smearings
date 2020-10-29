@@ -143,11 +143,13 @@ def get_nll( data, mc):
 
     if len(data) < 10 or len(mc) < 1000: return 0
     
+    __bin_size__ = __BIN_SIZE__
     if __AUTO_BIN__: 
         data_width = 2*scistat.iqr(data, rng=(25, 75), scale="raw", nan_policy="omit")/np.power(len(data), 1./3.)
         mc_width = 2*scistat.iqr(mc,rng=(25,75), scale="raw",nan_policy="omit")/np.power(len(mc), 1./3.)
-        __BIN_SIZE__ = max( data_width, mc_width)
-    bins = np.arange(__MIN_RANGE__, __MAX_RANGE__, __BIN_SIZE__)
+        __bin_size__ = max( data_width, mc_width)
+
+    bins = np.arange(__MIN_RANGE__, __MAX_RANGE__, __bin_size__ )
     mids = [(bins[i] + bins[i+1])/2 for i in range(len(bins)-1)]
 
     invMass_binned_data, edges_data = np.histogram(data, bins=bins)
@@ -294,7 +296,15 @@ def smear_mc(__MC__,smearings):
     return __MC__
 
 ##################################################################################################################
-def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kGuessRandom=False, _kAutoBin=True):
+def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, _kStartStyle='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kAutoBin=True):
+
+    #don't let the minimizer start with a bad _kStartStyle
+    allowed_start_styles = ('scan', 'random', 'specify')
+    if _kStartStyle not in allowed_start_styles: 
+        print("[ERROR][python/nll.py][minimize] Designated start style not recognized.")
+        print("[ERROR][python/nll.py][minimize] The allowed options are {}.".format(allowed_start_styles))
+        return []
+
     #this is the main function used to handle the minimization
     global __CATS__
     global __num_scales__
@@ -315,7 +325,6 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     __MIN_RANGE__ = hist_min
     __MAX_RANGE__ = hist_max
     __BIN_SIZE__ = hist_bin_size
-    __AUTO_BIN__ = _kAutoBin
     
     if ingore_cats != '':
         df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
@@ -370,6 +379,8 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     #the following code will implement such a scan, and write it to a format which is can be plotted.
     the_scan = []
     if _kScan:
+        #the auto binning feature needs to be turned off for the 1D scanning feature to work appropriately.
+        if __AUTO_BIN__: __AUTO_BIN__ = False
         scan_scales = [1 for x in range(__num_scales__)]+[0 for x in range(__num_smears__)]
         if _scan_file_ != '':
             scan_file_df = pd.read_csv(_scan_file_,sep='\t',header=None)
@@ -408,25 +419,48 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     else: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0.002, 0.05) for i in range(__num_smears__)]
     
     #set up and run a basic nll scan for the initial guess
+    __AUTO_BIN__ = False #turn off auto binning for the scan
     guess = [1 for x in range(__num_scales__)] + [0.01 for x in range(__num_smears__)]
-    for i in range(__num_scales__+__num_smears__):
-        min_val = target_function(guess)
-        low, high, step = scan_min, scan_max, scan_step
-        if i >= __num_scales__:
-            low = 0.005
-            high = 0.025
-            step = 0.0005
-        for x in np.arange(low, high, step):
-            initial_value = guess[i]
-            guess[i] = x
-            check = target_function(guess)
-            if check < min_val:
-                min_val = check
-            else: guess[i] = initial_value
 
-        print("[INFO][python/nll] best guess for {} {} is {}".format("scale" if i < __num_scales__ else "smearing", i, guess[i]))
+    if _kStartStyle == 'scan':
+       for i in range(__num_scales__+__num_smears__):
+           if i < __num_scales__ :
+               if len(__MASS_DATA__[i][i]) > 10 and len(__MASS_MC__[i][i]) > 1000:
+                   min_val = target_function(guess)
+                   low, high, step = scan_min, scan_max, scan_step
+                   if i >= __num_scales__:
+                       low = 0.005
+                       high = 0.025
+                       step = 0.0005
+                   for x in np.arange(low, high, step):
+                       initial_value = guess[i]
+                       guess[i] = x
+                       check = target_function(guess)
+                       if check < min_val:
+                           min_val = check
+                       else: guess[i] = initial_value
+               else:
+                   guess[i] = 1.
+           else:
+               min_val = target_function(guess)
+               low, high, step = scan_min, scan_max, scan_step
+               if i >= __num_scales__:
+                   low = 0.005
+                   high = 0.025
+                   step = 0.0005
+               for x in np.arange(low, high, step):
+                   initial_value = guess[i]
+                   guess[i] = x
+                   check = target_function(guess)
+                   if check < min_val:
+                       min_val = check
+                   else: guess[i] = initial_value
     
-    if _kGuessRandom:
+           print("[INFO][python/nll] best guess for {} {} is {}".format("scale" if i < __num_scales__ else "smearing", i, guess[i]))
+
+    __AUTO_BIN__ = _kAutoBin
+    
+    if _kStartStyle == 'random':
         xlow_scales = [0.995 for i in range(__num_scales__)]
         xhigh_scales = [1.001 for i in range(__num_scales__)]
         xlow_smears = [0.008 for i in range(__num_smears__)]
@@ -439,6 +473,13 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
         if _closure_ or _kTestMethodAccuracy: guess_smears = [0.0 for i in range(__num_smears__)]
         if _kTestMethodAccuracy or not _closure_: guess_scales.extend(guess_smears)
         guess = guess_scales
+
+    if _kStartStyle == 'specify':
+        scan_file_df = pd.read_csv(_scan_file_,sep='\t',header=None)
+        guess = scan_file_df.loc[:,9].values
+        guess = np.append(guess,[0.005 for x in range(__num_smears__)])
+        
+
 
     #it is important to test the accuracy with which a known scale can be recovered,
     #here we assign the known scales and inject them.
