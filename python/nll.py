@@ -172,8 +172,8 @@ def get_nll( data, mc):
 def apply_parameter( masses, par1, par2, kIsScale):
     #this function takes in a dataframe, category, and scale and returns an array of the scaled invariant masses
     ret = np.copy(masses)
-    par1 = round(par1,5)
-    par2 = round(par2,5)
+    par1 = round(par1,9)
+    par2 = round(par2,9)
 
     if kIsScale:
         ret = ret * np.sqrt(par1*par2)
@@ -229,7 +229,7 @@ def target_function(x, verbose=False):
     if verbose:
         print(x)
         print(ret)
-    return ret
+    return ret/len(ret_array)
 
 ##################################################################################################################
 def add_transverse_energy(__DATA__,__MC__):
@@ -380,7 +380,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     the_scan = []
     if _kScan:
         #the auto binning feature needs to be turned off for the 1D scanning feature to work appropriately.
-        if __AUTO_BIN__: __AUTO_BIN__ = False
+        #if __AUTO_BIN__: __AUTO_BIN__ = False
         scan_scales = [1 for x in range(__num_scales__)]+[0 for x in range(__num_smears__)]
         if _scan_file_ != '':
             scan_file_df = pd.read_csv(_scan_file_,sep='\t',header=None)
@@ -426,19 +426,17 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
        for i in range(__num_scales__+__num_smears__):
            if i < __num_scales__ :
                if len(__MASS_DATA__[i][i]) > 10 and len(__MASS_MC__[i][i]) > 1000:
-                   min_val = target_function(guess)
                    low, high, step = scan_min, scan_max, scan_step
-                   if i >= __num_scales__:
-                       low = 0.005
-                       high = 0.025
-                       step = 0.0005
-                   for x in np.arange(low, high, step):
-                       initial_value = guess[i]
-                       guess[i] = x
-                       check = target_function(guess)
-                       if check < min_val:
-                           min_val = check
-                       else: guess[i] = initial_value
+                   x = np.arange(low,high,step)
+                   my_guesses = []
+                   for j,val in enumerate(x): 
+                       guess[i] = val
+                       my_guesses.append(guess.copy())
+                   nll_vals = np.array([ target_function(g) for g in my_guesses])
+                   mask = [y > 0 for y in nll_vals]
+                   x = x[mask]
+                   nll_vals = nll_vals[mask]
+                   guess[i] = x[nll_vals.argmin()]
                else:
                    guess[i] = 1.
            else:
@@ -490,7 +488,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
             for j in range(i+1):
                 __MASS_DATA__[i][j] = apply_parameter(__MASS_DATA__[i][j], scales_to_inject[i], scales_to_inject[j], True)
 
-    print("[INFO][python/nll] the initial guess is {}".format(guess))
+    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
 
     min_step_size = 0.0001 if not _closure_ else 0.00001
     optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds, options={"eps":min_step_size}) 

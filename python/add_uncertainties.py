@@ -22,9 +22,7 @@ def main():
         gain_mask = [True for x in eta_mask_high]
         if row[6] != -1: #gain mask
             gain_mask = scales.loc[:,8] == row[6]
-        print(gain_mask)
 
-        print(row[9])
         scales.loc[eta_mask_low&eta_mask_high&gain_mask,10] = row[9]*scales.loc[eta_mask_low&eta_mask_high&gain_mask,9]/100.
 
     scales.to_csv(args.inputFile, sep='\t', header=False,index=False)
