@@ -27,6 +27,7 @@ import uproot as up
 
 import divide_by_run 
 import nll
+import nll_wClass
 import scale_data
 import scale_data_fast
 import pruner
@@ -183,7 +184,16 @@ def main():
 ###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = nll.minimize(data, mc, cats, args.ingore,
+    #scales_smears = nll.minimize(data, mc, cats, args.ingore,
+    #                             round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
+    #                             args.start_style,
+    #                             args.scan_min, args.scan_max, args.scan_step,
+    #                             args.closure, args.scales, 
+    #                             args.plot, 
+    #                             args.test_method_accuracy,
+    #                             args.scan_nll, args.scan_scales,
+    #                             not args.no_auto_bin)
+    scales_smears = nll_wClass.minimize(data, mc, cats, args.ingore,
                                  round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
                                  args.start_style,
                                  args.scan_min, args.scan_max, args.scan_step,

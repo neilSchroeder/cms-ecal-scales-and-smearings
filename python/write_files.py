@@ -46,6 +46,9 @@ def congruentCategories(last, this, nameLast, nameThis):
         if float(round(this[2],4)) <= float(round(last[2],4)) and float(round(this[3],4)) >= float(round(last[3],4)):
             if float(round(this[6],4)) <= float(round(last[6],4)) and float(round(this[7],4)) >= float(round(last[7],4)):
                 return True
+            if float(round(last[6],4)) <= float(round(this[6],4)) and float(round(last[7],4)) >= float(round(this[7],4)):
+                return True
+
 
         
     elif nameThis.find('step5') != -1:
@@ -157,9 +160,13 @@ def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
         
         thisDict['r9Min'].append(rowLast[4])
         thisDict['r9Max'].append(rowLast[5])
-        
-        thisDict['etMin'].append(rowLast[6])
-        thisDict['etMax'].append(rowLast[7])
+
+        if rowLast[7]-rowLast[6] > rowThis[7]-rowThis[6]:
+            thisDict['etMin'].append(rowThis[6])
+            thisDict['etMax'].append(rowThis[7])
+        else:
+            thisDict['etMin'].append(rowLast[6])
+            thisDict['etMax'].append(rowLast[7])
         
         thisDict['gain'].append(int(rowThis[8]))
         

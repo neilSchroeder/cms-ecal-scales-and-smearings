@@ -29,6 +29,10 @@ __CATS__ = []
 __SEED__ = 0
 __MASS_MC__ = []
 __MASS_DATA__ = []
+__NLL_LIST__ = []
+__WEIGHT_LIST__ = []
+__GUESS__ = []
+__UPDATE_TABLE__ = []
 
 ##################################################################################################################
 def extract_cats(__DATA__,__MC__):
@@ -115,7 +119,7 @@ def extract_cats(__DATA__,__MC__):
             df = __MC__[entries_eta&entries_r9OrEt]
             mass_list_mc.append(np.array(df['invMass_ECAL_ele']))
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc[-1]) < 7000 and ((len(mass_list_mc[-1]) >= 1000 and index1 == index2) or (len(mass_list_mc[-1]) >= 2000 and index1 != index2)):
+            while len(mass_list_mc[-1]) < 10*len(mass_list_data[-1]) and ((len(mass_list_mc[-1]) >= 1000 and index1 == index2) or (len(mass_list_mc[-1]) >= 2000 and index1 != index2)):
                 mass_list_mc[-1] = np.append(mass_list_mc[-1],mass_list_mc[-1])
 
             #drop any "bad" entries
@@ -206,30 +210,110 @@ def get_smearing_index(cat_index):
 ##################################################################################################################
 def target_function(x, verbose=False):
     #this uses the scales to build a global nll value, which is our minimization target
-    ret_array = []
     data_masses = np.array([0])
     mc_masses = np.array([0])
-    for i in range(__num_scales__):
-        for j in range(i+1):
-            mc_diag = len(__MASS_MC__[i][j]) > 1000 and i == j
-            mc_offdiag = len(__MASS_MC__[i][j]) > 2000 and i != j
-            good_cat = True
-            if __IGNORE__ is not None:
-                good_cat = not sum([(i,j) == x for x in __IGNORE__])
-            if len(__MASS_DATA__[i][j] > 10) and (mc_diag or mc_offdiag) and good_cat:
-                data_masses = apply_parameter( __MASS_DATA__[i][j], 1, 1, True)
-                mc_masses = apply_parameter( __MASS_MC__[i][j], 1/x[i], 1/x[j], True)
-                if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(i)], x[get_smearing_index(j)], False)
-                ret_array.append(get_nll(data_masses, mc_masses))
-                if verbose: 
-                    print(j,i,round(np.mean(data_masses),4), round(np.mean(mc_masses),4), round(ret_array[-1],6))
+    global __UPDATE_TABLE__
+    global __NLL_LIST__
+    global __GUESS__
+    global __WEIGHT_LIST__
+    if len(__NLL_LIST__) > 0 and not verbose:
+        #shortcut method
+        #this method only updates the necessary categories, instead of updating all categories
+        updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
+        __GUESS__ = x
+        for update in updated_scales:
+            if update < __num_scales__:
+                for second in range(__num_scales__):
+                    good_cat = True
+                    if second <= update:
+                        mc_diag = len(__MASS_MC__[update][second]) > 1000 and update == second
+                        mc_offdiag = len(__MASS_MC__[update][second]) > 2000 and update != second
+                        if __IGNORE__ is not None:
+                            good_cat = not sum([(update,second) == y for y in __IGNORE__])
+                        this_index = int(int(0.5*(update+1)*(update+2)-1) - (update - second))
+                        if len(__MASS_DATA__[update][second] > 10) and (mc_diag or mc_offdiag) and good_cat:
+                            data_masses = apply_parameter( __MASS_DATA__[update][second], 1, 1, True)
+                            mc_masses = apply_parameter( __MASS_MC__[update][second], 1/x[update], 1/x[second], True)
+                            if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(update)], x[get_smearing_index(second)], False)
+                            __NLL_LIST__[this_index] = get_nll(data_masses, mc_masses)
+                            __WEIGHT_LIST__[this_index] = min(len(data_masses),len(mc_masses))
+                            __UPDATE_TABLE__[this_index] = True
+                    else: #second > update
+                        mc_diag = len(__MASS_MC__[second][update]) > 1000 and update == second
+                        mc_offdiag = len(__MASS_MC__[second][update]) > 2000 and update != second
+                        if __IGNORE__ is not None:
+                            good_cat = not sum([(second,update) == y for y in __IGNORE__])
 
-    ret_array = np.array(ret_array)
-    ret = np.sum(ret_array)
+                        this_index = int(int(0.5*(second+1)*(second+2)-1) - (second-update))
+                        if len(__MASS_DATA__[second][update] > 10) and (mc_diag or mc_offdiag) and good_cat and not __UPDATE_TABLE__[this_index]:
+                            data_masses = apply_parameter( __MASS_DATA__[second][update], 1, 1, True)
+                            mc_masses = apply_parameter( __MASS_MC__[second][update], 1/x[second], 1/x[update], True)
+                            if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(second)], x[get_smearing_index(update)], False)
+                            __NLL_LIST__[this_index] = get_nll(data_masses, mc_masses)
+                            __WEIGHT_LIST__[this_index] = min(len(data_masses),len(mc_masses))
+                            __UPDATE_TABLE__[this_index] = True
+            else: #update >= __num_scales__
+                #this is where we handle the case that the updated value is a smearing
+                smearing_cats = [i for i in range(__num_scales__) if update == get_smearing_index(i)]
+                for first in smearing_cats:
+                    for second in range(__num_scales__):
+                        good_cat = True
+                        if second <= first:
+                            mc_diag = len(__MASS_MC__[first][second]) > 1000 and first == second
+                            mc_offdiag = len(__MASS_MC__[first][second]) > 2000 and first != second
+                            if __IGNORE__ is not None:
+                                good_cat = not sum([(first,second) == y for y in __IGNORE__])
+                            this_index = int(int(0.5*(first+1)*(first+2)-1) - (first - second))
+                            if len(__MASS_DATA__[first][second] > 10) and (mc_diag or mc_offdiag) and good_cat:
+                                data_masses = apply_parameter( __MASS_DATA__[first][second], 1, 1, True)
+                                mc_masses = apply_parameter( __MASS_MC__[first][second], 1/x[first], 1/x[second], True)
+                                if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(first)], x[get_smearing_index(second)], False)
+                                __NLL_LIST__[this_index] = get_nll(data_masses, mc_masses)
+                                __WEIGHT_LIST__[this_index] = min(len(data_masses),len(mc_masses))
+                                __UPDATE_TABLE__[this_index] = True
+                        else: #second > first
+                            mc_diag = len(__MASS_MC__[second][first]) > 1000 and first == second
+                            mc_offdiag = len(__MASS_MC__[second][first]) > 2000 and first != second
+                            if __IGNORE__ is not None:
+                                good_cat = not sum([(second,first) == y for y in __IGNORE__])
+
+                            this_index = int(int(0.5*(second+1)*(second+2)-1) - (second-first))
+                            if len(__MASS_DATA__[second][first] > 10) and (mc_diag or mc_offdiag) and good_cat and not __UPDATE_TABLE__[this_index]:
+                                data_masses = apply_parameter( __MASS_DATA__[second][first], 1, 1, True)
+                                mc_masses = apply_parameter( __MASS_MC__[second][first], 1/x[second], 1/x[first], True)
+                                if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(second)], x[get_smearing_index(first)], False)
+                                __NLL_LIST__[this_index] = get_nll(data_masses, mc_masses)
+                                __WEIGHT_LIST__[this_index] = min(len(data_masses),len(mc_masses))
+                                __UPDATE_TABLE__[this_index] = True
+    else:
+        #default method
+        for i in range(__num_scales__):
+            for j in range(i+1):
+                mc_diag = len(__MASS_MC__[i][j]) > 1000 and i == j
+                mc_offdiag = len(__MASS_MC__[i][j]) > 2000 and i != j
+                good_cat = True
+                if __IGNORE__ is not None:
+                    good_cat = not sum([(i,j) == x for x in __IGNORE__])
+                if len(__MASS_DATA__[i][j] > 10) and (mc_diag or mc_offdiag) and good_cat:
+                    data_masses = apply_parameter( __MASS_DATA__[i][j], 1, 1, True)
+                    mc_masses = apply_parameter( __MASS_MC__[i][j], 1/x[i], 1/x[j], True)
+                    if __num_smears__ > 0: mc_masses = apply_parameter( mc_masses, x[get_smearing_index(i)], x[get_smearing_index(j)], False)
+                    __NLL_LIST__.append(get_nll(data_masses, mc_masses))
+                    __WEIGHT_LIST__.append(min(len(data_masses),len(mc_masses)))
+                    __UPDATE_TABLE__.append(False)
+                    if verbose: 
+                        print(j,i,round(np.mean(data_masses),4), round(np.mean(mc_masses),4), round(ret_array[-1],6))
+                else:
+                    __NLL_LIST__.append(0)
+                    __WEIGHT_LIST__.append(1.)
+                    __UPDATE_TABLE__.append(False)
+
+    __UPDATE_TABLE__ = [False for x in __UPDATE_TABLE__]
+    ret = np.sum(np.multiply(__NLL_LIST__,np.sqrt(__WEIGHT_LIST__))/np.sum(np.sqrt(__WEIGHT_LIST__)))
     if verbose:
         print(x)
         print(ret)
-    return ret/len(ret_array)
+    return ret
 
 ##################################################################################################################
 def add_transverse_energy(__DATA__,__MC__):
@@ -315,6 +399,10 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     global __BIN_SIZE__
     global __IGNORE__
     global __AUTO_BIN__
+    global __NLL_LIST__
+    global __WEIGHT_LIST__
+    global __GUESS__
+    global __UPDATE_TABLE__
 
     #2D array of all mass arrays using these categories
     global __MASS_MC__ 
@@ -325,6 +413,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     __MIN_RANGE__ = hist_min
     __MAX_RANGE__ = hist_max
     __BIN_SIZE__ = hist_bin_size
+    __UPDATE_TABLE__= []
     
     if ingore_cats != '':
         df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
@@ -421,8 +510,10 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     #set up and run a basic nll scan for the initial guess
     __AUTO_BIN__ = False #turn off auto binning for the scan
     guess = [1 for x in range(__num_scales__)] + [0.01 for x in range(__num_smears__)]
+    __GUESS__ = guess
 
     if _kStartStyle == 'scan':
+       print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
        for i in range(__num_scales__+__num_smears__):
            if i < __num_scales__ :
                if len(__MASS_DATA__[i][i]) > 10 and len(__MASS_MC__[i][i]) > 1000:
@@ -490,12 +581,12 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
 
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
 
-    min_step_size = 0.0001 if not _closure_ else 0.00001
+    min_step_size = 0.0001 if not _closure_ else 0.000025
     optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds, options={"eps":min_step_size}) 
+    #optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds) 
 
     print("[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:")
     print(optimum)
-    print(optimum.success)
     
     if not optimum.success: 
         print("[ERROR] MINIMIZATION DID NOT SUCCEED")
