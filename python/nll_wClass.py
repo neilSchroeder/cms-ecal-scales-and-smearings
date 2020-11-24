@@ -47,7 +47,7 @@ def add_transverse_energy(data,mc):
     drop_list = ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'R9Ele[0]', 'R9Ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'runNumber']
     data.drop(drop_list, axis=1, inplace=True)
     mc.drop(drop_list, axis=1, inplace=True)
-#impose an et cut of 32 on leading and 20 on subleading
+    #impose an et cut of 32 on leading and 20 on subleading
     mask_lead = data['transverse_energy[0]'].between(32, 99999) & data['transverse_energy[1]'].between(20, 99999)
     data = data.loc[mask_lead]
     mask_lead = mc['transverse_energy[0]'].between(32, 99999) & mc['transverse_energy[1]'].between(20, 99999)
@@ -212,6 +212,12 @@ def extract_cats(data,mc):
 
 ##################################################################################################################
 def target_function(x, verbose=False):
+    """ 
+    This is the target function, which returns an event weighted -2*Delta NLL
+    This function features a small verbose option for debugging purposes.
+    target_function accepts an iterable of floats and uses them to evaluate the NLL in each category.
+    Some 'smart' checks prevent the function from evaluating all N(N+1)/2 categories unless absolutely necessary
+    """
     global __ZCATS__
     global __GUESS__
     updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
@@ -220,9 +226,13 @@ def target_function(x, verbose=False):
         if cat.valid:
             if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
                 if not cat.updated: 
-                    cat.update(x[cat.lead_index],x[cat.sublead_index],x[cat.lead_smear_index],x[cat.sublead_smear_index])
+                    if __num_smears__ == 0:
+                        cat.update(x[cat.lead_index],x[cat.sublead_index])
+                    else:
+                        cat.update(x[cat.lead_index],x[cat.sublead_index],x[cat.lead_smear_index],x[cat.sublead_smear_index])
+
                     if verbose:
-                        print("------------- ZCAT INFO -------------")
+                        print("------------- zcat info -------------")
                         cat.print()
                         print("-------------------------------------")
                         print()
@@ -230,14 +240,19 @@ def target_function(x, verbose=False):
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
     for cat in __ZCATS__: cat.reset()
-    if verbose:
-        print(ret,tot)
-        print("---- Total NLL: {} ----".format(ret/tot))
+    if True:
+        print("------------- total info -------------")
+        print("weighted nll:",ret/tot)
+        print("diagonal nll vals:", [cat.nll*cat.weight/tot for cat in __ZCATS__ if cat.lead_index == cat.sublead_index and cat.valid])
+        print("using scales:",x)
+        print("--------------------------------------")
     return ret/tot
-
 
 ##################################################################################################################
 def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, _kStartStyle='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kAutoBin=True):
+    """ 
+    This is the control/main function for minimizing global scales and smearings 
+    """
 
     #don't let the minimizer start with a bad _kStartStyle
     allowed_start_styles = ('scan', 'random', 'specify')
@@ -313,7 +328,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     gc.collect()
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
-    #the following code will implement such a scan, and write it to a format which is can be plotted.
+    #the following code will implement such a scan, and write it to a format which can be plotted.
     #the_scan = []
     #if _kScan:
 
@@ -324,7 +339,6 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     else: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0.002, 0.05) for i in range(__num_smears__)]
     
     #set up and run a basic nll scan for the initial guess
-    __AUTO_BIN__ = False #turn off auto binning for the scan
     guess = [1 for x in range(__num_scales__)] + [0.01 for x in range(__num_smears__)]
     __GUESS__ = [0 for x in guess]
 
@@ -332,44 +346,33 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
        print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
 
        for i in range(__num_scales__+__num_smears__):
-           if i < __num_scales__ :
-               low, high, step = scan_min, scan_max, scan_step
-               x = np.arange(low,high,step)
-               my_guesses = []
-               for j,val in enumerate(x): 
-                   guess[i] = val
-                   my_guesses.append(guess.copy())
-               nll_vals = np.array([ target_function(g) for g in my_guesses])
-               mask = [y > 0 for y in nll_vals]
-               x = x[mask]
-               nll_vals = nll_vals[mask]
-               guess[i] = x[nll_vals.argmin()]
-           else:
-               min_val = target_function(guess)
-               low, high, step = scan_min, scan_max, scan_step
-               if i >= __num_scales__:
-                   low = 0.005
-                   high = 0.025
-                   step = 0.0005
-               for x in np.arange(low, high, step):
-                   initial_value = guess[i]
-                   guess[i] = x
-                   check = target_function(guess)
-                   if check < min_val:
-                       min_val = check
-                   else: guess[i] = initial_value
-    
-           print("[INFO][python/nll] best guess for {} {} is {}".format("scale" if i < __num_scales__ else "smearing", i, guess[i]))
+            low, high, step = scan_min, scan_max, scan_step
+            if i < __num_scales__ :
+                #smearings are different, so use different values for low,high,step 
+                low = 0.005
+                high = 0.025
+                step = 0.0005
+            x = np.arange(low,high,step)
+            my_guesses = []
+            #generate a few guesses             
+            for j,val in enumerate(x): 
+                guess[i] = val
+                my_guesses.append(guess.copy())
+            #evaluate nll for each guess
+            nll_vals = np.array([ target_function(g) for g in my_guesses])
+            mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
+            x = x[mask]
+            nll_vals = nll_vals[mask]
+            guess[i] = x[nll_vals.argmin()]
+            print("[INFO][python/nll] best guess for {} {} is {}".format("scale" if i < __num_scales__ else "smearing", i, guess[i]))
 
-    __AUTO_BIN__ = _kAutoBin
-    
     if _kStartStyle == 'random':
         xlow_scales = [0.995 for i in range(__num_scales__)]
         xhigh_scales = [1.001 for i in range(__num_scales__)]
         xlow_smears = [0.008 for i in range(__num_smears__)]
         xhigh_smears = [0.025 for i in range(__num_smears__)]
 
-    #set the initial guess: random for a regular derivation and unity for a closure derivation
+        #set the initial guess: random for a regular derivation and unity for a closure derivation
         guess_scales = np.random.uniform(low=xlow_scales,high=xhigh_scales).ravel().tolist()
         if _closure_: guess_scales = [1. for i in range(__num_scales__)]
         guess_smears = np.random.uniform(low=xlow_smears,high=xhigh_smears).ravel().tolist()

@@ -1,4 +1,5 @@
 import numpy as np
+import numba_hist
 import pandas as pd
 from scipy import stats 
 from scipy.special import xlogy
@@ -108,19 +109,9 @@ class zcat:
         temp_mc = temp_mc[temp_mc <= self.hist_max]
         temp_mc = np.append(temp_mc,np.array([self.hist_min,self.hist_max]))
 
-        #this is 2 or 3 times faster than np.histogram and gives the same result
-        if len(self.bins) == 0: self.bins = np.arange(self.hist_min,self.hist_max,self.bin_size)
-        t1 = time.time()
-        binned_data = np.bincount((temp_data*(self.bins.size-1)).astype(int))
-        t2 = time.time()
-        bins, edges = np.histogram(temp_data, bins=self.bins, range=(self.hist_min,self.hist_max))
-        t3 = time.time()
-        print(len(bins),len(binned_data))
-        print(t2-t1,t3-t2)
-        binned_mc = np.bincount((temp_mc*int((self.hist_max-self.hist_min)/self.bin_size)-1).astype(int))
-        
-
-        binned_mc = np.bincount((temp_mc*int((self.hist_max-self.hist_min)/self.bin_size)-1).astype(int))
+        num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
+        binned_data,edges = numba_hist.numba_histogram(temp_data,num_bins)
+        binned_mc,edges = numba_hist.numba_histogram(temp_mc,num_bins)
 
         if np.sum(binned_data) < 10:
             self.NLL = 0
