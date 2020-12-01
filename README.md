@@ -70,17 +70,19 @@ With your run bins in hand you can now run the time_stability step:
 ```
 ./python/optimize.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat --time_stability
 ```
+From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
 
 ```
-./python/optimize.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step1_ul2018_scales.dat
-./python/optimize.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step2_ul2018_scales.dat --closure
-./python/optimize.py -i config/ul2018.dat -c config/cats_step3.py -s datFiles/step3_ul2018_scales_26Sep2020_v2.dat --scan_min=0.99 --scan_max=1.012 --scan_step=0.002 --closure
+./python/optimize.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step1_MY_TAG_scales.dat
+./python/optimize.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step2_MY_TAG_scales.dat --closure
+./python/optimize.py -i config/ul2018.dat -c config/cats_step3.py -s datFiles/step2_MY_TAG_scales.dat 
+./python/optimize.py -i config/ul2018.dat -c config/cats_step3.py -s datFiles/step3_MY_TAG_scales.dat --closure
+./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step3_MY_TAG_scales.dat
+./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step4_MY_TAG_scales.dat --closure
+./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step3_MY_TAG_scales.dat
+./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step4_MY_TAG_scales.dat --closure
 ```
-
-## Code Details
-
-### optimize.py
 
 ## To Do
-Add python/condor_helper.py to offer a default/automated method of submitting the job to condor
+Add python/condor_helper.py to offer a default/automated method of submitting the job to condor  
 Add ignore feature to python/nll_wClass.py
