@@ -13,7 +13,7 @@ This software has a number of interesting features:
 * A run divider to derive run bins 
 * A time stabilizer which uses medians to stabilize the scale as a function of run number
 * A minimzer to evaluate the scales and smearings
-* * blah blah
+	* blah blah
 
 ## Getting Started
 
