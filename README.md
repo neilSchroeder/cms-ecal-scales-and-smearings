@@ -12,8 +12,12 @@ This software has a number of interesting features:
 * A pruner to convert root files into tsv files with only relevant branches
 * A run divider to derive run bins 
 * A time stabilizer which uses medians to stabilize the scale as a function of run number
-* A minimzer to evaluate the scales and smearings
-	* blah blah
+* A minimzer to evaluate the scales and smearings:
+	* Auto-binning of dielectron category invariant mass distributions using the Freedman-Diaconis Rule
+    * Numba histograms to dramatically increase the speed of binning invariant mass distributions and NLL evaluation
+    * 1D scanning or random start styles of the scales/smearings for the minimizer
+    * SciPi minimizer using the 'L-BFGS-B' method for speed and memory preservation
+    * Smart handling of low stats categories in the NLL evaluation
 
 ## Getting Started
 
