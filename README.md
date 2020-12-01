@@ -4,7 +4,9 @@ A new python framework for deriving the residual scales and additional smearings
 
 ## Motivation
 
-This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation. Additionally, this software serves as a portion of the thesis of Neil Schroeder from the University of Minnesota, Twin Cities School of Physics and Astronomy.
+This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. 
+The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation.  
+Additionally, this software serves as a portion of the thesis of Neil Schroeder from the University of Minnesota, Twin Cities School of Physics and Astronomy.
 
 ## Features
 
@@ -79,10 +81,10 @@ From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step
 ./python/optimize.py -i config/ul2018.dat -c config/cats_step3.py -s datFiles/step3_MY_TAG_scales.dat --closure
 ./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step3_MY_TAG_scales.dat
 ./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step4_MY_TAG_scales.dat --closure
-./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step3_MY_TAG_scales.dat
-./python/optimize.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step4_MY_TAG_scales.dat --closure
+./python/optimize.py -i config/ul2018.dat -c config/cats_step4_et.py -s datFiles/step3_MY_TAG_scales.dat
+./python/optimize.py -i config/ul2018.dat -c config/cats_step4_et.py -s datFiles/step4_MY_TAG_scales.dat --closure
 ```
 
 ## To Do
 Add python/condor_helper.py to offer a default/automated method of submitting the job to condor  
-Add ignore feature to python/nll_wClass.py
+Add ignore feature to python/nll_wClass.py  
