@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This function will derive the residual scales and additional smearings.
 
