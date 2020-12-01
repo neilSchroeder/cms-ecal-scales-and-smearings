@@ -240,10 +240,10 @@ def target_function(x, verbose=False):
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
     for cat in __ZCATS__: cat.reset()
-    if True:
+    if verbose:
         print("------------- total info -------------")
         print("weighted nll:",ret/tot)
-        print("diagonal nll vals:", [cat.nll*cat.weight/tot for cat in __ZCATS__ if cat.lead_index == cat.sublead_index and cat.valid])
+        print("diagonal nll vals:", [cat.NLL*cat.weight/tot for cat in __ZCATS__ if cat.lead_index == cat.sublead_index and cat.valid])
         print("using scales:",x)
         print("--------------------------------------")
     return ret/tot
@@ -347,7 +347,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
 
        for i in range(__num_scales__+__num_smears__):
             low, high, step = scan_min, scan_max, scan_step
-            if i < __num_scales__ :
+            if i >= __num_scales__ :
                 #smearings are different, so use different values for low,high,step 
                 low = 0.005
                 high = 0.025
@@ -396,7 +396,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
 
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
 
-    min_step_size = 0.0001 if not _closure_ else 0.000025
+    min_step_size = 0.00001 if not _closure_ else 0.000001
     optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds, options={"eps":min_step_size}) 
     #optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds) 
 

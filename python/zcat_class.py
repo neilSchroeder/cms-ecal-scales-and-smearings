@@ -68,6 +68,7 @@ class zcat:
 
         #apply the smearings second
         if lead_smear!=0 and sublead_smear!=0:
+            np.random.seed(self.seed)
             lead_smear_list = np.random.normal(1, np.abs(lead_smear), len(temp_mc))
             sublead_smear_list = np.random.normal(1, np.abs(sublead_smear), len(temp_mc))
             temp_mc = np.multiply(temp_mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list)))
