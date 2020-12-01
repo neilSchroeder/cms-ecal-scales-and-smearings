@@ -53,16 +53,19 @@ To start, you will need a file containing a list of data and mc files in the for
 type	treeName	filePath
 ```
 where *type* is either "data" or "sim", *treeName* is the name of the tree in the root file containing the events you wish to analyze, and *filePath* is the full file path to the root file 
+
 You can now run the pruner:
 ```
 ./python/optimize.py -i INPUT_FILE --prune --pruned_file_dest='DEST_PATH' --pruned_file_name='DEST_TAG'
 ```
 This takes your input files and will write them to tsvs in the folder DEST_PATH using the tage DEST_TAG
+
 Now you will need to put the output files in a file, preferably in the config folder to run the run divider
 ```
 ./python/optimize.py -i config/ul2018.dat --run_divide
 ```
 If you want fewer run bins you can increase the default number of events per run using the `--minEvents` argument
+
 With your run bins in hand you can now run the time_stability step:
 ```
 ./python/optimize.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat --time_stability
