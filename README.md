@@ -2,6 +2,19 @@
 
 A new python framework for deriving the residual scales and additional smearings for the electron energy scale.
 
+## Motivation
+
+This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation.
+
+## Features
+
+This software has a number of interesting features:
+* A pruner to convert root files into tsv files with only relevant branches
+* A run divider to derive run bins 
+* A time stabilizer which uses medians to stabilize the scale as a function of run number
+* A minimzer to evaluate the scales and smearings
+** blah blah
+
 ## Getting Started
 
 Some basic instructions on how to get started:
