@@ -11,6 +11,7 @@ Additionally, this software serves as a portion of the thesis of Neil Schroeder 
 ## To Do
 Add python/condor_helper.py to offer a default/automated method of submitting the job to condor  
 Add ignore feature to python/nll_wClass.py  
+Improve structure of output files.
 
 ## Features
 
