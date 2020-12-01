@@ -4,7 +4,7 @@ A new python framework for deriving the residual scales and additional smearings
 
 ## Motivation
 
-This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation.
+This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation. Additionally, this software serves as a portion of the thesis of Neil Schroeder from the University of Minnesota, Twin Cities School of Physics and Astronomy.
 
 ## Features
 
@@ -13,7 +13,7 @@ This software has a number of interesting features:
 * A run divider to derive run bins 
 * A time stabilizer which uses medians to stabilize the scale as a function of run number
 * A minimzer to evaluate the scales and smearings
-** blah blah
+* * blah blah
 
 ## Getting Started
 
