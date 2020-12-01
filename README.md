@@ -88,3 +88,13 @@ From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step
 ## To Do
 Add python/condor_helper.py to offer a default/automated method of submitting the job to condor  
 Add ignore feature to python/nll_wClass.py  
+
+## Credit
+
+Thanks to Shervin Nourbahksh, Peter Hansen, and Rajdeep Chatterjee for development on the previous scales and smearings code in ECALELF.
+Thanks to Rajdeep Chatterjee for input on and review of this code.
+
+## Contact
+
+should something arise in which I must be contacted you can reach me at   
+schr1077@umn.edu
