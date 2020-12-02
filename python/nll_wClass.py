@@ -278,12 +278,6 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     __MAX_RANGE__ = hist_max
     __BIN_SIZE__ = hist_bin_size
     
-    if ingore_cats != '':
-        df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
-        __IGNORE__ = [(row[0],row[1]) for row in df_ignore.iterrows()]
-    else:
-        __IGNORE__ = None
-
     for i,row in cats.iterrows():
         if row[0] == 'scale':
             __num_scales__ += 1
@@ -316,6 +310,14 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
 
     gc.collect()
     extract_cats(data, mc)
+
+    #deactivate invalid categories
+    if ingore_cats != '':
+        df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
+        for cat in __ZCATS__:
+            for row in df_ingore.iterrows():
+                if row[0] == cat.lead_index and row[1] == cat.sublead_index:
+                    cat.valid=False
 
     #if we're plotting, just plot and return, don't run a minimization
     if _kPlot:

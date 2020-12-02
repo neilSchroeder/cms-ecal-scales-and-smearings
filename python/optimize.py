@@ -23,6 +23,7 @@ Usage/Order of Operations:
 import argparse as ap
 import gc
 import numpy as np
+import os
 import pandas as pd
 import uproot as up
 
@@ -102,13 +103,10 @@ def main():
     #if you need to rewrite a scales file after making changes by hand
     # you can use this option to do so.
     if args.rewrite:
-        scales_out = args.scales
-        if scales_out.find("closure") != -1: scales_out = scales_out.replace("closure","",1)
+        scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
         if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
         else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
         new_scales = scales_out.replace("step", "onlystep")
-        new_scales = new_scales.replace("scales", str(args.output+"_scales") if args.output != '' else "scales")
-        scales_out = scales_out.replace("scales", str(args.output+"_scales") if args.output != '' else "scales")
         write_files.combine( new_scales, args.scales, scales_out )
         return
 
@@ -154,18 +152,14 @@ def main():
 ###############################################################################
     #derive time bins (by run) in which to stabilize data
     if args.run_divide:
-        outFile = args.inputFile
-        outFile = outFile.replace("config","datFiles") #write into datFiles/ instead of config/
-        outFile = outFile[:outFile.find("/")+1]+"run_divide_"+outFile[outFile.find("/")+1:]
+        outFile = "datFiles/run_divide_"+args.output+".dat"
         write_files.write_runs(divide_by_run.divide(data, args.minEvents), outFile)
         return
 
 ###############################################################################
     #derive the scales for the time stability
     if args.time_stability:
-        outFile = args.inputFile
-        outFile = outFile.replace("config","datFiles") #write into datFiles/ instead of config/
-        outFile = outFile[:outFile.find("/")+1]+"step1_"+outFile[outFile.find("/")+1:]
+        outFile = "datFiles/step1_"+args.output+"_scales.dat"
         write_files.write_time_stability(time_stability.derive(data, args.cats), args.cats, outFile)
         return
 
@@ -185,15 +179,6 @@ def main():
 ###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    #scales_smears = nll.minimize(data, mc, cats, args.ingore,
-    #                             round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
-    #                             args.start_style,
-    #                             args.scan_min, args.scan_max, args.scan_step,
-    #                             args.closure, args.scales, 
-    #                             args.plot, 
-    #                             args.test_method_accuracy,
-    #                             args.scan_nll, args.scan_scales,
-    #                             not args.no_auto_bin)
     scales_smears = nll_wClass.minimize(data, mc, cats, args.ingore,
                                  round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
                                  args.start_style,
@@ -212,8 +197,8 @@ def main():
 
 ###############################################################################
     #write the onlystepX file and smearings file
-    scales_out = args.scales
-    scales_out = scales_out.replace("scales", str(args.output+"_scales")) #add the output tag
+
+    scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
     if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
 
@@ -229,6 +214,5 @@ def main():
     print("[INFO] creating new scales file: {}".format(scales_out))
     if not args.test_method_accuracy: write_files.combine( new_scales, args.scales, scales_out )
 ###############################################################################
-
 
 main()
