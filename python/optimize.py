@@ -42,55 +42,57 @@ def main():
     parser = ap.ArgumentParser(description="Derivation of Scales and Smearings")
 
     parser.add_argument("-i","--inputFile", required=True, 
-                      help="input file containing paths to data and mc")
+                    	help="input file containing paths to data and mc")
     parser.add_argument("-s","--scales",
-                      help="path to scales file to apply to data")
+                    	help="path to scales file to apply to data")
     parser.add_argument("-c","--cats", 
-                      help="path to file describing categories to use in minimization")
+                    	help="path to file describing categories to use in minimization")
     parser.add_argument("-o","--output", default='',
-                      help="output tag to add to file names")
+                    	help="output tag to add to file names")
     parser.add_argument("--ingore", default='',
-                      help="list of categories to ignore for the current derivation")
+                    	help="list of categories to ignore for the current derivation")
     parser.add_argument("--hist_min", default=80, type=float,
-                      help="Min of histogram for binned NLL evaluation")
+                    	help="Min of histogram for binned NLL evaluation")
     parser.add_argument("--hist_max", default=100, type=float,
-                      help="Max of histogram for binned NLL evaluation")
+                    	help="Max of histogram for binned NLL evaluation")
     parser.add_argument("--start_style", default='scan', type=str,
-                      help="Determines how the minimizer chooses its starting location. Allowed options are 'scan', 'random', 'specify'. If using specify, used the scan_scales argument to provide the starting location")
+                    	help="Determines how the minimizer chooses its starting location. Allowed options are 'scan', 'random', 'specify'. If using specify, used the scan_scales argument to provide the starting location")
     parser.add_argument("--scan_min", default=0.98, type=float,
-                      help="Min value for scan start")
+                    	help="Min value for scan start")
     parser.add_argument("--scan_max", default=1.02, type=float,
-                      help="Max value for scan start")
+                    	help="Max value for scan start")
     parser.add_argument("--scan_step", default=0.001, type=float,
-                      help="Step size for scan start")
+                    	help="Step size for scan start")
     parser.add_argument("--prune", default=False, action='store_true',
-                      help="prune down the data and mc to keep memory usage low")
+                    	help="prune down the data and mc to keep memory usage low")
     parser.add_argument("--pruned_file_name", 
-                      help="basic string for naming the pruned files")
+                    	help="basic string for naming the pruned files")
     parser.add_argument("--pruned_file_dest",
-                      help="destination for the pruned files, a directory in /eos/home-<initial>/<username>/ is recommended")
+                    	help="destination for the pruned files, a directory in /eos/home-<initial>/<username>/ is recommended")
     parser.add_argument("--run_divide", default=False, action='store_true',
-                      help="option to make the run division file for time_stability")
+                    	help="option to make the run division file for time_stability")
     parser.add_argument("--minEvents", default=10000,
-                      help="minimum number of events allowed in a given run bin")
+                    	help="minimum number of events allowed in a given run bin")
     parser.add_argument("--time_stability", default=False, action='store_true',
-                      help="scale data to PDG Z mass, pass the run divide file as your categories")
+                    	help="scale data to PDG Z mass, pass the run divide file as your categories")
     parser.add_argument("--closure", default=False, action='store_true',
-                      help="derive the closure of the scales for a given step")
+                    	help="derive the closure of the scales for a given step")
     parser.add_argument("--rewrite", default=False, action='store_true',
-                      help="only writes the scales file associated with this step")
+                    	help="only writes the scales file associated with this step")
     parser.add_argument("--plot", default=False, action='store_true',
-                      help="Plot the invariant mass distributions for data and mc in the provided categories")
+                    	help="Plot the invariant mass distributions for data and mc in the provided categories")
+    parser.add_argument("--plot_dir", default='./',
+                    	help="directory to write the plots")
     parser.add_argument("--test_method_accuracy", default=False, action='store_true',
-                      help="Treat MC as data, inject known scales into mc cats, see how well method recovers known scale injection")
+                    	help="Treat MC as data, inject known scales into mc cats, see how well method recovers known scale injection")
     parser.add_argument("--scan_nll", default=False, action='store_true',
-                      help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
+                    	help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
     parser.add_argument("--scan_scales", default='', 
-                      help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
+                    	help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
     parser.add_argument("--no_auto_bin", default=False, action='store_true',
-                      help="Turns off the auto binning feature (using Freedman-Diaconis method)")
+                    	help="Turns off the auto binning feature (using Freedman-Diaconis method)")
     parser.add_argument("--bin_size", default=0.25, type=float,
-                      help="Size of bins for binned NLL evaluation")
+                    	help="Size of bins for binned NLL evaluation")
 
     args = parser.parse_args()
 
@@ -184,7 +186,7 @@ def main():
                                  args.start_style,
                                  args.scan_min, args.scan_max, args.scan_step,
                                  args.closure, args.scales, 
-                                 args.plot, 
+                                 args.plot, args.plot_dir,
                                  args.test_method_accuracy,
                                  args.scan_nll, args.scan_scales,
                                  not args.no_auto_bin)

@@ -1,8 +1,36 @@
 """
-Author: Neil Schroeder
+Author: Neil Schroeder, schr1077@umn.edu, neil.raymond.schroeder@cern.ch
 About:
     This suite of functions will perform the minimization of the scales and smearings
+    using the zcat class defined in python/zcat_class.py 
+    The strategy is to extract the invariant mass disributions in each category for
+    data and MC and make zcats from them. These are then handed off the the loss function
+    while the scipy.optimize.minimze function minimizes the loss function by varying the scales
+    in the defined categories. 
 
+    The main function in minimize(...):
+    the required arguments are:
+        data -> dataset to be treated as data
+        mc   -> dataset to be treated as simulation
+        cats -> a dataframe containing the single electron categories from which to derive the scales
+    the options are:
+        ignore_cats -> path to a tsv containing pairs of single electron categories to ignore
+        hist_min -> minimum range of the histogram window defined for the Z inv mass line shape
+        hist_max -> maximum range of the histogram window defined for the Z inv mass line shape
+        hist_bin_size -> optional method to set the binning size to a defined value. _kAutoBin must be set to false.
+        start_style -> specifies the method by which the scales and smearings are seeded. Default is via a 1D scan.
+        scan_min -> minimum range of the 1D scan (true value not delta P, i.e. 0.99 not -0.01)
+        scan_max -> maximum range of the 1D scan (true value not delta P, i.e. 1.01 not 0.01)
+        scan_step -> step size of the 1D scan
+        _kClosure -> bool indicating whether this is a closure test or not
+        _scales_ -> path to a tsv file containing scales applied the data
+        _kPlot -> activates the plotting feature (currently deprecated).
+        plot_dir -> directory to write the plots
+        _kTestMethodAccuracy -> option for validating scales. random scales/smearings will be injected, the minimizer will attempt to recover them.
+        _kScan -> activates the 1D scan feature (currently deprecated).
+        _specify_file_ -> path to a tsv of single electron categories and the desired starting values of the scales in the case of start_style='specify'
+        _kAutoBin -> used to deliberately deactivate the auto_binning feature in the zcat invariant mass distributions.
+        
 """
 ##################################################################################################################
 import gc
@@ -305,14 +333,14 @@ def scan_nll(x, scan_min, scan_max, scan_step):
     return guess
 
 ##################################################################################################################
-def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, _kStartStyle='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kAutoBin=True):
+def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, start_style='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _kClosure=False, _scales_='', _kPlot=False, plot_dir='./', _kTestMethodAccuracy=False, _kScan=False, _specify_file_ = '', _kAutoBin=True):
     """ 
     This is the control/main function for minimizing global scales and smearings 
     """
 
-    #don't let the minimizer start with a bad _kStartStyle
+    #don't let the minimizer start with a bad start_style
     allowed_start_styles = ('scan', 'random', 'specify')
-    if _kStartStyle not in allowed_start_styles: 
+    if start_style not in allowed_start_styles: 
         print("[ERROR][python/nll.py][minimize] Designated start style not recognized.")
         print("[ERROR][python/nll.py][minimize] The allowed options are {}.".format(allowed_start_styles))
         return []
@@ -341,7 +369,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
             __num_smears__ += 1
 
     #if this a closure step smear the mc with static smearings and derive back only the scales
-    if _closure_:
+    if _kClosure:
         _smears_ = _scales_.replace('scales','smearings')
         mc = smear_mc(mc, _smears_)
         __num_smears__ = 0
@@ -367,9 +395,15 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     gc.collect()
     extract_cats(data, mc)
 
+    #if we're plotting, just plot and return, don't run a minimization
+    if _kPlot:
+        target_function([1.0 for i in range(__num_scales__)].extend([0 for i in range(__num_smears__)]))
+        plot_masses.plot_cats(plot_dir, __ZCATS__, __CATS__)
+        return []
+
     #set up boundaries on starting location of scales
     bounds = []
-    if _closure_: bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
+    if _kClosure: bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
     elif _kTestMethodAccuracy: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0., 0.05) for i in range(__num_smears__)]
     else: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0.002, 0.05) for i in range(__num_smears__)]
 
@@ -400,10 +434,6 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
                 if row[0] == cat.lead_index and row[1] == cat.sublead_index:
                     cat.valid=False
 
-    #if we're plotting, just plot and return, don't run a minimization
-    if _kPlot:
-        plot_masses.plot_cats(__ZCATS__, __CATS__)
-        return []
 
     #once categories are extracted, data and mc can be released to make more room.
     del data
@@ -420,11 +450,11 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     __GUESS__ = [0 for x in guess]
     target_function(guess) #initializes the categories
 
-    if _kStartStyle == 'scan':
+    if start_style == 'scan':
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
         guess = scan_nll(guess, scan_min, scan_max, scan_step)
 
-    if _kStartStyle == 'random':
+    if start_style == 'random':
         xlow_scales = [0.99 for i in range(__num_scales__)]
         xhigh_scales = [1.01 for i in range(__num_scales__)]
         xlow_smears = [0.008 for i in range(__num_smears__)]
@@ -432,20 +462,20 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
 
         #set the initial guess: random for a regular derivation and unity for a closure derivation
         guess_scales = np.random.uniform(low=xlow_scales,high=xhigh_scales).ravel().tolist()
-        if _closure_: guess_scales = [1. for i in range(__num_scales__)]
+        if _kClosure: guess_scales = [1. for i in range(__num_scales__)]
         guess_smears = np.random.uniform(low=xlow_smears,high=xhigh_smears).ravel().tolist()
-        if _closure_ or _kTestMethodAccuracy: guess_smears = [0.0 for i in range(__num_smears__)]
-        if _kTestMethodAccuracy or not _closure_: guess_scales.extend(guess_smears)
+        if _kClosure or _kTestMethodAccuracy: guess_smears = [0.0 for i in range(__num_smears__)]
+        if _kTestMethodAccuracy or not _kClosure: guess_scales.extend(guess_smears)
         guess = guess_scales
 
-    if _kStartStyle == 'specify':
-        scan_file_df = pd.read_csv(_scan_file_,sep='\t',header=None)
+    if start_style == 'specify':
+        scan_file_df = pd.read_csv(_specify_file_,sep='\t',header=None)
         guess = scan_file_df.loc[:,9].values
         guess = np.append(guess,[0.005 for x in range(__num_smears__)])
         
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
 
-    min_step_size = 0.00001 if not _closure_ else 0.000001
+    min_step_size = 0.00001 if not _kClosure else 0.000001
     #optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds, options={"eps":min_step_size}) 
     optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds) 
 
