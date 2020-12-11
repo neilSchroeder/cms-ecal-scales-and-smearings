@@ -137,12 +137,12 @@ def main():
     elif root_files[1].find("data") != -1:
         data = pd.read_csv(root_files[1], sep='\t')
         mc = pd.read_csv(root_files[0], sep='\t')
-    elif args.test_method_accuracy:
-        data = pd.read_csv(root_files[0], sep='\t')
-        mc = pd.read_csv(root_files[1], sep='\t')
     else:
         print("[ERROR] could not find a data file to open")
         return
+    if args.test_method_accuracy:
+        data = mc.copy()
+
     data['etaEle[0]'] = np.absolute(data['etaEle[0]'].values)
     data['etaEle[1]'] = np.absolute(data['etaEle[1]'].values)
     mc['etaEle[0]'] = np.absolute(mc['etaEle[0]'].values)
@@ -212,7 +212,7 @@ def main():
 ###############################################################################
     #make scales file here
     print("[INFO] creating new scales file: {}".format(scales_out))
-    if not args.test_method_accuracy: write_files.combine( new_scales, args.scales, scales_out )
+    write_files.combine( new_scales, args.scales, scales_out )
 ###############################################################################
 
 main()

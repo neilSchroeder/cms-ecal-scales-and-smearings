@@ -34,8 +34,11 @@ def apply(arg):
     return data
 
 def scale(data, scales):
-#newformat of scales files is 
-#runMin runMax etaMin etaMax r9Min r9Max etMin etMax gain val err
+    """
+    This function applies the 
+    """
+    #newformat of scales files is 
+    #runMin runMax etaMin etaMax r9Min r9Max etMin etMax gain val err
     scales_df = pd.read_csv(scales, sep="\t", comment="#", header=None)
     processors = mp.cpu_count() - 1
     unique_runnums_low = scales_df[:][0].unique().tolist()

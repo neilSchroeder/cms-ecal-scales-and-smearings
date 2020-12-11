@@ -204,7 +204,10 @@ def extract_cats(data,mc):
             #drop any "bad" entries
             mass_list_data = mass_list_data[~np.isnan(mass_list_data)]
             mass_list_mc = mass_list_mc[~np.isnan(mass_list_mc)]
-            __ZCATS__.append(zcat(index1, index2, get_smearing_index(index1), get_smearing_index(index2), mass_list_data.copy(), mass_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
+            if __num_smears__ > 0:
+                __ZCATS__.append(zcat(index1, index2, get_smearing_index(index1), get_smearing_index(index2), mass_list_data.copy(), mass_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
+            else:
+                __ZCATS__.append(zcat(index1, index2, -1,-1, mass_list_data.copy(), mass_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
             del df
             del entries_eta
             del entries_r9OrEt
@@ -247,6 +250,59 @@ def target_function(x, verbose=False):
         print("using scales:",x)
         print("--------------------------------------")
     return ret/tot
+
+##################################################################################################################
+def scan_nll(x, scan_min, scan_max, scan_step):
+    global __ZCATS__
+    global __num_scales__
+    global __num_smears__
+    guess = x
+    scanned = []
+    while len(scanned) < __num_scales__:
+        #find "worst" category and scan that first
+        tot = np.sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])/np.sum([cat.weight for cat in __ZCATS__ if cat.valid])
+        max_index = -1
+        max_nll = 0
+        for cat in __ZCATS__:
+            if cat.NLL*cat.weight/tot > max_nll and cat.valid and cat.lead_index not in scanned:
+                max_index = cat.lead_index
+                max_nll = cat.NLL*cat.weight/tot
+        scanned.append(max_index)
+        x = np.arange(scan_min,scan_max,scan_step)
+        my_guesses = []
+        #generate a few guesses             
+        for j,val in enumerate(x): 
+            guess[max_index] = val
+            my_guesses.append(guess.copy())
+        #evaluate nll for each guess
+        nll_vals = np.array([ target_function(g) for g in my_guesses])
+        mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
+        x = x[mask]
+        nll_vals = nll_vals[mask]
+        guess[max_index] = x[nll_vals.argmin()]
+        print("[INFO][python/nll] best guess for scale {} is {}".format(max_index, guess[max_index]))
+
+    if __num_smears__ > 0:
+        for i in range(__num_scales__,__num_scales__+__num_smears__,1):
+            #smearings are different, so use different values for low,high,step 
+            low = 0.005
+            high = 0.025
+            step = 0.0005
+            x = np.arange(low,high,step)
+            my_guesses = []
+            #generate a few guesses             
+            for j,val in enumerate(x): 
+                guess[i] = val
+                my_guesses.append(guess.copy())
+            #evaluate nll for each guess
+            nll_vals = np.array([ target_function(g) for g in my_guesses])
+            mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
+            x = x[mask]
+            nll_vals = nll_vals[mask]
+            guess[i] = x[nll_vals.argmin()]
+            print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
+
+    return guess
 
 ##################################################################################################################
 def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, _kStartStyle='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _closure_=False, _scales_='', _kPlot=False, _kTestMethodAccuracy=False, _kScan=False, _scan_file_ = '', _kAutoBin=True):
@@ -311,6 +367,31 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     gc.collect()
     extract_cats(data, mc)
 
+    #set up boundaries on starting location of scales
+    bounds = []
+    if _closure_: bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
+    elif _kTestMethodAccuracy: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0., 0.05) for i in range(__num_smears__)]
+    else: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0.002, 0.05) for i in range(__num_smears__)]
+
+    #it is important to test the accuracy with which a known scale can be recovered,
+    #here we assign the known scales and inject them.
+    scales_to_inject = []
+    smearings_to_inject = []
+    if _kTestMethodAccuracy:
+        scales_to_inject = np.random.uniform(low=0.99*np.ones(__num_scales__),high=1.01*np.ones(__num_scales__)).ravel().tolist()
+        scales_to_inject = np.array([round(x,6) for x in scales_to_inject]).tolist()
+        if __num_smears__ > 0:
+            smearings_to_inject = np.random.uniform(low=0.009*np.ones(__num_smears__),high=0.011*np.ones(__num_smears__)).ravel().tolist()
+            scales_to_inject.extend(smearings_to_inject)
+        print("[INFO][python/nll] the injected scales and smearings are: {}".format(scales_to_inject))
+        for cat in __ZCATS__:
+            if cat.valid:
+                if __num_smears__ > 0:
+                    cat.inject(scales_to_inject[cat.lead_index], scales_to_inject[cat.sublead_index], scales_to_inject[cat.lead_smear_index], scales_to_inject[cat.sublead_smear_index])
+                else:
+                    cat.inject(scales_to_inject[cat.lead_index], scales_to_inject[cat.sublead_index],0,0)
+
+
     #deactivate invalid categories
     if ingore_cats != '':
         df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
@@ -334,43 +415,18 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     #the_scan = []
     #if _kScan:
 
-    #set up boundaries on starting location of scales
-    bounds = []
-    if _closure_: bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
-    elif _kTestMethodAccuracy: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0., 0.00005) for i in range(__num_smears__)]
-    else: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0.002, 0.05) for i in range(__num_smears__)]
-    
     #set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.01 for x in range(__num_smears__)]
     __GUESS__ = [0 for x in guess]
+    target_function(guess) #initializes the categories
 
     if _kStartStyle == 'scan':
-       print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
-
-       for i in range(__num_scales__+__num_smears__):
-            low, high, step = scan_min, scan_max, scan_step
-            if i >= __num_scales__ :
-                #smearings are different, so use different values for low,high,step 
-                low = 0.005
-                high = 0.025
-                step = 0.0005
-            x = np.arange(low,high,step)
-            my_guesses = []
-            #generate a few guesses             
-            for j,val in enumerate(x): 
-                guess[i] = val
-                my_guesses.append(guess.copy())
-            #evaluate nll for each guess
-            nll_vals = np.array([ target_function(g) for g in my_guesses])
-            mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
-            x = x[mask]
-            nll_vals = nll_vals[mask]
-            guess[i] = x[nll_vals.argmin()]
-            print("[INFO][python/nll] best guess for {} {} is {}".format("scale" if i < __num_scales__ else "smearing", i, guess[i]))
+        print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
+        guess = scan_nll(guess, scan_min, scan_max, scan_step)
 
     if _kStartStyle == 'random':
-        xlow_scales = [0.995 for i in range(__num_scales__)]
-        xhigh_scales = [1.001 for i in range(__num_scales__)]
+        xlow_scales = [0.99 for i in range(__num_scales__)]
+        xhigh_scales = [1.01 for i in range(__num_scales__)]
         xlow_smears = [0.008 for i in range(__num_smears__)]
         xhigh_smears = [0.025 for i in range(__num_smears__)]
 
@@ -387,31 +443,26 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
         guess = scan_file_df.loc[:,9].values
         guess = np.append(guess,[0.005 for x in range(__num_smears__)])
         
-    #it is important to test the accuracy with which a known scale can be recovered,
-    #here we assign the known scales and inject them.
-    scales_to_inject = []
-    if _kTestMethodAccuracy:
-        scales_to_inject = np.random.uniform(low=xlow_scales,high=xhigh_scales).ravel().tolist()
-        for cat in __ZCATS__:
-            if cat.valid:
-                cat.inject(scales_to_inject[cat.lead_index], scales_to_inject[cat.sublead_index])
-
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
 
     min_step_size = 0.00001 if not _closure_ else 0.000001
-    optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds, options={"eps":min_step_size}) 
-    #optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds) 
+    #optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds, options={"eps":min_step_size}) 
+    optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds) 
 
     print("[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:")
     print(optimum)
-    
+
     if not optimum.success: 
         print("[ERROR] MINIMIZATION DID NOT SUCCEED")
         return []
     if _kTestMethodAccuracy:
         ret = optimum.x
         for i in range(len(scales_to_inject)): 
-            print("[INFO][ACCURACY TEST] The injected scale was {}, the recovered scale was {}".format(scales_to_inject[i], 1./ret[i]))
-            ret[i] *= scales_to_inject[i]
+            if i < __num_scales__:
+                print("[INFO][ACCURACY TEST] The injected scale was recovered to {} %".format((scales_to_inject[i]*ret[i]-1)*100))
+                ret[i] = 100*(ret[i]*scales_to_inject[i] - 1)
+            else:
+                print("[INFO][ACCURACY TEST] The injected smearing was {}, the recovered smearing was {}".format(scales_to_inject[i], ret[i]))
+                ret[i] = 100*(ret[i]/scales_to_inject[i] - 1)
         return ret
     return optimum.x

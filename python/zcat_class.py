@@ -55,8 +55,12 @@ class zcat:
         self.updated=False
         return
 
-    def inject(self, lead_scale, sublead_scale):
+    def inject(self, lead_scale, sublead_scale, lead_smear, sublead_smear):
         self.data = self.data*np.sqrt(lead_scale*sublead_scale)
+        if lead_smear != 0 and sublead_smear != 0:
+            lead_smear_list = np.random.normal(1, np.abs(lead_smear), len(self.data))
+            sublead_smear_list = np.random.normal(1, np.abs(sublead_smear), len(self.data))
+            self.data = self.data*np.sqrt(np.multiply(lead_smear_list,sublead_smear_list))
         return
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
@@ -145,6 +149,13 @@ class zcat:
         #normalize mc to use as a pdf
         norm_binned_mc = binned_mc/np.sum(binned_mc)
 
+        #eval chi squared
+        scaled_mc = norm_binned_mc*np.sum(binned_data)
+        err_mc = np.sqrt(scaled_mc)
+        err_data = np.sqrt(binned_data)
+        err = np.sqrt(np.add(np.multiply(err_mc,err_mc), np.multiply(err_data,err_data)))
+        chi_sqr = np.sum( np.divide(np.multiply(binned_data-scaled_mc,binned_data-scaled_mc),err))/num_bins
+
         #evalute nll
         nll = xlogy(binned_data, norm_binned_mc)
         nll[nll==-np.inf] = 0
@@ -154,7 +165,7 @@ class zcat:
         penalty[penalty==-np.inf] = 0
         penalty = np.sum(penalty)/len(penalty)
 
-        self.NLL = -2*(nll+penalty)
+        self.NLL = -2*(nll+penalty)*chi_sqr
         self.weight = min(np.sum(binned_data),np.sum(binned_mc))
         return
 
