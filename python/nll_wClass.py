@@ -45,7 +45,7 @@ from scipy.optimize import minimize as minz
 from scipy.special import xlogy
 from scipy import stats as scistat 
 
-import plot_masses
+import plotter
 from zcat_class import zcat
 
 ##################################################################################################################
@@ -146,6 +146,7 @@ def extract_cats(data,mc):
     global __BIN_SIZE__
     global __AUTO_BIN__
     global __ZCATS__
+    global __CATS__
     for index1 in range(__num_scales__):
         for index2 in range(index1+1):
             cat1 = __CATS__.iloc[index1]
@@ -395,11 +396,6 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     gc.collect()
     extract_cats(data, mc)
 
-    #if we're plotting, just plot and return, don't run a minimization
-    if _kPlot:
-        target_function([1.0 for i in range(__num_scales__)].extend([0 for i in range(__num_smears__)]))
-        plot_masses.plot_cats(plot_dir, __ZCATS__, __CATS__)
-        return []
 
     #set up boundaries on starting location of scales
     bounds = []
@@ -434,21 +430,28 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
                 if row[0] == cat.lead_index and row[1] == cat.sublead_index:
                     cat.valid=False
 
-
     #once categories are extracted, data and mc can be released to make more room.
     del data
     del mc
     gc.collect()
 
-    #It is sometimes necessary to demonstrate a likelihood scan. 
-    #the following code will implement such a scan, and write it to a format which can be plotted.
-    #the_scan = []
-    #if _kScan:
 
     #set up and run a basic nll scan for the initial guess
-    guess = [1 for x in range(__num_scales__)] + [0.01 for x in range(__num_smears__)]
+    guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
     __GUESS__ = [0 for x in guess]
     target_function(guess) #initializes the categories
+
+    #if we're plotting, just plot and return, don't run a minimization
+    if _kPlot:
+        target_function(guess)
+        plotter.plot_cats(plot_dir, __ZCATS__, __CATS__)
+        return []
+
+    #It is sometimes necessary to demonstrate a likelihood scan. 
+    if _kScan:
+        target_function(guess)
+        plotter.plot_1Dscan(plot_dir,_specify_file_, __ZCATS__, __CATS__)
+        return
 
     if start_style == 'scan':
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
