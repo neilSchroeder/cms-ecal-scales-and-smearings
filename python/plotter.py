@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from zcat_class import zcat
 """
 This function will plot histograms of data and mc in the categories provided
 """
@@ -34,24 +35,25 @@ def plot_cats(plot_dir, zcats, cats):
             fig.savefig(plot_dir+"invMass_{}_{}.png".format(cat.lead_index if cat.lead_index > 9 else str('0'+str(cat.lead_index)), cat.sublead_index if cat.sublead_index > 9 else str('0'+str(cat.sublead_index))))
             plt.close(fig)
 
-def plot_1Dscan(plot_dir, scales, __ZCATS__, __CATS__):
+def plot_1Dscan(plot_dir, scan_file, zcats):
     """
     Plots the 1D scans in the diagonal dielectron categories
     """
-    scales_df = pd.read_csv(scales,sep='\t',header=None)
 
+    scales_df = pd.read_csv(scan_file,sep='\t',header=None)
+    print(scan_file)
     for i,row in scales_df.iterrows():
-        print("[INFO][python/plotter][plot_1Dscan] Plotting category with indices ({}, {})".format(cat.lead_index,cat.sublead_index))
-        scan_vals = np.arange(row[9]*0.9, row[9]*0.95, (row[9]*0.95-row[9]*0.9)/5)
-        scan_vals = np.append(scan_vals, np.arange(row[9]*0.95, row[9]*0.99, (row[9]*0.99-row[9]*0.95)/10))
-        scan_vals = np.append(scan_vals, np.arange(row[9]*0.99, row[9]*1.01, (row[9]*1.01-row[9]*0.99)/25))
-        scan_vals = np.append(scan_vals, np.arange(row[9]*1.01, row[9]*1.05, (row[9]*1.05-row[9]*1.01)/10))
-        scan_vals = np.append(scan_vals, np.arange(row[9]*1.01, row[9]*1.05, (row[9]*1.1-row[9]*1.05)/5))
+        print("[INFO][python/plotter][plot_1Dscan] Plotting single category with index {}".format(i))
+        scan_vals = np.arange(row[8]*0.95, row[8]*0.975, (row[8]*0.975-row[8]*0.95)/5)
+        scan_vals = np.append(scan_vals, np.arange(row[8]*0.975, row[8]*0.99, (row[8]*0.99-row[8]*0.975)/10))
+        scan_vals = np.append(scan_vals, np.arange(row[8]*0.99, row[8]*1.01, (row[8]*1.01-row[8]*0.99)/25))
+        scan_vals = np.append(scan_vals, np.arange(row[8]*1.01, row[8]*1.025, (row[8]*1.025-row[8]*1.01)/10))
+        scan_vals = np.append(scan_vals, np.arange(row[8]*1.025, row[8]*1.05, (row[8]*1.05-row[8]*1.025)/5))
         scan_vals = np.unique(scan_vals)
         nll = []
         for val in scan_vals:
             nll.append(0)
-            for cat in __ZCAT__:
+            for cat in zcats: 
                 if cat.valid:
                     if row[0]=='scale':
                         if cat.lead_index == i:
@@ -67,20 +69,22 @@ def plot_1Dscan(plot_dir, scales, __ZCATS__, __CATS__):
                         if cat.sublead_smear_index == i:
                             cat.update(1,1,0,val)
                             nll[-1] += cat.NLL
-        nll = nll - min(nll)
+        nll = [x - min(nll) for x in nll]
+
         fig, axs = plt.subplots(nrows = 2, ncols = 1)
         eta_label = "{} $< |\eta| <$ {}".format(round(row[1],4), round(row[2],4))
-        r9_label = "{} $< R_9 <$ {}".format(row[3], row[4]) if cats.iloc[cat.lead_index,3] != -1 else ""
-        et_label = "{} $< E_T <$ {}".format(row[6], row[7]) if cats.iloc[cat.lead_index,6] != -1 else ""
+        r9_label = "{} $< R_9 <$ {}".format(row[3], row[4]) if row[3] != -1 else ""
+        et_label = "{} $< E_T <$ {}".format(row[6], row[7]) if row[6] != -1 else ""
         axs[1].plot(scan_vals, nll, '')
         axs[1].plot([],[],'',label=eta_label)
-        axs[0].plot(scan_vals[15:35],nll[15:35], '')
+        mindex = nll.index(min(nll))
+        axs[0].plot(scan_vals[mindex-5:mindex+6],nll[mindex-5:mindex+6], '')
         axs[0].set_ylabel('-2$\Delta$NLL * $\Chi^2$')
         axs[1].set_ylabel('-2$\Delta$NLL * $\Chi^2$')
-        axs[0].set_ylabel('1+$\Delta$P' if row[0]=='scale' else '$\Delta\sigma$')
-        axs[1].set_ylabel('1+$\Delta$P' if row[0]=='scale' else '$\Delta\sigma$')
-        axs.legend(loc='best')
-        fig.savefig(plot_dir+"scan1D_{}.png".format(i if i >= 10 else str('0'+str(i)))
+        axs[0].set_xlabel('1+$\Delta$P' if row[0]=='scale' else '$\Delta\sigma$')
+        axs[1].set_xlabel('1+$\Delta$P' if row[0]=='scale' else '$\Delta\sigma$')
+        axs[1].legend(loc='best')
+        fig.savefig(plot_dir+"scan1D_{}.png".format(i if i >= 10 else str('0'+str(i))))
         plt.close(fig)
             
     return

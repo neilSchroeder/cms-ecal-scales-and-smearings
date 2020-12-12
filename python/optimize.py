@@ -28,7 +28,6 @@ import pandas as pd
 import uproot as up
 
 import divide_by_run 
-import nll
 import nll_wClass
 import scale_data
 import scale_data_fast

@@ -450,8 +450,8 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     #It is sometimes necessary to demonstrate a likelihood scan. 
     if _kScan:
         target_function(guess)
-        plotter.plot_1Dscan(plot_dir,_specify_file_, __ZCATS__, __CATS__)
-        return
+        plotter.plot_1Dscan(plot_dir, _specify_file_, __ZCATS__)
+        return []
 
     if start_style == 'scan':
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
