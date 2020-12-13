@@ -1,35 +1,48 @@
 """
 Author: Neil Schroeder, schr1077@umn.edu, neil.raymond.schroeder@cern.ch
 About:
-    This suite of functions will perform the minimization of the scales and smearings
-    using the zcat class defined in python/zcat_class.py 
-    The strategy is to extract the invariant mass disributions in each category for
-    data and MC and make zcats from them. These are then handed off the the loss function
-    while the scipy.optimize.minimze function minimizes the loss function by varying the scales
-    in the defined categories. 
+    This suite of functions will perform the minimization of the scales and 
+    smearings using the zcat class defined in python/zcat_class.py 
+    The strategy is to extract the invariant mass disributions in each category
+    for data and MC and make zcats from them. These are then handed off to the
+    loss function while the scipy.optimize.minimze function minimizes the loss
+    function by varying the scales in the defined categories. 
 
     The main function in minimize(...):
     the required arguments are:
         data -> dataset to be treated as data
         mc   -> dataset to be treated as simulation
-        cats -> a dataframe containing the single electron categories from which to derive the scales
+        cats -> a dataframe containing the single electron categories from 
+                which to derive the scales
     the options are:
-        ignore_cats -> path to a tsv containing pairs of single electron categories to ignore
-        hist_min -> minimum range of the histogram window defined for the Z inv mass line shape
-        hist_max -> maximum range of the histogram window defined for the Z inv mass line shape
-        hist_bin_size -> optional method to set the binning size to a defined value. _kAutoBin must be set to false.
-        start_style -> specifies the method by which the scales and smearings are seeded. Default is via a 1D scan.
-        scan_min -> minimum range of the 1D scan (true value not delta P, i.e. 0.99 not -0.01)
-        scan_max -> maximum range of the 1D scan (true value not delta P, i.e. 1.01 not 0.01)
+        ignore_cats -> path to a tsv containing pairs of single electron 
+                       categories to ignore
+        hist_min -> minimum range of the histogram window defined for the Z 
+                    inv mass line shape
+        hist_max -> maximum range of the histogram window defined for the Z 
+                    inv mass line shape
+        hist_bin_size -> optional method to set the binning size to a defined 
+                         value. _kAutoBin should be set to false.
+        start_style -> specifies the method by which the scales and smearings
+                       are seeded. Default is via a 1D scan.
+        scan_min -> minimum range of the 1D scan 
+                    (true value not delta P, i.e. 0.99 not -0.01)
+        scan_max -> maximum range of the 1D scan 
+                    (true value not delta P, i.e. 1.01 not 0.01)
         scan_step -> step size of the 1D scan
         _kClosure -> bool indicating whether this is a closure test or not
         _scales_ -> path to a tsv file containing scales applied the data
         _kPlot -> activates the plotting feature (currently deprecated).
         plot_dir -> directory to write the plots
-        _kTestMethodAccuracy -> option for validating scales. random scales/smearings will be injected, the minimizer will attempt to recover them.
+        _kTestMethodAccuracy -> option for validating scales. random 
+                                scales/smearings will be injected, the 
+                                minimizer will attempt to recover them.
         _kScan -> activates the 1D scan feature (currently deprecated).
-        _specify_file_ -> path to a tsv of single electron categories and the desired starting values of the scales in the case of start_style='specify'
-        _kAutoBin -> used to deliberately deactivate the auto_binning feature in the zcat invariant mass distributions.
+        _specify_file_ -> path to a tsv of single electron categories and 
+                          the desired starting values of the scales in the 
+                          case of start_style='specify'
+        _kAutoBin -> used to deliberately deactivate the auto_binning feature
+                     in the zcat invariant mass distributions.
         
 """
 ##################################################################################################################
@@ -125,8 +138,11 @@ def smear_mc(mc,smearings):
         energy_1 = np.array(mc['energy_ECAL_ele[1]'].values)
         invMass = np.array(mc['invMass_ECAL_ele'].values)
 
-        smears_0 = np.multiply(mask0, np.random.normal(1, float(row[3]), len(mask0)))
-        smears_1 = np.multiply(mask1, np.random.normal(1, float(row[3]), len(mask1)))
+        smears_0 = np.multiply(mask0, 
+                np.random.normal(1, float(row[3]), len(mask0)))
+        smears_1 = np.multiply(mask1, 
+                np.random.normal(1, float(row[3]), len(mask1)))
+
         smears_0[smears_0 == 0] = 1
         smears_1[smears_1 == 0] = 1
         energy_0 = np.multiply(energy_0, smears_0)
@@ -182,6 +198,7 @@ def extract_cats(data,mc):
                 entries_r9OrEt = data['transverse_energy[0]'].between(cat1[6], cat1[7])&data['transverse_energy[1]'].between(cat2[6], cat2[7])
             else:
                 print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
+                #please forgive my sin of sloth
                 raise KeyboardInterrupt
 
             df = data[entries_eta&entries_r9OrEt]
@@ -259,9 +276,13 @@ def target_function(x, verbose=False):
             if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
                 if not cat.updated: 
                     if __num_smears__ == 0:
-                        cat.update(x[cat.lead_index],x[cat.sublead_index])
+                        cat.update(x[cat.lead_index],
+                                   x[cat.sublead_index])
                     else:
-                        cat.update(x[cat.lead_index],x[cat.sublead_index],x[cat.lead_smear_index],x[cat.sublead_smear_index])
+                        cat.update(x[cat.lead_index],
+                                   x[cat.sublead_index],
+                                   x[cat.lead_smear_index],
+                                   x[cat.sublead_smear_index])
 
                     if verbose:
                         print("------------- zcat info -------------")
@@ -334,7 +355,10 @@ def scan_nll(x, scan_min, scan_max, scan_step):
     return guess
 
 ##################################################################################################################
-def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, start_style='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _kClosure=False, _scales_='', _kPlot=False, plot_dir='./', _kTestMethodAccuracy=False, _kScan=False, _specify_file_ = '', _kAutoBin=True):
+def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, 
+        start_style='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _kClosure=False, 
+        _scales_='', _kPlot=False, plot_dir='./', _kTestMethodAccuracy=False, _kScan=False, 
+        _specify_file_ = '', _kAutoBin=True):
     """ 
     This is the control/main function for minimizing global scales and smearings 
     """
@@ -346,7 +370,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
         print("[ERROR][python/nll.py][minimize] The allowed options are {}.".format(allowed_start_styles))
         return []
 
-    #this is the main function used to handle the minimization
+    #we heavily rely on globals for passing around info
     global __CATS__
     global __num_scales__
     global __num_smears__
@@ -362,6 +386,7 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     __MAX_RANGE__ = hist_max
     __BIN_SIZE__ = hist_bin_size
     
+    #count the number of categories which are a scale or a smearing
     for i,row in cats.iterrows():
         if row[0] == 'scale':
             __num_scales__ += 1
@@ -380,45 +405,64 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
         gc.collect()
     else:
         if cats.iloc[0,3] != -1 and cats.iloc[0,5] == -1:
-            drop_list = ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'runNumber']
+            drop_list = ['energy_ECAL_ele[0]', 
+                         'energy_ECAL_ele[1]', 
+                         'gainSeedSC[0]', 
+                         'gainSeedSC[1]', 
+                         'runNumber']
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
             mc.drop(drop_list, axis=1, inplace=True)
         else:
-            drop_list = ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'R9Ele[0]', 'R9Ele[1]', 'runNumber']
+            drop_list = ['energy_ECAL_ele[0]', 
+                         'energy_ECAL_ele[1]', 
+                         'R9Ele[0]', 
+                         'R9Ele[1]', 
+                         'runNumber']
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
             mc.drop(drop_list, axis=1, inplace=True)
     
     print("[INFO][python/nll] extracting lists from category definitions")
 
-    gc.collect()
-    extract_cats(data, mc)
+    gc.collect() #just in case
 
+    #extract the categories
+    extract_cats(data, mc)
 
     #set up boundaries on starting location of scales
     bounds = []
     if _kClosure: bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
-    elif _kTestMethodAccuracy: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0., 0.05) for i in range(__num_smears__)]
-    else: bounds = [(0.96,1.04) for i in range(__num_scales__)] + [(0.002, 0.05) for i in range(__num_smears__)]
+    elif _kTestMethodAccuracy: 
+        bounds = [(0.96,1.04) for i in range(__num_scales__)] 
+        bound += [(0., 0.05) for i in range(__num_smears__)]
+    else: 
+        bounds = [(0.96,1.04) for i in range(__num_scales__)] 
+        bound += [(0.002, 0.05) for i in range(__num_smears__)]
 
     #it is important to test the accuracy with which a known scale can be recovered,
     #here we assign the known scales and inject them.
     scales_to_inject = []
     smearings_to_inject = []
     if _kTestMethodAccuracy:
-        scales_to_inject = np.random.uniform(low=0.99*np.ones(__num_scales__),high=1.01*np.ones(__num_scales__)).ravel().tolist()
+        scales_to_inject = np.random.uniform(low=0.99*np.ones(__num_scales__),
+                high=1.01*np.ones(__num_scales__)).ravel().tolist()
         scales_to_inject = np.array([round(x,6) for x in scales_to_inject]).tolist()
         if __num_smears__ > 0:
-            smearings_to_inject = np.random.uniform(low=0.009*np.ones(__num_smears__),high=0.011*np.ones(__num_smears__)).ravel().tolist()
+            smearings_to_inject = np.random.uniform(low=0.009*np.ones(__num_smears__),
+                    high=0.011*np.ones(__num_smears__)).ravel().tolist()
             scales_to_inject.extend(smearings_to_inject)
         print("[INFO][python/nll] the injected scales and smearings are: {}".format(scales_to_inject))
         for cat in __ZCATS__:
             if cat.valid:
                 if __num_smears__ > 0:
-                    cat.inject(scales_to_inject[cat.lead_index], scales_to_inject[cat.sublead_index], scales_to_inject[cat.lead_smear_index], scales_to_inject[cat.sublead_smear_index])
+                    cat.inject(scales_to_inject[cat.lead_index], 
+                               scales_to_inject[cat.sublead_index], 
+                               scales_to_inject[cat.lead_smear_index], 
+                               scales_to_inject[cat.sublead_smear_index])
                 else:
-                    cat.inject(scales_to_inject[cat.lead_index], scales_to_inject[cat.sublead_index],0,0)
+                    cat.inject(scales_to_inject[cat.lead_index], 
+                               scales_to_inject[cat.sublead_index],0,0)
 
 
     #deactivate invalid categories
@@ -462,12 +506,18 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
         xlow_smears = [0.008 for i in range(__num_smears__)]
         xhigh_smears = [0.025 for i in range(__num_smears__)]
 
-        #set the initial guess: random for a regular derivation and unity for a closure derivation
-        guess_scales = np.random.uniform(low=xlow_scales,high=xhigh_scales).ravel().tolist()
-        if _kClosure: guess_scales = [1. for i in range(__num_scales__)]
-        guess_smears = np.random.uniform(low=xlow_smears,high=xhigh_smears).ravel().tolist()
-        if _kClosure or _kTestMethodAccuracy: guess_smears = [0.0 for i in range(__num_smears__)]
-        if _kTestMethodAccuracy or not _kClosure: guess_scales.extend(guess_smears)
+        #set the initial guess: random for a regular derivation and unity 
+        #for a closure derivation
+        guess_scales = np.random.uniform(low=xlow_scales,
+                high=xhigh_scales).ravel().tolist()
+        if _kClosure: 
+            guess_scales = [1. for i in range(__num_scales__)]
+        guess_smears = np.random.uniform(low=xlow_smears,
+                high=xhigh_smears).ravel().tolist()
+        if _kClosure or _kTestMethodAccuracy: 
+            guess_smears = [0.0 for i in range(__num_smears__)]
+        if _kTestMethodAccuracy or not _kClosure: 
+            guess_scales.extend(guess_smears)
         guess = guess_scales
 
     if start_style == 'specify':
@@ -475,18 +525,27 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
         guess = scan_file_df.loc[:,9].values
         guess = np.append(guess,[0.005 for x in range(__num_smears__)])
         
-    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
+    print("[INFO][python/nll] the initial guess is {} 
+            with nll {}".format(guess,target_function(guess)))
 
-    min_step_size = 0.00001 if not _kClosure else 0.000001
-    #optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds, options={"eps":min_step_size}) 
-    optimum = minz(target_function, np.array(guess), method="L-BFGS-B", bounds=bounds) 
+    optimum = minz(target_function,
+                   np.array(guess), 
+                   method="L-BFGS-B", 
+                   bounds=bounds) 
 
-    print("[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:")
+    print("[INFO][python/nll] the optimal values returned by 
+            scypi.optimize.minimize are:")
     print(optimum)
 
     if not optimum.success: 
+        print("#"*40)
+        print("#"*40)
         print("[ERROR] MINIMIZATION DID NOT SUCCEED")
+        print("[ERROR] Please review the output and resubmit")
+        print("#"*40)
+        print("#"*40)
         return []
+
     if _kTestMethodAccuracy:
         ret = optimum.x
         for i in range(len(scales_to_inject)): 

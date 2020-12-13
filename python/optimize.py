@@ -240,8 +240,8 @@ def main():
     if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
 
-    new_scales = scales_out.replace("step", "onlystep")
-    new_smears = scales_out.replace("scales", "smearings")
+    new_scales = os.path.dirname(scales_out)+os.path.basename(scales_out).replace("step", "onlystep")
+    new_smears = os.path.dirname(scales_out)+os.path.basename(scales_out).replace("scales", "smearings")
 
     write_files.write_scales(scales_smears[:num_scales], cats, new_scales)
     if not args.closure: write_files.write_smearings(scales_smears, cats, new_smears)
