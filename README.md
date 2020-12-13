@@ -9,8 +9,7 @@ The goal of this software is to improve usability, speed, and performance of the
 Additionally, this software serves as a portion of the thesis of Neil Schroeder from the University of Minnesota, Twin Cities School of Physics and Astronomy.
 
 ## To Do
-Add python/condor_helper.py to offer a default/automated method of submitting the job to condor  
-Add ignore feature to python/nll_wClass.py  
+
 
 ## Features
 

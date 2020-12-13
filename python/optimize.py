@@ -25,6 +25,7 @@ import gc
 import numpy as np
 import os
 import pandas as pd
+import sys
 import uproot as up
 
 import divide_by_run 
@@ -34,6 +35,7 @@ import scale_data_fast
 import pruner
 import time_stability
 import write_files
+import condor_handler
 
 def main():
 ###############################################################################
@@ -92,8 +94,16 @@ def main():
                     	help="Turns off the auto binning feature (using Freedman-Diaconis method)")
     parser.add_argument("--bin_size", default=0.25, type=float,
                     	help="Size of bins for binned NLL evaluation")
+    parser.add_argument("--condor", default=False, action='store_true',
+                        help="Submit this job to condor")
+    parser.add_argument("--queue", default='tomorrow',
+                        help="flavour of submitted job")
+    parser.add_argument("--from_condor", default=False, action='store_true',
+                        help="[NOT FOR USER] flag added by condor_handler to indicate this has been submitted from condor")
 
     args = parser.parse_args()
+    print("[INFO] welcome to SS_PyMin")
+    print("[INFO] you have run the following command:")
 
     step = -1
     if args.cats is not None: step = sum([i*(args.cats.find(str(i)) != -1) for i in range(8)])
@@ -101,10 +111,33 @@ def main():
 ###############################################################################
 
 ###############################################################################
+    #submit this job to condor
+    cmd = ''
+    for arg in sys.argv:
+        if ' ' in arg:
+            cmd += '"{}"  '.format(arg)
+        else:
+            cmd +="{}  ".format(arg)
+    print(cmd) 
+    if args.condor and not args.from_condor:
+        #remove the condor/queue information
+        if cmd.find('--condor') != -1:
+            cmd = cmd.replace("--condor ","")
+
+        condor_handler.manage(cmd, args.output, args.queue) 
+        return
+
+###############################################################################
+
+###############################################################################
     #if you need to rewrite a scales file after making changes by hand
     # you can use this option to do so.
     if args.rewrite:
-        scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
+        scales_out = os.getcwd()+"/datFiles/step"+str(step)+"_"+args.output+"_scales.dat"
+        if args.scales != '':
+            scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
+        if args.from_condor:
+            scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
         if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
         else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
         new_scales = scales_out.replace("step", "onlystep")
@@ -200,6 +233,10 @@ def main():
     #write the onlystepX file and smearings file
 
     scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
+    if args.scales != '':
+        scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
+    if args.from_condor:
+        scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
     if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
 

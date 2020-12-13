@@ -353,7 +353,6 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
     global __MIN_RANGE__
     global __MAX_RANGE__
     global __BIN_SIZE__
-    global __IGNORE__
     global __AUTO_BIN__
     global __GUESS__
     global __ZCATS__
