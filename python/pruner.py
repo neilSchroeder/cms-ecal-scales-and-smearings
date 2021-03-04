@@ -26,7 +26,7 @@ def prune(files, out, out_dir):
         #drop events in the transition region or outside the tracker
         transition_mask_0 = ~df['etaEle[0]'].between(1.4442, 1.566)&(~df['etaEle[0]'].between(-1.566, -1.4442))
         transition_mask_1 = ~df['etaEle[1]'].between(1.4442, 1.566)&(~df['etaEle[1]'].between(-1.566, -1.4442))
-        tracker_mask_0 = ~df['etaEle[0]'].between(2.5, 10)&(~df['etaEle[0]'].between(-10, -2.5))
+        tracker_mask_0 = ~df['etaEle[0]'].between(2.5, 10)&(~df['etaEle[0]'].between(-10, -2.5)) 
         tracker_mask_1 = ~df['etaEle[1]'].between(2.5, 10)&(~df['etaEle[1]'].between(-10, -2.5))
         df = df.loc[transition_mask_0&transition_mask_1&tracker_mask_0&tracker_mask_1]
 

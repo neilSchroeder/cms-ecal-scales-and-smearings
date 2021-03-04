@@ -7,234 +7,95 @@ from collections import OrderedDict
 ##################################################################################################################
 def congruentCategories(last, this, nameLast, nameThis):
     ret = False
-    if nameLast.find('step1') != -1:
-        #compare eta
-        if float(round(last[2],4)) <= float(round(this[2],4)):
-            if float(round(last[3],4)) >= float(round(this[3],4)):
+    """
+    0: runMin
+    1: runMax
+    2: etaMin
+    3: etaMax
+    4: r9Min
+    5: r9Max
+    6: EtMin
+    7: EtMax
+    8: Gain
+    9: Scale
+    10: Err
+    """
+    #this is finer than last categories:
+    ret_eta = False
+    if float(round(last[2],4)) <= float(round(this[2],4)):
+        if float(round(last[3],4)) >= float(round(this[3],4)):
+            ret_eta=True
+            if nameLast.find('step1') != -1:
                 return True
-    elif nameLast.find('step2') != -1:
-        #compare eta
-        etaRet = False
-        if float(round(last[2],4)) <= float(round(this[2],4)):
-            if float(round(last[3],4)) >= float(round(this[3],4)):
-                etaRet = True
-        #compare R9
-        r9Ret = False
-        if float(round(last[4],4)) <= float(round(this[4],4)):
-            if float(round(last[5],4)) >= float(round(this[5],4)):
-                r9Ret = True
-        ret = etaRet and r9Ret
-    elif nameLast.find('step3') != -1 or nameLast.find('step5') != -1:
-        if nameThis.find('gain') != -1:
-            if float(round(this[2],4)) <= float(round(last[2],4)):
-                if float(round(this[3],4)) >= float(round(last[3],4)):
-                    return True
-        else:
-            etaRet = False
-            if float(round(last[2],4)) <= float(round(this[2],4)):
-                if float(round(last[3],4)) >= float(round(this[3],4)):
-                    etaRet = True
-            #compare R9
-            r9Ret = False
-            if float(round(this[4],4)) <= float(round(last[4],4)):
-                if float(round(this[5],4)) >= float(round(last[5],4)):
-                    r9Ret = True
-
-            return r9Ret and etaRet
-
-    elif nameLast.find('step4') != -1 and nameThis.find('step4') != -1:
-        if float(round(this[2],4)) <= float(round(last[2],4)) and float(round(this[3],4)) >= float(round(last[3],4)):
-            if float(round(this[6],4)) <= float(round(last[6],4)) and float(round(this[7],4)) >= float(round(last[7],4)):
-                return True
-            if float(round(last[6],4)) <= float(round(this[6],4)) and float(round(last[7],4)) >= float(round(this[7],4)):
-                return True
-
-
-        
-    elif nameThis.find('step5') != -1:
-        if float(round(last[2],4)) <= float(round(this[2])) and float(round(last[3],4)) <= float(round(this[3],4)):
-            if float(round(last[6],4)) == float(round(this[6],4)) and float(round(last[7],4)) >= float(round(this[7],4)):
-                return True
-    else:
-        print("[ERROR] function 'congruentCategories()' in module 'python/combineSteps.py' not configured for this setup.")
-        ret = -999
+    if float(round(last[2],4)) >= float(round(this[2],4)):
+        if float(round(last[3],4)) <= float(round(this[3],4)):
+            ret_eta=True
     
-    return ret
+    ret_r9 = False
+    if float(round(last[4],4)) <= float(round(this[4],4)):
+        if float(round(last[5],5)) >= float(round(this[5],4)):
+            ret_r9 = True
+    if float(round(last[4],4)) >= float(round(this[4],4)):
+        if float(round(last[5],5)) <= float(round(this[5],4)):
+            ret_r9 = True
+
+    ret_gain = True
+    if float(round(last[8],4)) != 0:
+        ret_gain = False
+        if float(round(last[8],4)) == float(round(this[8],4)):
+            ret_gain = True
+
+    ret_et = False
+    if float(round(last[6],4)) <= float(round(this[6],4)):
+        if float(round(last[7],4)) >= float(round(this[7],4)):
+                ret_et=True
+    if float(round(last[6],4)) >= float(round(this[6],4)):
+        if float(round(last[7],4)) <= float(round(this[7],4)):
+                ret_et=True
+
+    if ret_eta and ret_r9 and ret_gain and ret_et:
+        return True
+
+    if nameLast.find('step2') != -1:
+        return ret_r9 and ret_eta
+
+    if nameThis.find('gain') != -1 or nameThis.find('Gain') != -1:
+        if nameLast.find('gain') != -1 or nameLast.find('Gain') != -1:
+            return ret_eta and ret_gain
+        else:
+            return ret_eta
+        
+    return False
 
 ##################################################################################################################
 def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
-    if thisStep.find('step2closure') != -1 and lastStep.find('step2') == -1: #not setep 4 
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
+    thisDict['runMin'].append(int(rowLast[0]))
+    thisDict['runMax'].append(int(rowLast[1]))
+
+    if round(rowLast[2],4) <= round(rowThis[2],4) and round(rowLast[3]) >= round(rowThis[3],4):
         thisDict['etaMin'].append(round(rowThis[2],4))
         thisDict['etaMax'].append(round(rowThis[3],4))
-        
-        thisDict['r9Min'].append(rowThis[4])
-        if round(float(rowThis[5]),4) == 1.00:
-            thisDict['r9Max'].append('100.000')
-        else:
-            thisDict['r9Max'].append(rowThis[5])
-        
-        thisDict['etMin'].append(rowThis[6])
-        thisDict['etMax'].append(rowThis[7])
-        
-        thisDict['gain'].append(int(rowThis[8]))
-        
-        thisDict['scale'].append(round(float(rowThis[9])*float(rowLast[9]),6))
-        
-        if thisStep.find('step2') != -1:
-            thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-        else:
-            thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-
-    elif thisStep.find('step3') != -1:
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
-        thisDict['etaMin'].append(round(rowThis[2],4))
-        thisDict['etaMax'].append(round(rowThis[3],4))
-        
-        thisDict['r9Min'].append(rowThis[4])
-        thisDict['r9Max'].append(rowThis[5])
-        
-        thisDict['etMin'].append(rowThis[6])
-        thisDict['etMax'].append(rowThis[7])
-        
-        thisDict['gain'].append(int(rowThis[8]))
-        
-        thisDict['scale'].append(round(float(rowThis[9])*float(rowLast[9]),6))
-        
-        thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-
-    elif thisStep.find('step6') != -1 and lastStep.find('step4') != -1: #not setep 4 
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
-        thisDict['etaMin'].append(round(rowLast[2],4))
-        thisDict['etaMax'].append(round(rowLast[3],4))
-        
-        thisDict['r9Min'].append(rowLast[4])
-        if round(float(rowLast[5]),4) == 1.00:
-            thisDict['r9Max'].append('100.000')
-        else:
-            thisDict['r9Max'].append(rowLast[5])
-        
-        thisDict['etMin'].append(rowLast[6])
-        thisDict['etMax'].append(rowLast[7])
-        
-        thisDict['gain'].append(int(rowThis[8]))
-        
-        thisDict['scale'].append(round(float(rowThis[9])*float(rowLast[9]),6))
-        
-        if thisStep.find('step2') != -1:
-            thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-        else:
-            thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-
-
-    elif (thisStep.find('step4') != -1 ) and thisStep.find('et') != -1 and lastStep.find('step3') != -1: #step 4 
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
-        thisDict['etaMin'].append(round(rowLast[2],4))
-        thisDict['etaMax'].append(round(rowLast[3],4))
-        
-        thisDict['r9Min'].append(rowLast[4])
-        thisDict['r9Max'].append(rowLast[5])
-        
-        thisDict['etMin'].append(rowThis[6])
-        thisDict['etMax'].append(rowThis[7])
-        
-        thisDict['gain'].append(int(rowThis[8]))
-        
-        thisDict['scale'].append(float(rowThis[9])*float(rowLast[9]))
-        thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-
-    elif (thisStep.find('step4') != -1 ) and thisStep.find('et') != -1 and lastStep.find('step4') != -1: #step 4 
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
-        thisDict['etaMin'].append(round(rowLast[2],4))
-        thisDict['etaMax'].append(round(rowLast[3],4))
-        
-        thisDict['r9Min'].append(rowLast[4])
-        thisDict['r9Max'].append(rowLast[5])
-
-        if rowLast[7]-rowLast[6] > rowThis[7]-rowThis[6]:
-            thisDict['etMin'].append(rowThis[6])
-            thisDict['etMax'].append(rowThis[7])
-        else:
-            thisDict['etMin'].append(rowLast[6])
-            thisDict['etMax'].append(rowLast[7])
-        
-        thisDict['gain'].append(int(rowThis[8]))
-        
-        thisDict['scale'].append(float(rowThis[9])*float(rowLast[9]))
-        thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-
-    elif (thisStep.find('step5') != -1 ) and thisStep.find('et') != -1: #step 4 
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
-        thisDict['etaMin'].append(round(rowLast[2],4))
-        thisDict['etaMax'].append(round(rowLast[3],4))
-        
-        thisDict['r9Min'].append(rowLast[4])
-        thisDict['r9Max'].append(rowLast[5])
-        
-        thisDict['etMin'].append(rowLast[6])
-        thisDict['etMax'].append(rowLast[7])
-        
-        thisDict['gain'].append(int(rowLast[8]))
-        
-        thisDict['scale'].append(float(rowThis[9])*float(rowLast[9]))
-        thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-
-    elif thisStep.find('step4') != -1 and thisStep.find('gain') != -1: #step 4 
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
-        thisDict['etaMin'].append(round(rowLast[2],4))
-        thisDict['etaMax'].append(round(rowLast[3],4))
-        
-        thisDict['r9Min'].append(rowLast[4])
-        thisDict['r9Max'].append(rowLast[5])
-        
-        thisDict['etMin'].append(rowLast[6])
-        thisDict['etMax'].append(rowLast[7])
-        
-        thisDict['gain'].append(int(rowThis[8]))
-        
-        thisDict['scale'].append(float(rowThis[9])*float(rowLast[9]))
-        thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-
     else:
-        #for step4 you have to use the previous step's categories everywhere
-        #this is because step4 is coarser than step2 or step3
-        thisDict['runMin'].append(int(rowLast[0]))
-        thisDict['runMax'].append(int(rowLast[1]))
-        
-        thisDict['etaMin'].append(round(rowThis[2],4))
-        thisDict['etaMax'].append(round(rowThis[3],4))
-        
-        thisDict['r9Min'].append(rowThis[4])
-        if round(float(rowThis[5]),4) == 1.00:
-            thisDict['r9Max'].append('10.000')
-        else:
-            thisDict['r9Max'].append(rowThis[5])
-        
-        thisDict['etMin'].append(rowThis[6])
-        thisDict['etMax'].append(rowThis[7])
-        
-        thisDict['gain'].append(int(rowThis[8]))
-        
-        thisDict['scale'].append(round(float(rowLast[9])*float(rowThis[9]),6))
-        
-        if thisStep.find('step2') != -1:
-            thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
-        else:
-            thisDict['err'].append(round(np.sqrt(float(rowThis[10])**2 + float(rowLast[10]/100)**2),6))
+        thisDict['etaMin'].append(round(rowLast[2],4))
+        thisDict['etaMax'].append(round(rowLast[3],4))
+
+    if round(rowLast[4],4) <= round(rowThis[4],4) and round(rowLast[5],4) >= round(rowThis[5],4):
+        thisDict['r9Min'].append(round(rowThis[4],4))
+        thisDict['r9Max'].append(round(rowThis[5],4))
+    else:
+        thisDict['r9Min'].append(round(rowLast[4],4))
+        thisDict['r9Max'].append(round(rowLast[5],4))
+
+    if round(rowLast[6],4) <= round(rowThis[6],4) and round(rowLast[7],4) >= round(rowThis[7],4):
+        thisDict['etMin'].append(round(rowThis[6],4))
+        thisDict['etMax'].append(round(rowThis[7],4))
+    else:
+        thisDict['etMin'].append(round(rowLast[6],4))
+        thisDict['etMax'].append(round(rowLast[7],4))
+
+    thisDict['gain'].append(int(rowThis[8]))
+    thisDict['scale'].append(round(float(rowThis[9])*float(rowLast[9]),6))
+    thisDict['err'].append(5e-5)
 
 ##################################################################################################################
 def writeJsonFromDF(thisDF,outFile):
@@ -297,7 +158,6 @@ def combine(thisStep, lastStep, outFile):
                 #builds the new categories by reference in dictForDf
             if kCongruent:
                 addNewCategory(rowLast, rowThis, dictForDf, lastStep, thisStep)
-
 
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(outFile, sep='	', header=False,index=False)

@@ -64,6 +64,8 @@ def main():
                     	help="Max value for scan start")
     parser.add_argument("--scan_step", default=0.001, type=float,
                     	help="Step size for scan start")
+    parser.add_argument("--min_step_size", default=None, 
+                        help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.")
     parser.add_argument("--prune", default=False, action='store_true',
                     	help="prune down the data and mc to keep memory usage low")
     parser.add_argument("--pruned_file_name", 
@@ -106,7 +108,8 @@ def main():
     print("[INFO] you have run the following command:")
 
     step = -1
-    if args.cats is not None: step = sum([i*(args.cats.find(str(i)) != -1) for i in range(8)])
+    if args.cats is not None: 
+        step = int(args.cats[args.cats.find("step")+4])
 
 ###############################################################################
 
@@ -217,6 +220,7 @@ def main():
                                  round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
                                  args.start_style,
                                  args.scan_min, args.scan_max, args.scan_step,
+                                 args.min_step_size,
                                  args.closure, args.scales, 
                                  args.plot, args.plot_dir,
                                  args.test_method_accuracy,
@@ -240,8 +244,8 @@ def main():
     if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
 
-    new_scales = os.path.dirname(scales_out)+os.path.basename(scales_out).replace("step", "onlystep")
-    new_smears = os.path.dirname(scales_out)+os.path.basename(scales_out).replace("scales", "smearings")
+    new_scales = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("step", "onlystep")
+    new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
 
     write_files.write_scales(scales_smears[:num_scales], cats, new_scales)
     if not args.closure: write_files.write_smearings(scales_smears, cats, new_smears)

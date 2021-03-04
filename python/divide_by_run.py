@@ -25,10 +25,6 @@ def divide(data, min_num_events):
                     break
             bins.append( (runs[i], runs[high_edge]) )
             i = high_edge + 1
-        print(bins)
-
-
-
 
     print(bins)
     return bins

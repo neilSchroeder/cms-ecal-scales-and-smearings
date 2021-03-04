@@ -87,7 +87,7 @@ class zcat:
             temp_mc = temp_mc[temp_mc >= self.hist_min]
             temp_mc = temp_mc[temp_mc <= self.hist_max]
             if len(temp_data) < 10 or len(temp_mc) < 1000: 
-                print("WOAH0")
+                print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
                 self.NLL = 0
                 self.valid=False
                 del self.data
@@ -96,7 +96,7 @@ class zcat:
                 del temp_mc
                 return
             if len(temp_mc) < 2000 and self.lead_index != self.sublead_index: 
-                print("WOAH1")
+                print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics in MC".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
                 self.NLL = 0
                 self.valid=False
                 del self.data
@@ -123,7 +123,7 @@ class zcat:
         binned_mc,edges = numba_hist.numba_histogram(temp_mc,num_bins)
 
         if np.sum(binned_data) < 10:
-            print("WOAH2")
+            print("[INFO][zcat] category ({},{}) was deactivated due to insufficient statistics in data".format(self.lead_index, self.sublead_index))
             self.NLL = 0
             self.valid=False
             del self.data
@@ -131,8 +131,7 @@ class zcat:
             del temp_mc
             return
         if np.sum(binned_mc) < 1000 and self.lead_index==self.sublead_index:
-            print("WOAH3")
-            print(binned_mc)
+            print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics in MC".format(self.lead_index, self.sublead_index, len(temp_data),len(temp_mc)))
             self.NLL = 0
             self.valid=False
             del self.data
@@ -140,7 +139,7 @@ class zcat:
             del temp_mc
             return
         if np.sum(binned_mc) < 2000 and self.lead_index!=self.sublead_index:
-            print("WOAH4")
+            print("[INFO][zcat] category ({},{}) was deactivated due to insufficient statistics in MC".format(self.lead_index, self.sublead_index))
             self.NLL = 0
             self.valid=False
             del self.data
@@ -174,5 +173,10 @@ class zcat:
 
         self.NLL = -2*(nll+penalty)*chi_sqr
         self.weight = min(np.sum(binned_data),np.sum(binned_mc))
+        if np.isnan(self.NLL):
+            self.valid = False
+            self.NLL = 0
+            del self.data
+            del self.mc
         return
 

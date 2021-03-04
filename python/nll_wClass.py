@@ -98,8 +98,8 @@ def add_transverse_energy(data,mc):
 ##################################################################################################################
 def get_smearing_index(cat_index):
     #this function takes in a category index and returns the associated smearing index
-    r9_min = 0 if __CATS__.iloc[int(cat_index),3] < 0.96 else 0.96
-    r9_max = 0.96 if __CATS__.iloc[int(cat_index),4] <= 0.96 else 10
+    r9_min = 0 if __CATS__.iloc[int(cat_index),3] < 0.94 else 0.94
+    r9_max = 0.94 if __CATS__.iloc[int(cat_index),4] <= 0.94 else 10
     eta_min = __CATS__.iloc[int(cat_index),1]
     eta_max = __CATS__.iloc[int(cat_index),2]
     truth_type = __CATS__.loc[:,0] == 'smear'
@@ -244,7 +244,7 @@ def extract_cats(data,mc):
             df = mc[entries_eta&entries_r9OrEt]
             mass_list_mc = np.array(df['invMass_ECAL_ele'])
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc) < 10*len(mass_list_data) and ((len(mass_list_mc) >= 1000 and index1 == index2) or (len(mass_list_mc) >= 2000 and index1 != index2)):
+            while len(mass_list_mc) < 100*len(mass_list_data) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 200000:
                 mass_list_mc = np.append(mass_list_mc,mass_list_mc)
 
             #drop any "bad" entries
@@ -299,7 +299,7 @@ def target_function(x, verbose=False):
         print("diagonal nll vals:", [cat.NLL*cat.weight/tot for cat in __ZCATS__ if cat.lead_index == cat.sublead_index and cat.valid])
         print("using scales:",x)
         print("--------------------------------------")
-    return ret/tot
+    return ret/tot if tot != 0 else 9e30
 
 ##################################################################################################################
 def scan_nll(x, scan_min, scan_max, scan_step):
@@ -318,24 +318,26 @@ def scan_nll(x, scan_min, scan_max, scan_step):
                 max_index = cat.lead_index
                 max_nll = cat.NLL*cat.weight/tot
         scanned.append(max_index)
-        x = np.arange(scan_min,scan_max,scan_step)
-        my_guesses = []
-        #generate a few guesses             
-        for j,val in enumerate(x): 
-            guess[max_index] = val
-            my_guesses.append(guess.copy())
-        #evaluate nll for each guess
-        nll_vals = np.array([ target_function(g) for g in my_guesses])
-        mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
-        x = x[mask]
-        nll_vals = nll_vals[mask]
-        guess[max_index] = x[nll_vals.argmin()]
-        print("[INFO][python/nll] best guess for scale {} is {}".format(max_index, guess[max_index]))
+        if max_index != -1:
+            x = np.arange(scan_min,scan_max,scan_step)
+            my_guesses = []
+            #generate a few guesses             
+            for j,val in enumerate(x): 
+                guess[max_index] = val
+                my_guesses.append(guess.copy())
+            #evaluate nll for each guess
+            nll_vals = np.array([ target_function(g) for g in my_guesses])
+            mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
+            x = x[mask]
+            nll_vals = nll_vals[mask]
+            if len(nll_vals) > 0:
+                guess[max_index] = x[nll_vals.argmin()]
+                print("[INFO][python/nll] best guess for scale {} is {}".format(max_index, guess[max_index]))
 
     if __num_smears__ > 0:
         for i in range(__num_scales__,__num_scales__+__num_smears__,1):
             #smearings are different, so use different values for low,high,step 
-            low = 0.005
+            low = 0.000
             high = 0.025
             step = 0.0005
             x = np.arange(low,high,step)
@@ -349,16 +351,18 @@ def scan_nll(x, scan_min, scan_max, scan_step):
             mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
             x = x[mask]
             nll_vals = nll_vals[mask]
-            guess[i] = x[nll_vals.argmin()]
-            print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
+            if len(nll_vals) > 0:
+                guess[i] = x[nll_vals.argmin()]
+                print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
 
+    print("[INFO][python/nll] scan complete")
     return guess
 
 ##################################################################################################################
 def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, 
-        start_style='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, _kClosure=False, 
-        _scales_='', _kPlot=False, plot_dir='./', _kTestMethodAccuracy=False, _kScan=False, 
-        _specify_file_ = '', _kAutoBin=True):
+        start_style='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, min_step_size=None, 
+        _kClosure=False, _scales_='', _kPlot=False, plot_dir='./', _kTestMethodAccuracy=False, 
+        _kScan=False, _specify_file_ = '', _kAutoBin=True):
     """ 
     This is the control/main function for minimizing global scales and smearings 
     """
@@ -432,13 +436,16 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
 
     #set up boundaries on starting location of scales
     bounds = []
-    if _kClosure: bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
+    if _kClosure: 
+        bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
+        if cats.iloc[1,3] != -1 or cats.iloc[1,5] != -1:
+            bounds=[(0.95,1.05) for i in range(__num_scales__)]
     elif _kTestMethodAccuracy: 
         bounds = [(0.96,1.04) for i in range(__num_scales__)] 
-        bound += [(0., 0.05) for i in range(__num_smears__)]
+        bounds += [(0., 0.05) for i in range(__num_smears__)]
     else: 
         bounds = [(0.96,1.04) for i in range(__num_scales__)] 
-        bound += [(0.002, 0.05) for i in range(__num_smears__)]
+        bounds += [(0.000, 0.05) for i in range(__num_smears__)]
 
     #it is important to test the accuracy with which a known scale can be recovered,
     #here we assign the known scales and inject them.
@@ -525,16 +532,17 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
         guess = scan_file_df.loc[:,9].values
         guess = np.append(guess,[0.005 for x in range(__num_smears__)])
         
-    print("[INFO][python/nll] the initial guess is {} 
-            with nll {}".format(guess,target_function(guess)))
-
+    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
+    min_step_dict = {}
+    if min_step_size is not None:
+        min_step_dict = {"eps":float(min_step_size)}
     optimum = minz(target_function,
                    np.array(guess), 
                    method="L-BFGS-B", 
-                   bounds=bounds) 
+                   bounds=bounds,
+                   options=min_step_dict) 
 
-    print("[INFO][python/nll] the optimal values returned by 
-            scypi.optimize.minimize are:")
+    print("[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:")
     print(optimum)
 
     if not optimum.success: 
