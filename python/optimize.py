@@ -46,6 +46,8 @@ def main():
                     	help="input file containing paths to data and mc")
     parser.add_argument("-s","--scales",
                     	help="path to scales file to apply to data")
+    parser.add_argument("--smearings", default=None,
+                        help="path to smearings file to apply to MC")
     parser.add_argument("-c","--cats", 
                     	help="path to file describing categories to use in minimization")
     parser.add_argument("-o","--output", default='',
@@ -216,7 +218,7 @@ def main():
 ###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = nll_wClass.minimize(data, mc, cats, args.ingore,
+    scales_smears = nll_wClass.minimize(data, mc, cats, args.ingore, args.smearings,
                                  round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
                                  args.start_style,
                                  args.scan_min, args.scan_max, args.scan_step,

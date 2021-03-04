@@ -359,7 +359,7 @@ def scan_nll(x, scan_min, scan_max, scan_step):
     return guess
 
 ##################################################################################################################
-def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin_size=0.25, 
+def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_max=100, hist_bin_size=0.25, 
         start_style='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, min_step_size=None, 
         _kClosure=False, _scales_='', _kPlot=False, plot_dir='./', _kTestMethodAccuracy=False, 
         _kScan=False, _specify_file_ = '', _kAutoBin=True):
@@ -398,9 +398,13 @@ def minimize(data, mc, cats, ingore_cats='', hist_min=80, hist_max=100, hist_bin
             __num_smears__ += 1
 
     #if this a closure step smear the mc with static smearings and derive back only the scales
+    if smearings is not None:
+        mc = smear_mc(mc, smearings)
+
     if _kClosure:
-        _smears_ = _scales_.replace('scales','smearings')
-        mc = smear_mc(mc, _smears_)
+        if smearings is None: 
+            _scales_.replace('scales','smearings')
+            mc = smear_mc(mc, _smears_)
         __num_smears__ = 0
 
     #check to see if transverse energy columns need to be added
