@@ -98,17 +98,23 @@ def add_transverse_energy(data,mc):
 ##################################################################################################################
 def get_smearing_index(cat_index):
     #this function takes in a category index and returns the associated smearing index
-    r9_min = 0 if __CATS__.iloc[int(cat_index),3] < 0.94 else 0.94
-    r9_max = 0.94 if __CATS__.iloc[int(cat_index),4] <= 0.94 else 10
+    r9_min = 0 if __CATS__.iloc[int(cat_index),3] < 0.96 else 0.96
+    r9_max = 0.96 if __CATS__.iloc[int(cat_index),4] <= 0.96 else 10
     eta_min = __CATS__.iloc[int(cat_index),1]
     eta_max = __CATS__.iloc[int(cat_index),2]
+    et_min = __CATS__.iloc[int(cat_index),6]
+    et_max = __CATS__.iloc[int(cat_index),7]
     truth_type = __CATS__.loc[:,0] == 'smear'
     truth_eta_min = __CATS__.loc[:,1] == eta_min
     truth_eta_max = __CATS__.loc[:,2] == eta_max
     truth_r9_min = __CATS__.loc[:,3] == r9_min
     truth_r9_max = __CATS__.loc[:,4] == r9_max
+    truth_et_min = __CATS__.loc[:,6] == et_min
+    truth_et_max = __CATS__.loc[:,7] == et_max
     if __CATS__.iloc[int(cat_index),4] == -1:
         #there are no r9 categories in an et dependent scale minimization
+        if __CATS__.iloc[int(cat_index),5] == -1:
+            return __CATS__.loc[truth_type&truth_eta_min&truth_eta_max&truth_et_min&truth_et_max].index[0]
         return __CATS__.loc[truth_type&truth_eta_min&truth_eta_max].index[0]
     else:
         return __CATS__.loc[truth_type&truth_eta_min&truth_eta_max&truth_r9_min&truth_r9_max].index[0]
@@ -244,7 +250,7 @@ def extract_cats(data,mc):
             df = mc[entries_eta&entries_r9OrEt]
             mass_list_mc = np.array(df['invMass_ECAL_ele'])
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc) < 100*len(mass_list_data) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 200000:
+            while len(mass_list_mc) < max(100*len(mass_list_data),200000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
                 mass_list_mc = np.append(mass_list_mc,mass_list_mc)
 
             #drop any "bad" entries
