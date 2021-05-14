@@ -10,7 +10,7 @@ def make_htcondor(out_dir, queue):
     lines.append( "error = "+out_dir+"/"+os.path.basename(out_dir)+".err\n")
     lines.append( "log = "+out_dir+"/"+os.path.basename(out_dir)+".log\n")
     lines.append( '+JobFlavour = "'+queue+'"\n')
-    lines.append( "RequestCpus = 5\n")
+    lines.append( "RequestCpus = 12\n")
     lines.append( "queue 1")
 
     htcondor = out_dir+"/htcondor"

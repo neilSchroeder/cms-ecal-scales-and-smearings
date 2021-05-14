@@ -4,6 +4,11 @@ pd.options.mode.chained_assignment = None
 import multiprocessing as mp
 import gc
 
+def reweight_pt_y(df):
+    
+    ptz_bins = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,29,30,31,32,33,34,35,36,37,38,39,40,45,50,55,60,80,100,14000]
+    yz_bins = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5]
+
 def apply(arg):
     #make a returnable df with all runs in this set of scales:
     data,scales = arg
@@ -25,6 +30,21 @@ def apply(arg):
             data.loc[ele0_eta&ele0_r9&ele0_et,'invMass_ECAL_ele'] *= np.sqrt(row[9])
             data.loc[ele1_eta&ele1_r9&ele1_et,'energy_ECAL_ele[1]'] *= row[9]
             data.loc[ele1_eta&ele1_r9&ele1_et,'invMass_ECAL_ele'] *= np.sqrt(row[9])
+        elif row[8] != 0:
+            gainLow = 0
+            gainHigh = 0
+            if row[8] == 6:
+                gainLow = 1
+                gainHigh = 1
+            if row[8] == 1:
+                gainLow = 2
+                gainHigh = 9999
+            ele0_gain = data['gainSeedSC[0]'].between(gainLow,gainHigh,inclusive=True)
+            ele1_gain = data['gainSeedSC[1]'].between(gainLow,gainHigh,inclusive=True)
+            data.loc[ele0_eta&ele0_r9&ele0_gain,'energy_ECAL_ele[0]'] *= row[9]
+            data.loc[ele0_eta&ele0_r9&ele0_gain,'invMass_ECAL_ele'] *= np.sqrt(row[9])
+            data.loc[ele1_eta&ele1_r9&ele1_gain,'energy_ECAL_ele[1]'] *= row[9]
+            data.loc[ele1_eta&ele1_r9&ele1_gain,'invMass_ECAL_ele'] *= np.sqrt(row[9])
         else:
             data.loc[ele0_eta&ele0_r9,'energy_ECAL_ele[0]'] *= row[9]
             data.loc[ele0_eta&ele0_r9,'invMass_ECAL_ele'] *= np.sqrt(row[9])
@@ -52,5 +72,5 @@ def scale(data, scales):
     scaled_data=pool.map(apply, divided_scales)
     pool.close()
     pool.join()
-    return pd.concat(scaled_data)
+    return reweight_pt_y(pd.concat(scaled_data))
 

@@ -53,11 +53,17 @@ def congruentCategories(last, this, nameLast, nameThis):
         if float(round(last[7],4)) <= float(round(this[7],4)):
                 ret_et=True
 
-    if ret_eta and ret_r9 and ret_gain and ret_et:
-        return True
+ #   if ret_eta and ret_r9 and ret_gain and ret_et:
+ #       return True
 
-    if nameLast.find('step2') != -1:
-        return ret_r9 and ret_eta
+ #   if nameLast.find('step2') != -1:
+ #       return ret_r9 and ret_eta
+
+    if nameThis.find('stochastic') != -1:
+        return ret_eta and ret_r9 and ret_et
+
+    if nameThis.find('step6') != -1:
+        return ret_eta and ret_et
 
     if nameThis.find('gain') != -1 or nameThis.find('Gain') != -1:
         if nameLast.find('gain') != -1 or nameLast.find('Gain') != -1:
@@ -92,10 +98,13 @@ def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
     else:
         thisDict['etMin'].append(round(rowLast[6],4))
         thisDict['etMax'].append(round(rowLast[7],4))
-
-    thisDict['gain'].append(int(rowThis[8]))
+    
+    if rowLast[8] != 0:
+        thisDict['gain'].append(int(rowLast[8]))
+    else: 
+        thisDict['gain'].append(int(rowThis[8]))
     thisDict['scale'].append(round(float(rowThis[9])*float(rowLast[9]),6))
-    thisDict['err'].append(5e-5)
+    thisDict['err'].append(rowThis[10])
 
 ##################################################################################################################
 def writeJsonFromDF(thisDF,outFile):
@@ -155,7 +164,7 @@ def combine(thisStep, lastStep, outFile):
                 #now you've done it
                 print("[FATAL ERROR][python/write_files][combine] Since this isn't working, let's just stop")
                 return
-                #builds the new categories by reference in dictForDf
+            #builds the new categories by reference in dictForDf
             if kCongruent:
                 addNewCategory(rowLast, rowThis, dictForDf, lastStep, thisStep)
 
@@ -208,12 +217,47 @@ def write_smearings(smears, cats, out):
                 row[3] = 0
                 row[4] = 10
             dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])))
+            if row[5] != -1:
+                dictForDf['#category'][-1] = str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])+"-Et_"+str(row[5])+"_"+str(row[6]))
             dictForDf['Emean'].append(6.6)
             dictForDf['err_Emean'].append(0.0)
             dictForDf['rho'].append(smears[index])
             dictForDf['err_rho'].append(0.00005)
             dictForDf['phi'].append('M_PI_2')
             dictForDf['err_phi'].append('M_PI_2')
+    
+    dfOut = pd.DataFrame(dictForDf)
+    dfOut.to_csv(out, sep='\t',header=True,index=False)
+
+def rewrite_smearings(cats, out):
+    #format of smearings files is:
+#category       Emean   err_Emean   rho err_rho     phi err_phi
+    headers = ['#category', 'Emean', 'err_Emean', 'rho', 'err_rho', 'phi', 'err_phi']
+    dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
+    for col in headers:
+        dictForDf[col] = []
+
+    _cats = pd.read_csv(cats, delimiter='\t', header=None, comment='#')
+    mask_smears = (_cats.loc[:,0] == 'smear') 
+    smear_df = pd.read_csv(out, delimiter='\t', header=None, comment='#')
+    smears = np.array(smear_df.loc[:,3].values)
+    num_scales = np.sum(~mask_smears)
+    
+    for index,row in _cats.loc[_cats[:][0]=='smear'].iterrows():
+        if row[0] != 'scale':
+            if row[3] == -1: 
+                row[3] = 0
+                row[4] = 10
+            dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])))
+            if row[6] != -1:
+                dictForDf['#category'][-1] = str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])+"-Et_"+str(row[6])+"_"+str(row[7]))
+            dictForDf['Emean'].append(6.6)
+            dictForDf['err_Emean'].append(0.0)
+            dictForDf['rho'].append(smears[index-num_scales])
+            dictForDf['err_rho'].append(0.00005)
+            dictForDf['phi'].append('M_PI_2')
+            dictForDf['err_phi'].append('M_PI_2')
+
     
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='\t',header=True,index=False)

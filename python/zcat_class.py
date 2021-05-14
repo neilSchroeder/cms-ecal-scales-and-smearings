@@ -73,10 +73,10 @@ class zcat:
         temp_mc = self.mc * np.sqrt(1./(lead_scale*sublead_scale))
 
         #apply the smearings second
-        if lead_smear!=0 and sublead_smear!=0:
+        if lead_smear!=0 or sublead_smear!=0:
             np.random.seed(self.seed)
-            lead_smear_list = np.random.normal(1, np.abs(lead_smear), len(temp_mc))
-            sublead_smear_list = np.random.normal(1, np.abs(sublead_smear), len(temp_mc))
+            lead_smear_list = np.random.normal(1, np.abs(lead_smear), len(temp_mc)) if lead_smear != 0 else np.ones(len(temp_mc))
+            sublead_smear_list = np.random.normal(1, np.abs(sublead_smear), len(temp_mc)) if sublead_smear != 0 else np.ones(len(temp_mc))
             temp_mc = np.multiply(temp_mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list)))
 
         #determinite binning using the Freedman-Diaconis rule
@@ -172,6 +172,7 @@ class zcat:
         penalty = np.sum(penalty)/len(penalty)
 
         self.NLL = -2*(nll+penalty)*chi_sqr
+        #self.NLL = -2*(nll+penalty)
         self.weight = min(np.sum(binned_data),np.sum(binned_mc))
         if np.isnan(self.NLL):
             self.valid = False

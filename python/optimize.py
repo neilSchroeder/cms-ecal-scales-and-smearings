@@ -104,6 +104,12 @@ def main():
                         help="flavour of submitted job")
     parser.add_argument("--from_condor", default=False, action='store_true',
                         help="[NOT FOR USER] flag added by condor_handler to indicate this has been submitted from condor")
+    parser.add_argument("--fix_scales", default=False, action='store_true',
+                        help="[ADVANCED] flag to keep scales fixed at 1. and only derive smearings")
+    parser.add_argument("--combine_files", default=False, action='store_true',
+                    	help="[ADVANCED] combines two specified files, using the --only_step and --step options")
+    parser.add_argument("--only_step", default='', type=str,
+                    	help="[ADVANCED] only step file, to be used with the --combine_files and --step options")
 
     args = parser.parse_args()
     print("[INFO] welcome to SS_PyMin")
@@ -146,7 +152,20 @@ def main():
         if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
         else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
         new_scales = scales_out.replace("step", "onlystep")
+        new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
+        write_files.rewrite_smearings(args.cats, new_smears)
         write_files.combine( new_scales, args.scales, scales_out )
+        return
+
+    if args.combine_files:
+        scales_out = os.getcwd()+"/datFiles/step"+str(step)+"_"+args.output+"_scales.dat"
+        if args.scales != '':
+            scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
+        if args.from_condor:
+            scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
+        if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
+        else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
+        write_files.combine( args.only_step, args.scales, scales_out )
         return
 
 ###############################################################################
@@ -227,6 +246,7 @@ def main():
                                  args.plot, args.plot_dir,
                                  args.test_method_accuracy,
                                  args.scan_nll, args.scan_scales,
+                                 args.fix_scales,
                                  not args.no_auto_bin)
     if args.plot:
         print("[INFO] plotting is done, please review")
