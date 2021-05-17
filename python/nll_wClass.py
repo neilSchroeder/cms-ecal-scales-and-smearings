@@ -265,17 +265,19 @@ def extract_cats(data,mc):
 
             df = mc[entries_eta&entries_r9OrEt]
             mass_list_mc = np.array(df['invMass_ECAL_ele'])
+            weight_list_mc = np.array(df['pty_weight'])
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
             while len(mass_list_mc) < max(100*len(mass_list_data),200000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
                 mass_list_mc = np.append(mass_list_mc,mass_list_mc)
+                weight_list_mc = np.append(weight_list_mc,weight_list_mc)
 
             #drop any "bad" entries
             mass_list_data = mass_list_data[~np.isnan(mass_list_data)]
             mass_list_mc = mass_list_mc[~np.isnan(mass_list_mc)]
             if __num_smears__ > 0:
-                __ZCATS__.append(zcat(index1, index2, get_smearing_index(index1), get_smearing_index(index2), mass_list_data.copy(), mass_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
+                __ZCATS__.append(zcat(index1, index2, get_smearing_index(index1), get_smearing_index(index2), mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
             else:
-                __ZCATS__.append(zcat(index1, index2, -1,-1, mass_list_data.copy(), mass_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
+                __ZCATS__.append(zcat(index1, index2, -1,-1, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
             del df
             del entries_eta
             del entries_r9OrEt

@@ -10,7 +10,7 @@ def prune(files, out, out_dir):
     files = open(files, 'r').readlines()
     files = [x.strip() for x in files]
 
-    keep_cols = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiele', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber']
+    keep_cols = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber']
     mc_files = []
     data_files = []
 

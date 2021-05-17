@@ -8,13 +8,14 @@ import time
 class zcat:
     """ produces a 'z category' object to be used in the scales and smearing derivation """
 
-    def __init__(self, i, j, smear_i, smear_j, data, mc, hist_min=80, hist_max=100, auto_bin=True, bin_size=0.25):
+    def __init__(self, i, j, smear_i, smear_j, data, mc, weights, hist_min=80, hist_max=100, auto_bin=True, bin_size=0.25):
         self.lead_index=i
         self.sublead_index=j
         self.lead_smear_index=smear_i
         self.sublead_smear_index=smear_j
         self.data = data
         self.mc = mc
+        self.weights = weights
         self.hist_min = hist_min
         self.hist_max = hist_max
         self.auto_bin = auto_bin
@@ -118,9 +119,13 @@ class zcat:
         temp_mc = temp_mc[temp_mc <= self.hist_max]
         temp_mc = np.append(temp_mc,np.array([self.hist_min,self.hist_max]))
 
+        temp_weights = weights[temp_mc >= self.hist_min]
+        temp_weights = temp_weights[temp_mc <= self.hist_max]
+        temp_weights = np.append(temp_weights, np.array([0,0]))
+
         num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
         binned_data,edges = numba_hist.numba_histogram(temp_data,num_bins)
-        binned_mc,edges = numba_hist.numba_histogram(temp_mc,num_bins)
+        binned_mc,edges = numba_hist.numba_weighted_histogram(temp_mc,num_bins)
 
         if np.sum(binned_data) < 10:
             print("[INFO][zcat] category ({},{}) was deactivated due to insufficient statistics in data".format(self.lead_index, self.sublead_index))

@@ -48,3 +48,14 @@ def numba_histogram(a, bins):
             hist[int(bin)] += 1
 
     return hist, bin_edges
+
+@numba.jit(nopython=True)
+def numba_weighted_histogram(a, weights, bins):
+    hist = np.zeros((bins,), dtype=np.intp)
+    bin_edges = get_bin_edges(a, bins)
+    for i,x in enumerate(a.flat):
+        bin = compute_bin(x, bin_edges)
+        if bin is not None:
+            hist[int(bin)] += weights[i]
+
+    return hist, bin_edges

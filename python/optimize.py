@@ -36,6 +36,7 @@ import pruner
 import time_stability
 import write_files
 import condor_handler
+import reweight_pt_y
 
 def main():
 ###############################################################################
@@ -50,6 +51,8 @@ def main():
                         help="path to smearings file to apply to MC")
     parser.add_argument("-c","--cats", 
                     	help="path to file describing categories to use in minimization")
+    parser.add_argument("-w", "--weights", default='',
+                        help="tsv containing rapidity x ptz weights, if empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.")
     parser.add_argument("-o","--output", default='',
                     	help="output tag to add to file names")
     parser.add_argument("--ingore", default='',
@@ -227,6 +230,13 @@ def main():
         print("[INFO] applying {} to the data".format(args.scales))
         data = scale_data_fast.scale(data, args.scales)
         gc.collect()
+
+    weight_file = args.weights
+    if args.weights == '':
+        print("[INFO] deriving Y(Z), Pt(Z) weights")
+        weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
+    mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
+
 
 ###############################################################################
     #load categories for the derivation
