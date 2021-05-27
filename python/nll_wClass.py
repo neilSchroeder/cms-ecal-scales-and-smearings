@@ -85,7 +85,7 @@ def add_transverse_energy(data,mc):
     eta_1 = np.array(mc.loc[:,'etaEle[1]'].values)
     mc['transverse_energy[0]'] = np.divide(energy_0,np.cosh(eta_0))
     mc['transverse_energy[1]'] = np.divide(energy_1,np.cosh(eta_1))
-    drop_list = ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'runNumber']
+    drop_list = ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'phiEle[0]', 'phiEle[1]', 'runNumber']
     data.drop(drop_list, axis=1, inplace=True)
     mc.drop(drop_list, axis=1, inplace=True)
     #impose an et cut of 32 on leading and 20 on subleading
@@ -273,7 +273,9 @@ def extract_cats(data,mc):
 
             #drop any "bad" entries
             mass_list_data = mass_list_data[~np.isnan(mass_list_data)]
+            weight_list_mc = weight_list_mc[~np.isnan(mass_list_mc)]
             mass_list_mc = mass_list_mc[~np.isnan(mass_list_mc)]
+            
             if __num_smears__ > 0:
                 __ZCATS__.append(zcat(index1, index2, get_smearing_index(index1), get_smearing_index(index2), mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
             else:
@@ -445,6 +447,8 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
                          'energy_ECAL_ele[1]', 
                          'gainSeedSC[0]', 
                          'gainSeedSC[1]', 
+                         'phiEle[0]',
+                         'phiEle[1]',
                          'runNumber']
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
@@ -454,6 +458,8 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
                          'energy_ECAL_ele[1]', 
                          'R9Ele[0]', 
                          'R9Ele[1]', 
+                         'phiEle[0]',
+                         'phiEle[1]',
                          'runNumber']
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)

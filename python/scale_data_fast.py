@@ -72,5 +72,5 @@ def scale(data, scales):
     scaled_data=pool.map(apply, divided_scales)
     pool.close()
     pool.join()
-    return reweight_pt_y(pd.concat(scaled_data))
+    return pd.concat(scaled_data)
 

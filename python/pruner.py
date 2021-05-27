@@ -38,7 +38,7 @@ def prune(files, out, out_dir):
         invmass_mask = df['invMass_ECAL_ele'].values
         invmass_mask = [60 < val and val < 120 for val in invmass_mask]
         df = df.loc[invmass_mask]
-        drop_list = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'gainSeedSC[2]']
+        drop_list = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]']
         df.drop(drop_list,axis=1,inplace=True)
 
         if line_list[0] == 'data': data_files.append(df)

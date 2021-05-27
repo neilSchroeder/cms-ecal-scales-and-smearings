@@ -72,6 +72,7 @@ class zcat:
 
         #apply the scales first 
         temp_mc = self.mc * np.sqrt(1./(lead_scale*sublead_scale))
+        temp_weights = self.weights
 
         #apply the smearings second
         if lead_smear!=0 or sublead_smear!=0:
@@ -85,16 +86,19 @@ class zcat:
             #prune and check data and mc for validity
             temp_data = self.data[self.data >= self.hist_min]
             temp_data = temp_data[temp_data <= self.hist_max]
-            temp_mc = temp_mc[temp_mc >= self.hist_min]
-            temp_mc = temp_mc[temp_mc <= self.hist_max]
+            mask_mc = (temp_mc >= self.hist_min)&(temp_mc <= self.hist_max)
+            temp_weights = temp_weights[mask_mc]
+            temp_mc = temp_mc[mask_mc]
             if len(temp_data) < 10 or len(temp_mc) < 1000: 
                 print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
                 self.NLL = 0
                 self.valid=False
                 del self.data
                 del self.mc
+                del self.weights
                 del temp_data
                 del temp_mc
+                del temp_weights
                 return
             if len(temp_mc) < 2000 and self.lead_index != self.sublead_index: 
                 print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics in MC".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
@@ -102,8 +106,10 @@ class zcat:
                 self.valid=False
                 del self.data
                 del self.mc
+                del self.weights
                 del temp_data
                 del temp_mc
+                del temp_weights
                 return
             #since the data and mc are now pruned go ahead and find the bin size
             data_width = 2*stats.iqr(temp_data, rng=(25,75), scale="raw", nan_policy="omit")/np.power(len(temp_data), 1./3.)
@@ -115,17 +121,16 @@ class zcat:
         temp_data = self.data[self.data >= self.hist_min]
         temp_data = temp_data[temp_data <= self.hist_max]
         temp_data = np.append(temp_data,np.array([self.hist_min,self.hist_max]))
-        temp_mc = temp_mc[temp_mc >= self.hist_min]
-        temp_mc = temp_mc[temp_mc <= self.hist_max]
+        mask_mc = (temp_mc >= self.hist_min)&(temp_mc <= self.hist_max)
+        temp_weights = temp_weights[mask_mc]
+        temp_mc = temp_mc[mask_mc]
+        temp_weights = np.append(temp_weights,np.array([0,0]))
         temp_mc = np.append(temp_mc,np.array([self.hist_min,self.hist_max]))
 
-        temp_weights = weights[temp_mc >= self.hist_min]
-        temp_weights = temp_weights[temp_mc <= self.hist_max]
-        temp_weights = np.append(temp_weights, np.array([0,0]))
 
         num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
         binned_data,edges = numba_hist.numba_histogram(temp_data,num_bins)
-        binned_mc,edges = numba_hist.numba_weighted_histogram(temp_mc,num_bins)
+        binned_mc,edges = numba_hist.numba_weighted_histogram(temp_mc,temp_weights,num_bins)
 
         if np.sum(binned_data) < 10:
             print("[INFO][zcat] category ({},{}) was deactivated due to insufficient statistics in data".format(self.lead_index, self.sublead_index))
@@ -133,26 +138,33 @@ class zcat:
             self.valid=False
             del self.data
             del self.mc
+            del self.weights
             del temp_mc
+            del temp_weights
             return
-        if np.sum(binned_mc) < 1000 and self.lead_index==self.sublead_index:
+        if len(temp_mc) < 1000 and self.lead_index==self.sublead_index:
             print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics in MC".format(self.lead_index, self.sublead_index, len(temp_data),len(temp_mc)))
             self.NLL = 0
             self.valid=False
             del self.data
             del self.mc
+            del self.weights
             del temp_mc
+            del temp_weights
             return
-        if np.sum(binned_mc) < 2000 and self.lead_index!=self.sublead_index:
+        if len(temp_mc) < 2000 and self.lead_index!=self.sublead_index:
             print("[INFO][zcat] category ({},{}) was deactivated due to insufficient statistics in MC".format(self.lead_index, self.sublead_index))
             self.NLL = 0
             self.valid=False
             del self.data
             del self.mc
+            del self.weights
             del temp_mc
+            del temp_weights
             return
 
         del temp_mc
+        del temp_weights
         
         #clean binned data and mc, log of 0 is a problem
         binned_mc[binned_mc == 0] = 1e-15
@@ -178,11 +190,12 @@ class zcat:
 
         self.NLL = -2*(nll+penalty)*chi_sqr
         #self.NLL = -2*(nll+penalty)
-        self.weight = min(np.sum(binned_data),np.sum(binned_mc))
+        self.weight = np.sum(binned_data)
         if np.isnan(self.NLL):
             self.valid = False
             self.NLL = 0
             del self.data
             del self.mc
+            del self.weights
         return
 

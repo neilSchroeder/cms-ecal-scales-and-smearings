@@ -119,7 +119,7 @@ def main():
     print("[INFO] you have run the following command:")
 
     step = -1
-    if args.cats is not None: 
+    if args.cats is not None and not args.time_stability: 
         step = int(args.cats[args.cats.find("step")+4])
 
 ###############################################################################
@@ -232,6 +232,7 @@ def main():
         gc.collect()
 
     weight_file = args.weights
+    print(args.weights)
     if args.weights == '':
         print("[INFO] deriving Y(Z), Pt(Z) weights")
         weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
