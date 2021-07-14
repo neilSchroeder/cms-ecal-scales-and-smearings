@@ -28,15 +28,16 @@ import pandas as pd
 import sys
 import uproot as up
 
-import divide_by_run 
-import nll_wClass
-import scale_data
-import scale_data_fast
-import pruner
-import time_stability
-import write_files
-import condor_handler
-import reweight_pt_y
+import python.helpers.helper_pymin as helper_pymin
+
+import python.utilities.divide_by_run as divide_by_run
+import python.utilities.minimizer as minimizer
+import python.utilities.scale_data as scale_data
+import python.utilities.pruner as pruner
+import python.utilities.time_stability as time_stability
+import python.utilities.write_files as write_files
+import python.utilities.condor_handler as condor_handler
+import python.utilities.reweight_pt_y as reweight_pt_y
 
 def main():
 ###############################################################################
@@ -68,9 +69,9 @@ def main():
                     	help="path to scales file to apply to data")
     parser.add_argument("--smearings", default=None,
                         help="path to smearings file to apply to MC")
-    parser.add_argument("-w", "--weights", default='',
+    parser.add_argument("-w", "--weights", default=None,
                         help="tsv containing rapidity x ptz weights, if empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.")
-    parser.add_argument("-o","--output", default='',
+    parser.add_argument("-o","--output", default=None,
                     	help="output tag to add to file names")
     parser.add_argument("--ingore", default='',
                     	help="list of categories to ignore for the current derivation")
@@ -184,12 +185,12 @@ def main():
     #scale the data
     if args.scales:
         print("[INFO] applying {} to the data".format(args.scales))
-        data = scale_data_fast.scale(data, args.scales)
+        data = scale_data.scale(data, args.scales)
         gc.collect()
 
     weight_file = args.weights
     print(args.weights)
-    if args.weights == '':
+    if args.weights is None:
         print("[INFO] deriving Y(Z), Pt(Z) weights")
         weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
     mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
