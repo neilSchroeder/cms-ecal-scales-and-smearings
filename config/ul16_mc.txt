@@ -1,0 +1,2 @@
+/eos/cms/store/group/dpg_ecal/alca_ecalcalib/ecalelf/ntuples/13TeV/MINIAODNTUPLE/80X_mcRun2_asymptotic_2016_TrancheIV_v6/DYJets_madgraph-RunIISummer16-miniAODv2/allRange/Moriond17_Scale_ID80X/DYJets_madgraph-RunIISummer16-miniAODv2-allRange.root
+/eos/cms/store/group/dpg_ecal/alca_ecalcalib/ecalelf/ntuples/13TeV/MINIAODNTUPLE/80X_mcRun2_asymptotic_2016_TrancheIV_v7/DYJets_amcatnlo-RunIISummer16-miniAODv2/allRange/Moriond17_Scale_ID80X/DYJets_amcatnlo-RunIISummer16-miniAODv2-allRange.root
