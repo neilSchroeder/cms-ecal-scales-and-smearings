@@ -56,14 +56,14 @@ def congruentCategories(last, this, nameLast, nameThis):
  #   if ret_eta and ret_r9 and ret_gain and ret_et:
  #       return True
 
- #   if nameLast.find('step2') != -1:
- #       return ret_r9 and ret_eta
+    if 'step2' in nameLast or 'step3' in nameLast:
+        return ret_r9 and ret_eta
 
     if nameThis.find('stochastic') != -1:
         return ret_eta and ret_r9 and ret_et
 
-    if nameThis.find('step6') != -1:
-        return ret_eta and ret_et
+ #   if nameThis.find('step6') != -1:
+ #       return ret_eta and ret_et
 
     if nameThis.find('gain') != -1 or nameThis.find('Gain') != -1:
         if nameLast.find('gain') != -1 or nameLast.find('Gain') != -1:
@@ -185,6 +185,7 @@ def write_scales(scales, cats, out):
     for col in headers:
         dictForDf[col] = []
     
+    print(len(scales),sum(cats.loc[:,0] == 'scale'))
     for index,row in cats.iterrows():
         if row[0] != 'smear':
             dictForDf['runMin'].append('000000')
@@ -196,8 +197,8 @@ def write_scales(scales, cats, out):
             dictForDf['etMin'].append(row[6] if row[6] != -1 else 0)
             dictForDf['etMax'].append(row[7] if row[7] != -1 else 14000)
             dictForDf['gain'].append(row[5] if row[5] != -1 else 0)
-            dictForDf['scale'].append(scales[index])
-            dictForDf['err'].append(0.00005)
+            dictForDf['scale'].append(scales[index][0])
+            dictForDf['err'].append(scales[index][1])
 
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='\t',header=False,index=False)
@@ -216,13 +217,15 @@ def write_smearings(smears, cats, out):
             if row[3] == -1: 
                 row[3] = 0
                 row[4] = 10
-            dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])))
-            if row[5] != -1:
-                dictForDf['#category'][-1] = str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])+"-Et_"+str(row[5])+"_"+str(row[6]))
+            print(row)
+            if row[6] != -1:
+                dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])+"-Et_"+str(row[6])+"_"+str(row[7])))
+            else:
+                dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])))
             dictForDf['Emean'].append(6.6)
             dictForDf['err_Emean'].append(0.0)
-            dictForDf['rho'].append(smears[index])
-            dictForDf['err_rho'].append(0.00005)
+            dictForDf['rho'].append(smears[index][0])
+            dictForDf['err_rho'].append(smears[index][1])
             dictForDf['phi'].append('M_PI_2')
             dictForDf['err_phi'].append('M_PI_2')
     

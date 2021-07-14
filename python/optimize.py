@@ -117,6 +117,18 @@ def main():
     args = parser.parse_args()
     print("[INFO] welcome to SS_PyMin")
     print("[INFO] you have run the following command:")
+    cmd = ''
+    for arg in sys.argv:
+        if ' ' in arg:
+            cmd += '"{}"  '.format(arg)
+        else:
+            cmd +="{}  ".format(arg)
+    print(cmd) 
+
+    if args.closure and args.smearings is None:
+        print("[ERROR] you have submitted a closure test without a smearings file.")
+        print("[ERROR] please resubmit this job with a smearings file.")
+        return
 
     step = -1
     if args.cats is not None and not args.time_stability: 
@@ -126,13 +138,6 @@ def main():
 
 ###############################################################################
     #submit this job to condor
-    cmd = ''
-    for arg in sys.argv:
-        if ' ' in arg:
-            cmd += '"{}"  '.format(arg)
-        else:
-            cmd +="{}  ".format(arg)
-    print(cmd) 
     if args.condor and not args.from_condor:
         #remove the condor/queue information
         if cmd.find('--condor') != -1:
@@ -156,7 +161,7 @@ def main():
         else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
         new_scales = scales_out.replace("step", "onlystep")
         new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
-        write_files.rewrite_smearings(args.cats, new_smears)
+        if not args.closure: write_files.rewrite_smearings(args.cats, new_smears)
         write_files.combine( new_scales, args.scales, scales_out )
         return
 
@@ -248,7 +253,7 @@ def main():
 ###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = nll_wClass.minimize(data, mc, cats, args.ingore, args.smearings,
+    scales_smears, unc = nll_wClass.minimize(data, mc, cats, args.ingore, args.smearings,
                                  round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
                                  args.start_style,
                                  args.scan_min, args.scan_max, args.scan_step,
@@ -280,6 +285,7 @@ def main():
     new_scales = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("step", "onlystep")
     new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
 
+    scales_smears = [(scales_smears[i], unc[i]) for i,x in enumerate(unc)]
     write_files.write_scales(scales_smears[:num_scales], cats, new_scales)
     if not args.closure: write_files.write_smearings(scales_smears, cats, new_smears)
 ###############################################################################

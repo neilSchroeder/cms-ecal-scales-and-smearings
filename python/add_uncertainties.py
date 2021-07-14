@@ -15,7 +15,7 @@ def main():
     scales = pd.read_csv(args.inputFile, sep='\t', header=None)
     unc = pd.read_csv(args.uncFile, sep='\t', header=None)
     
-#make necessary masks
+    #make necessary masks
     for i,row in unc.iterrows():
         eta_mask_low = scales.loc[:,2] >= row[2]
         eta_mask_high = scales.loc[:,3] <= row[3]

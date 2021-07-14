@@ -188,9 +188,19 @@ class zcat:
         penalty[penalty==-np.inf] = 0
         penalty = np.sum(penalty)/len(penalty)
 
-        self.NLL = -2*(nll+penalty)*chi_sqr
+        #evaluate minimum nll, i.e. nll of mc to mc
+        nll_min = xlogy(binned_mc, norm_binned_mc)
+        nll_min[nll_min==-np.inf] = 0
+        nll_min = np.sum(nll_min)/len(nll_min)
+        pen_min = xlogy(np.sum(binned_mc)-binned_mc, 1 - norm_binned_mc)
+        pen_min[pen_min==-np.inf] = 0
+        pen_min = np.sum(pen_min)/len(pen_min)
+
+        self.NLL = (-2*(nll+penalty)-(-2*(nll_min+pen_min)))*chi_sqr
         #self.NLL = -2*(nll+penalty)
         self.weight = np.sum(binned_data)
+        #penalize off-diagonal categories in the fit
+        #self.weight = np.sum(binned_data) if self.lead_index == self.sublead_index else 0.01*np.sum(binned_data)
         if np.isnan(self.NLL):
             self.valid = False
             self.NLL = 0

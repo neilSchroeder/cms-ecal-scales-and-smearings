@@ -57,6 +57,11 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     yz_bins = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5]
 
     #calculate pt(z) and y(z) for each event
+    pt_lead = np.divide( df_data['energy_ECAL_ele[0]'].values, np.cosh( df_data['etaEle[0]'].values))
+    pt_sub = np.divide( df_data['energy_ECAL_ele[1]'].values, np.cosh( df_data['etaEle[1]'].values))
+    pt_mask = (pt_lead > 32)&(pt_sub > 20)
+    df_data = df_data[pt_mask&(df_data['invMass_ECAL_ele'].between(80,100))]
+
     zpt_data = get_zpt(df_data)
     zpt_mc = get_zpt(df_mc)
 

@@ -59,6 +59,7 @@ from scipy.special import xlogy
 from scipy import stats as scistat 
 
 import plotter
+from smear_mc import smear
 from zcat_class import zcat
 
 ##################################################################################################################
@@ -98,70 +99,31 @@ def add_transverse_energy(data,mc):
 ##################################################################################################################
 def get_smearing_index(cat_index):
     #this function takes in a category index and returns the associated smearing index
-    r9_min = 0 if __CATS__.iloc[int(cat_index),3] < 0.96 else 0.96
-    r9_max = 0.96 if __CATS__.iloc[int(cat_index),4] <= 0.96 else 10
     eta_min = __CATS__.iloc[int(cat_index),1]
     eta_max = __CATS__.iloc[int(cat_index),2]
+    r9_min = __CATS__.iloc[int(cat_index),3]
+    r9_max = __CATS__.iloc[int(cat_index),4]
     et_min = __CATS__.iloc[int(cat_index),6]
     et_max = __CATS__.iloc[int(cat_index),7]
     truth_type = __CATS__.loc[:,0] == 'smear'
-    truth_eta_min = __CATS__.loc[:,1] == eta_min
-    truth_eta_max = __CATS__.loc[:,2] == eta_max
-    truth_r9_min = __CATS__.loc[:,3] == r9_min
-    truth_r9_max = __CATS__.loc[:,4] == r9_max
-    truth_et_min = __CATS__.loc[:,6] == et_min
-    truth_et_max = __CATS__.loc[:,7] == et_max
-    if __CATS__.iloc[int(cat_index),4] == -1: #check to see if R9 is used
-        if __CATS__.iloc[-1,6] != -1: #check the last entry (smearing) for et dependence
-            #this should only be used if the smearings depend on Et
-            return __CATS__.loc[truth_type&truth_eta_min&truth_eta_max&truth_et_min&truth_et_max].index[0]
-        return __CATS__.loc[truth_type&truth_eta_min&truth_eta_max].index[0] #otherwise smearings are only eta dependent
-    else:
-        if __CATS__.iloc[int(cat_index),6] != -1:
-            return __CATS__.loc[truth_type&truth_eta_min&truth_eta_max&truth_r9_min&truth_r9_max&truth_et_min&truth_et_max].index[0]
-        return __CATS__.loc[truth_type&truth_eta_min&truth_eta_max&truth_r9_min&truth_r9_max].index[0]
+    truth_eta_min = np.array([True for x in truth_type])
+    truth_eta_max = np.array([True for x in truth_type])
+    truth_r9_min = np.array([True for x in truth_type])
+    truth_r9_max = np.array([True for x in truth_type])
+    truth_et_min = np.array([True for x in truth_type])
+    truth_et_max = np.array([True for x in truth_type])
+    if eta_min != -1 and eta_max != -1:
+        truth_eta_min = __CATS__.loc[:,1] <= eta_min
+        truth_eta_max = __CATS__.loc[:,2] >= eta_max
+    if r9_min != -1 and r9_max != - 1:
+        truth_r9_min = __CATS__.loc[:,3] <= r9_min
+        truth_r9_max = __CATS__.loc[:,4] >= r9_max
+    if et_min != -1 and et_max != -1:
+        truth_et_min = __CATS__.loc[:,6] <= et_min
+        truth_et_max = __CATS__.loc[:,7] >= et_max
 
-##################################################################################################################
-def smear_mc(mc,smearings):
-    print("[INFO][python/nll][smear_mc] smearing the mc with {} for fixed smearings".format(smearings))
-    smear_df = pd.read_csv(smearings, delimiter='\t', header=None, comment='#')
-    #format is category, emain, err_mean, rho, err_rho, phi, err_phi
-    for i,row in smear_df.iterrows():
-        cat = row[0]
-        cat_list = cat.split("-") #cat_list[0] is eta, cat_list[1] is r9
-        eta_list = cat_list[0].split("_")
-        r9_list = cat_list[1].split("_")
-
-        eta_min, eta_max = float(eta_list[1]), float(eta_list[2])
-        r9_min, r9_max = float(r9_list[1]), float(r9_list[2])
-
-        mask_eta0 = mc['etaEle[0]'].between(eta_min, eta_max)
-        mask_eta1 = mc['etaEle[1]'].between(eta_min, eta_max)
-        mask_r90 = mc['R9Ele[0]'].between(r9_min, r9_max)
-        mask_r91 = mc['R9Ele[1]'].between(r9_min, r9_max)
-        mask0 = np.array(mask_eta0&mask_r90)
-        mask1 = np.array(mask_eta1&mask_r91)
-
-        energy_0 = np.array(mc['energy_ECAL_ele[0]'].values)
-        energy_1 = np.array(mc['energy_ECAL_ele[1]'].values)
-        invMass = np.array(mc['invMass_ECAL_ele'].values)
-
-        smears_0 = np.multiply(mask0, 
-                np.random.normal(1, float(row[3]), len(mask0)))
-        smears_1 = np.multiply(mask1, 
-                np.random.normal(1, float(row[3]), len(mask1)))
-
-        smears_0[smears_0 == 0] = 1
-        smears_1[smears_1 == 0] = 1
-        energy_0 = np.multiply(energy_0, smears_0)
-        energy_1 = np.multiply(energy_1, smears_1)
-        invMass = np.multiply(invMass, np.sqrt(np.multiply(smears_0,smears_1)))
-
-        mc['energy_ECAL_ele[0]'] = energy_0
-        mc['energy_ECAL_ele[1]'] = energy_1
-        mc['invMass_ECAL_ele'] = invMass
-
-    return mc
+    truth = truth_type&truth_eta_min&truth_eta_max&truth_r9_min&truth_r9_max&truth_et_min&truth_et_max
+    return __CATS__.loc[truth].index[0]
 
 ##################################################################################################################
 def extract_cats(data,mc):
@@ -429,12 +391,12 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
 
     #if this a closure step smear the mc with static smearings and derive back only the scales
     if smearings is not None:
-        mc = smear_mc(mc, smearings)
+        mc = smear(mc, smearings)
 
     if _kClosure:
         if smearings is None: 
             _scales_.replace('scales','smearings')
-            mc = smear_mc(mc, _smears_)
+            mc = smear(mc, _smears_)
         __num_smears__ = 0
 
     #check to see if transverse energy columns need to be added
@@ -585,6 +547,17 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
 
     print("[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:")
     print(optimum)
+    #calculate errors using hess_inv
+    ftol = 2.220446049250313e-09
+    tmp_i = np.zeros(len(optimum.x))
+    unc = []
+    for i in range(len(optimum.x)):
+       tmp_i[i] = 1.0
+       hess_inv_i = optimum.hess_inv(tmp_i)[i]
+       uncertainty_i = np.sqrt(max(1, abs(optimum.fun)) * ftol * hess_inv_i)
+       tmp_i[i] = 0.0
+       print('x^{0} = {1:12.4e} +/- {2:.1e}'.format(i, optimum.x[i], uncertainty_i))
+       unc.append(uncertainty_i)
 
     if not optimum.success: 
         print("#"*40)
@@ -593,7 +566,7 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
         print("[ERROR] Please review the output and resubmit")
         print("#"*40)
         print("#"*40)
-        return []
+        return optimum.x, unc
 
     if _kTestMethodAccuracy:
         ret = optimum.x
@@ -604,5 +577,5 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
             else:
                 print("[INFO][ACCURACY TEST] The injected smearing was {}, the recovered smearing was {}".format(scales_to_inject[i], ret[i]))
                 ret[i] = 100*(ret[i]/scales_to_inject[i] - 1)
-        return ret
-    return optimum.x
+        return ret, unc
+    return optimum.x, unc
