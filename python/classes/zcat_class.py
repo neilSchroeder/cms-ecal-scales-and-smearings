@@ -1,9 +1,11 @@
+import time
+
 import numpy as np
-import numba_hist
 import pandas as pd
 from scipy import stats 
 from scipy.special import xlogy
-import time
+
+import python.utilities.numba_hist as numba_hist
 
 class zcat:
     """ produces a 'z category' object to be used in the scales and smearing derivation """

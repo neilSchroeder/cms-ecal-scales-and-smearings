@@ -33,6 +33,7 @@ import python.helpers.helper_pymin as helper_pymin
 import python.utilities.divide_by_run as divide_by_run
 import python.utilities.minimizer as minimizer
 import python.utilities.scale_data as scale_data
+import python.utilities.smear_mc as smear_mc
 import python.utilities.pruner as pruner
 import python.utilities.time_stability as time_stability
 import python.utilities.write_files as write_files
@@ -202,20 +203,31 @@ def main():
     cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
     num_scales = sum([val.find('scale') != -1 for val in cats[0]])
 
+    if args.closure:
+        mc = smear_mc.smear(mc, args.smearings)
+
 ###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears, unc = nll_wClass.minimize(data, mc, cats, args.ingore, args.smearings,
-                                 round(float(args.hist_min),2), round(float(args.hist_max),2), round(float(args.bin_size),2),
-                                 args.start_style,
-                                 args.scan_min, args.scan_max, args.scan_step,
-                                 args.min_step_size,
-                                 args.closure, args.scales, 
-                                 args.plot, args.plot_dir,
-                                 args.test_method_accuracy,
-                                 args.scan_nll, args.scan_scales,
-                                 args.fix_scales,
-                                 not args.no_auto_bin)
+    scales_smears, unc = nll_wClass.minimize(data, mc, cats, 
+                                             ignore_cats=args.ignore, #categories to ignore
+                                             hist_min=round(float(args.hist_min),2), #bottom edge of histogram
+                                             hist_max=round(float(args.hist_max),2), #top edge of histogram
+                                             bin_size=round(float(args.bin_size),2), #bin size
+                                             start_style=args.start_style, #seed method for scales/smearings
+                                             scan_min=args.scan_min, #min value in scan
+                                             scan_max=args.scan_max, #max value in scan
+                                             scan_step=args.scan_step, #step size of scan
+                                             min_step=args.min_step_size, #step size of minimizer
+                                             _kClosure=args.closure, #closure flag
+                                             scales=args.scales, #scales file
+                                             _kPlot=args.plot, #plot flag
+                                             plot_dir=args.plot_dir, #directory to put plots
+                                             _kTestMethodAccuracy=args.test_method_accuracy, #test method flag
+                                             _kScan=args.scan_nll, #scan nll flag
+                                             scan_scales=args.scan_scales, #scales to seed the scan
+                                             _kFixScales=args.fix_scales, #don't let scales float in fit flag
+                                             _kAutoBin=(not args.no_auto_bin))
     if args.plot:
         print("[INFO] plotting is done, please review")
         return

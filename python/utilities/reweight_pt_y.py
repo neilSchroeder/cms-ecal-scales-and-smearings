@@ -4,8 +4,7 @@ import numpy as np
 import multiprocessing as mp
 from collections import OrderedDict
 
-import python.classes.constants as constants
-import python.helpers.helper_main as helper_main
+import python.classes.const_class as constants
 
 def get_zpt(df):
     #calculates the transverse momentum of the dielectron event

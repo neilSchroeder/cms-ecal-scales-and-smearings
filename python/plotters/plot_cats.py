@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from zcat_class import zcat
+from python.classes.zcat_class import zcat
 """
 This function will plot histograms of data and mc in the categories provided
 """

@@ -4,7 +4,7 @@ pd.options.mode.chained_assignment = None
 import multiprocessing as mp
 import gc
 
-import python.classes.constants as constants
+import python.classes.const_class as constants
 
 def apply(arg):
     #make a returnable df with all runs in this set of scales:

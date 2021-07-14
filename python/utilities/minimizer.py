@@ -58,384 +58,43 @@ from scipy.optimize import minimize as minz
 from scipy.special import xlogy
 from scipy import stats as scistat 
 
-import plotter
-from smear_mc import smear
-from zcat_class import zcat
+import python.plotters.plot_cats as plotter
+from python.utilities.smear_mc import smear
+from python.classes.zcat_class import zcat
 
-##################################################################################################################
 __num_scales__ = 0
 __num_smears__ = 0
 
-__ZCATS__ = []
-__CATS__ = []
-__GUESS__ = []
-__AUTO_BIN__ = True
+def minimize(data, mc, cats, **options):
 
-##################################################################################################################
-def add_transverse_energy(data,mc):
-    #add a transverse energy column for data and mc 
-    energy_0 = np.array(data.loc[:,'energy_ECAL_ele[0]'].values)
-    energy_1 = np.array(data.loc[:,'energy_ECAL_ele[1]'].values)
-    eta_0 = np.array(data.loc[:,'etaEle[0]'].values)
-    eta_1 = np.array(data.loc[:,'etaEle[1]'].values)
-    data['transverse_energy[0]'] = np.divide(energy_0,np.cosh(eta_0))
-    data['transverse_energy[1]'] = np.divide(energy_1,np.cosh(eta_1))
-    energy_0 = np.array(mc.loc[:,'energy_ECAL_ele[0]'].values)
-    energy_1 = np.array(mc.loc[:,'energy_ECAL_ele[1]'].values)
-    eta_0 = np.array(mc.loc[:,'etaEle[0]'].values)
-    eta_1 = np.array(mc.loc[:,'etaEle[1]'].values)
-    mc['transverse_energy[0]'] = np.divide(energy_0,np.cosh(eta_0))
-    mc['transverse_energy[1]'] = np.divide(energy_1,np.cosh(eta_1))
-    drop_list = ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'phiEle[0]', 'phiEle[1]', 'runNumber']
-    data.drop(drop_list, axis=1, inplace=True)
-    mc.drop(drop_list, axis=1, inplace=True)
-    #impose an et cut of 32 on leading and 20 on subleading
-    mask_lead = data['transverse_energy[0]'].between(32, 99999) & data['transverse_energy[1]'].between(20, 99999)
-    data = data.loc[mask_lead]
-    mask_lead = mc['transverse_energy[0]'].between(32, 99999) & mc['transverse_energy[1]'].between(20, 99999)
-    mc = mc.loc[mask_lead]
-    return data,mc
-
-##################################################################################################################
-def get_smearing_index(cat_index):
-    #this function takes in a category index and returns the associated smearing index
-    eta_min = __CATS__.iloc[int(cat_index),1]
-    eta_max = __CATS__.iloc[int(cat_index),2]
-    r9_min = __CATS__.iloc[int(cat_index),3]
-    r9_max = __CATS__.iloc[int(cat_index),4]
-    et_min = __CATS__.iloc[int(cat_index),6]
-    et_max = __CATS__.iloc[int(cat_index),7]
-    truth_type = __CATS__.loc[:,0] == 'smear'
-    truth_eta_min = np.array([True for x in truth_type])
-    truth_eta_max = np.array([True for x in truth_type])
-    truth_r9_min = np.array([True for x in truth_type])
-    truth_r9_max = np.array([True for x in truth_type])
-    truth_et_min = np.array([True for x in truth_type])
-    truth_et_max = np.array([True for x in truth_type])
-    if eta_min != -1 and eta_max != -1:
-        truth_eta_min = __CATS__.loc[:,1] <= eta_min
-        truth_eta_max = __CATS__.loc[:,2] >= eta_max
-    if r9_min != -1 and r9_max != - 1:
-        truth_r9_min = __CATS__.loc[:,3] <= r9_min
-        truth_r9_max = __CATS__.loc[:,4] >= r9_max
-    if et_min != -1 and et_max != -1:
-        truth_et_min = __CATS__.loc[:,6] <= et_min
-        truth_et_max = __CATS__.loc[:,7] >= et_max
-
-    truth = truth_type&truth_eta_min&truth_eta_max&truth_r9_min&truth_r9_max&truth_et_min&truth_et_max
-    return __CATS__.loc[truth].index[0]
-
-##################################################################################################################
-def extract_cats(data,mc):
-    global __MIN_RANGE__
-    global __MAX_RANGE__
-    global __BIN_SIZE__
-    global __AUTO_BIN__
-    global __ZCATS__
-    global __CATS__
-    for index1 in range(__num_scales__):
-        for index2 in range(index1+1):
-            cat1 = __CATS__.iloc[index1]
-            cat2 = __CATS__.iloc[index2]
-            #thisCat should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
-            entries_eta = data['etaEle[0]'].between(cat1[1],cat1[2]) & data['etaEle[1]'].between(cat2[1],cat2[2])
-            entries_eta = entries_eta | (data['etaEle[1]'].between(cat1[1],cat1[2])&data['etaEle[0]'].between(cat2[1],cat2[2]))
-            #need to handle the gain and et scales 
-            entries_r9OrEt = []
-            if cat1[5] != -1:
-                gainlow1 = 0
-                gainhigh1 = 0
-                gainlow2 = 0
-                gainhigh2 = 0
-                if cat1[5] == 6:
-                    gainlow1 = 1
-                    gainhigh1 = 1
-                if cat1[5] == 1:
-                    gainlow1 = 2
-                    gainhigh1 = 99999
-                if cat2[5] == 6:
-                    gainlow2 = 1
-                    gainhigh2 = 1
-                if cat2[5] == 1:
-                    gainlow2 = 2
-                    gainhigh2 = 99999
-                entries_r9OrEt = data['gainSeedSC[0]'].between(gainlow1,gainhigh1)&data['gainSeedSC[1]'].between(gainlow2,gainhigh2)
-                entries_r9OrEt = entries_r9OrEt | (data['gainSeedSC[1]'].between(gainlow1,gainhigh1)&data['gainSeedSC[0]'].between(gainlow2,gainhigh2))
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] == -1: 
-                #this is for R9 dependent scale derivation
-                entries_r9OrEt = data['R9Ele[0]'].between(cat1[3],cat1[4])&data['R9Ele[1]'].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (data['R9Ele[1]'].between(cat1[3],cat1[4])&data['R9Ele[0]'].between(cat2[3],cat2[4]))
-            elif cat1[3] == -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is for et dependent scale derivation
-                entries_r9OrEt = data['transverse_energy[0]'].between(cat1[6], cat1[7])&data['transverse_energy[1]'].between(cat2[6], cat2[7])
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is specifically for stochastic smearings
-                entries_r9OrEt = data['R9Ele[0]'].between(cat1[3],cat1[4])&data['R9Ele[1]'].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (data['R9Ele[1]'].between(cat1[3],cat1[4])&data['R9Ele[0]'].between(cat2[3],cat2[4]))
-                entries_r9OrEt = entries_r9OrEt & (data['transverse_energy[0]'].between(cat1[6], cat1[7])&data['transverse_energy[1]'].between(cat2[6], cat2[7]))
-            else:
-                print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
-                #please forgive my sin of sloth
-                raise KeyboardInterrupt
-
-            df = data[entries_eta&entries_r9OrEt]
-            mass_list_data = np.array(df['invMass_ECAL_ele'])
-            del df
-            del entries_eta
-            del entries_r9OrEt
-            gc.collect()
-
-            entries_eta = mc['etaEle[0]'].between(cat1[1],cat1[2]) & mc['etaEle[1]'].between(cat2[1],cat2[2])
-            entries_eta = entries_eta | (mc['etaEle[1]'].between(cat1[1],cat1[2])&mc['etaEle[0]'].between(cat2[1],cat2[2]))
-            entries_r9OrEt = []
-
-            #now do the same thing for MC
-            if cat1[5] != -1:
-                gainlow1 = 0
-                gainhigh1 = 0
-                gainlow2 = 0
-                gainhigh2 = 0
-                if cat1[5] == 6:
-                    gainlow1 = 1
-                    gainhigh1 = 1
-                if cat1[5] == 1:
-                    gainlow1 = 2
-                    gainhigh1 = 99999
-                if cat2[5] == 6:
-                    gainlow2 = 1
-                    gainhigh2 = 1
-                if cat2[5] == 1:
-                    gainlow2 = 2
-                    gainhigh2 = 99999
-                entries_r9OrEt = mc['gainSeedSC[0]'].between(gainlow1,gainhigh1)&mc['gainSeedSC[1]'].between(gainlow2,gainhigh2)
-                entries_r9OrEt = entries_r9OrEt | (mc['gainSeedSC[1]'].between(gainlow1,gainhigh1)&mc['gainSeedSC[0]'].between(gainlow2,gainhigh2))
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] == -1: 
-                #this is for R9 dependent scale derivation
-                entries_r9OrEt = mc['R9Ele[0]'].between(cat1[3],cat1[4])&mc['R9Ele[1]'].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (mc['R9Ele[1]'].between(cat1[3],cat1[4])&mc['R9Ele[0]'].between(cat2[3],cat2[4]))
-            elif cat1[3] == -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is for et dependent scale derivation
-                entries_r9OrEt = mc['transverse_energy[0]'].between(cat1[6], cat1[7])&mc['transverse_energy[1]'].between(cat2[6], cat2[7])
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is specifically for stochastic smearings
-                entries_r9OrEt = mc['R9Ele[0]'].between(cat1[3],cat1[4])&mc['R9Ele[1]'].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (mc['R9Ele[1]'].between(cat1[3],cat1[4])&mc['R9Ele[0]'].between(cat2[3],cat2[4]))
-                entries_r9OrEt = entries_r9OrEt & (mc['transverse_energy[0]'].between(cat1[6], cat1[7])&mc['transverse_energy[1]'].between(cat2[6], cat2[7]))
-            else:
-                print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
-                raise KeyboardInterrupt
-
-            df = mc[entries_eta&entries_r9OrEt]
-            mass_list_mc = np.array(df['invMass_ECAL_ele'])
-            weight_list_mc = np.array(df['pty_weight'])
-            #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc) < max(100*len(mass_list_data),200000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
-                mass_list_mc = np.append(mass_list_mc,mass_list_mc)
-                weight_list_mc = np.append(weight_list_mc,weight_list_mc)
-
-            #drop any "bad" entries
-            mass_list_data = mass_list_data[~np.isnan(mass_list_data)]
-            weight_list_mc = weight_list_mc[~np.isnan(mass_list_mc)]
-            mass_list_mc = mass_list_mc[~np.isnan(mass_list_mc)]
-            
-            if __num_smears__ > 0:
-                __ZCATS__.append(zcat(index1, index2, get_smearing_index(index1), get_smearing_index(index2), mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
-            else:
-                __ZCATS__.append(zcat(index1, index2, -1,-1, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
-            del df
-            del entries_eta
-            del entries_r9OrEt
-            gc.collect()
-
-##################################################################################################################
-def target_function(x, verbose=False):
-    """ 
-    This is the target function, which returns an event weighted -2*Delta NLL
-    This function features a small verbose option for debugging purposes.
-    target_function accepts an iterable of floats and uses them to evaluate the NLL in each category.
-    Some 'smart' checks prevent the function from evaluating all N(N+1)/2 categories unless absolutely necessary
-    """
-    global __ZCATS__
-    global __GUESS__
-    updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
-    __GUESS__ = x
-    for cat in __ZCATS__:
-        if cat.valid:
-            if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
-                if not cat.updated: 
-                    if __num_smears__ == 0:
-                        cat.update(x[cat.lead_index],
-                                   x[cat.sublead_index])
-                    else:
-                        cat.update(x[cat.lead_index],
-                                   x[cat.sublead_index],
-                                   x[cat.lead_smear_index],
-                                   x[cat.sublead_smear_index])
-
-                    if verbose:
-                        print("------------- zcat info -------------")
-                        cat.print()
-                        print("-------------------------------------")
-                        print()
-
-    tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
-    ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
-    for cat in __ZCATS__: cat.reset()
-    if verbose:
-        print("------------- total info -------------")
-       #print("weighted nll:",ret/tot)
-        print("diagonal nll vals:", [cat.NLL*cat.weight/tot for cat in __ZCATS__ if cat.lead_index == cat.sublead_index and cat.valid])
-        print("using scales:",x)
-        print("--------------------------------------")
-    return ret/tot if tot != 0 else 9e30
-
-##################################################################################################################
-def scan_nll(x, scan_min, scan_max, scan_step):
-    global __ZCATS__
-    global __num_scales__
-    global __num_smears__
-    guess = x
-    scanned = []
-    if not __FIX_SCALES__:
-        while len(scanned) < __num_scales__:
-            #find "worst" category and scan that first
-            tot = np.sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])/np.sum([cat.weight for cat in __ZCATS__ if cat.valid])
-            max_index = -1
-            max_nll = 0
-            for cat in __ZCATS__:
-                if cat.NLL*cat.weight/tot > max_nll and cat.valid and cat.lead_index not in scanned:
-                    max_index = cat.lead_index
-                    max_nll = cat.NLL*cat.weight/tot
-            scanned.append(max_index)
-            if max_index != -1:
-                x = np.arange(scan_min,scan_max,scan_step)
-                my_guesses = []
-                #generate a few guesses             
-                for j,val in enumerate(x): 
-                    guess[max_index] = val
-                    my_guesses.append(guess.copy())
-                #evaluate nll for each guess
-                nll_vals = np.array([ target_function(g) for g in my_guesses])
-                mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
-                x = x[mask]
-                nll_vals = nll_vals[mask]
-                if len(nll_vals) > 0:
-                    guess[max_index] = x[nll_vals.argmin()]
-                    print("[INFO][python/nll] best guess for scale {} is {}".format(max_index, guess[max_index]))
-
-    print("[INFO][python/nll] scanning smearings:")
-    if __num_smears__ > 0:
-        for i in range(__num_scales__,__num_scales__+__num_smears__,1):
-            #smearings are different, so use different values for low,high,step 
-            low = 0.000
-            high = 0.025
-            step = 0.00025
-            x = np.arange(low,high,step)
-            my_guesses = []
-            #generate a few guesses             
-            for j,val in enumerate(x): 
-                guess[i] = val
-                my_guesses.append(guess.copy())
-            #evaluate nll for each guess
-            nll_vals = np.array([ target_function(g) for g in my_guesses])
-            mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
-            x = x[mask]
-            nll_vals = nll_vals[mask]
-            if len(nll_vals) > 0:
-                guess[i] = x[nll_vals.argmin()]
-                print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
-
-    print("[INFO][python/nll] scan complete")
-    return guess
-
-##################################################################################################################
-def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_max=100, hist_bin_size=0.25, 
-        start_style='scan', scan_min=0.98, scan_max=1.02, scan_step=0.001, min_step_size=None, 
-        _kClosure=False, _scales_='', _kPlot=False, plot_dir='./', _kTestMethodAccuracy=False, 
-        _kScan=False, _specify_file_ = '', _kFixScales=False, _kAutoBin=True):
     """ 
     This is the control/main function for minimizing global scales and smearings 
     """
 
     #don't let the minimizer start with a bad start_style
     allowed_start_styles = ('scan', 'random', 'specify')
-    if start_style not in allowed_start_styles: 
+    if options['start_style'] not in allowed_start_styles: 
         print("[ERROR][python/nll.py][minimize] Designated start style not recognized.")
         print("[ERROR][python/nll.py][minimize] The allowed options are {}.".format(allowed_start_styles))
         return []
 
-    #we heavily rely on globals for passing around info
-    global __CATS__
-    global __num_scales__
-    global __num_smears__
-    global __MIN_RANGE__
-    global __MAX_RANGE__
-    global __BIN_SIZE__
-    global __AUTO_BIN__
-    global __GUESS__
-    global __ZCATS__
-    global __FIX_SCALES__
-
-    __CATS__ = cats
-    __MIN_RANGE__ = hist_min
-    __MAX_RANGE__ = hist_max
-    __BIN_SIZE__ = hist_bin_size
-    __FIX_SCALES__ = _kFixScales
-    
     #count the number of categories which are a scale or a smearing
-    for i,row in cats.iterrows():
-        if row[0] == 'scale':
-            __num_scales__ += 1
-        else:
-            __num_smears__ += 1
+    __num_scales__ = np.sum( cats.iloc[:,0].values == 'scale')
+    __num_smears__ = np.sum( cats.iloc[:,0].values == 'smear')
 
-    #if this a closure step smear the mc with static smearings and derive back only the scales
-    if smearings is not None:
-        mc = smear(mc, smearings)
-
-    if _kClosure:
-        if smearings is None: 
-            _scales_.replace('scales','smearings')
-            mc = smear(mc, _smears_)
+    if options['_kClosure']:
         __num_smears__ = 0
 
     #check to see if transverse energy columns need to be added
-    if (cats.iloc[1, 3] == -1 and cats.iloc[1, 5] == -1) or (cats.iloc[1,3] != -1 and cats.iloc[1,6] != -1):
-        data,mc = add_transverse_energy(data, mc)
-        gc.collect()
-    else:
-        if cats.iloc[0,3] != -1 and cats.iloc[0,5] == -1:
-            drop_list = ['energy_ECAL_ele[0]', 
-                         'energy_ECAL_ele[1]', 
-                         'gainSeedSC[0]', 
-                         'gainSeedSC[1]', 
-                         'phiEle[0]',
-                         'phiEle[1]',
-                         'runNumber']
-            print("[INFO][python/nll] dropping {}".format(drop_list))
-            data.drop(drop_list, axis=1, inplace=True)
-            mc.drop(drop_list, axis=1, inplace=True)
-        else:
-            drop_list = ['energy_ECAL_ele[0]', 
-                         'energy_ECAL_ele[1]', 
-                         'R9Ele[0]', 
-                         'R9Ele[1]', 
-                         'phiEle[0]',
-                         'phiEle[1]',
-                         'runNumber']
-            print("[INFO][python/nll] dropping {}".format(drop_list))
-            data.drop(drop_list, axis=1, inplace=True)
-            mc.drop(drop_list, axis=1, inplace=True)
+    data, mc = helper_minimizer.clean_up(data,mc, cats)
     
     print("[INFO][python/nll] extracting lists from category definitions")
 
-    gc.collect() #just in case
-
     #extract the categories
-    extract_cats(data, mc)
+    __ZCATS__ = helper_minimizer.extract_cats(data, mc, cats, options)
 
     #set up boundaries on starting location of scales
-    bounds = []
+    bounds = helper_minimizer.set_bounds(options) #reduce v
     if _kClosure: 
         bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
         if cats.iloc[1,3] != -1 or cats.iloc[1,5] != -1:
@@ -454,13 +113,15 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
     #here we assign the known scales and inject them.
     scales_to_inject = []
     smearings_to_inject = []
-    if _kTestMethodAccuracy:
+    if options['_kTestMethodAccuracy']:
         scales_to_inject = np.random.uniform(low=0.99*np.ones(__num_scales__),
-                high=1.01*np.ones(__num_scales__)).ravel().tolist()
+                                             high=1.01*np.ones(__num_scales__)
+                                             ).ravel().tolist()
         scales_to_inject = np.array([round(x,6) for x in scales_to_inject]).tolist()
         if __num_smears__ > 0:
             smearings_to_inject = np.random.uniform(low=0.009*np.ones(__num_smears__),
-                    high=0.011*np.ones(__num_smears__)).ravel().tolist()
+                                                    high=0.011*np.ones(__num_smears__)
+                                                    ).ravel().tolist()
             scales_to_inject.extend(smearings_to_inject)
         print("[INFO][python/nll] the injected scales and smearings are: {}".format(scales_to_inject))
         for cat in __ZCATS__:
@@ -476,12 +137,7 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
 
 
     #deactivate invalid categories
-    if ingore_cats != '':
-        df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
-        for cat in __ZCATS__:
-            for row in df_ingore.iterrows():
-                if row[0] == cat.lead_index and row[1] == cat.sublead_index:
-                    cat.valid=False
+    helper_minimizer.deactivate_cats(__ZCATS__, options['ignore_cats']) 
 
     #once categories are extracted, data and mc can be released to make more room.
     del data
@@ -492,19 +148,19 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
     #set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
     __GUESS__ = [0 for x in guess]
-    target_function(guess) #initializes the categories
+    helper_minimizer.target_function(guess) #initializes the categories
 
     #if we're plotting, just plot and return, don't run a minimization
-    if _kPlot:
+    if options['_kPlot']:
         target_function(guess)
         plotter.plot_cats(plot_dir, __ZCATS__, __CATS__)
-        return []
+        return [], []
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
-    if _kScan:
+    if options['_kScan']:
         target_function(guess)
         plotter.plot_1Dscan(plot_dir, _specify_file_, __ZCATS__)
-        return []
+        return [], []
 
     if start_style == 'scan':
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
@@ -539,8 +195,9 @@ def minimize(data, mc, cats, ingore_cats='', smearings=None, hist_min=80, hist_m
     min_step_dict = {}
     if min_step_size is not None:
         min_step_dict = {"eps":float(min_step_size)}
-    optimum = minz(target_function,
+    optimum = minz(helper_minimizer.target_function,
                    np.array(guess), 
+                   args=(__ZCATS__),
                    method="L-BFGS-B", 
                    bounds=bounds,
                    options=min_step_dict) 

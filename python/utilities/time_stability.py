@@ -1,9 +1,10 @@
 from collections import OrderedDict
+import datetime
 import numpy as np
 import pandas as pd
 import statistics as stat
-import write_files
-import datetime
+
+import python.utilities.write_files as write_files
 
 def derive(data, runs, _kWriteData=True):
     print("[INFO][python/time_stability][derive] Deriving scale for runs in {}".format(runs))

@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import uproot as up
 
-import python.classes.constants as constants
+import python.classes.const_class as constants
 
 def get_run_string(args):
     #reconstructs and returns the command line string used to run the program
