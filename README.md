@@ -10,6 +10,8 @@ Additionally, this software serves as a portion of the thesis of Neil Schroeder 
 
 ## To Do
 
+Initiating overhaul using some better coding practices and improved data handling 
+
 
 ## Features
 
