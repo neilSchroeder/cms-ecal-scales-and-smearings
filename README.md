@@ -5,7 +5,7 @@ A new python framework for deriving the residual scales and additional smearings
 ## Motivation
 
 This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. 
-The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation.  
+The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation. 
 Additionally, this software serves as a portion of the thesis of Neil Schroeder from the University of Minnesota, Twin Cities School of Physics and Astronomy.
 
 ## Example Results
@@ -47,13 +47,11 @@ The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 cmsrel CMSSW_10_2_14
 git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git
 ```
-Now you'll want to checkout your own branch (name it something useful)
+Now you'll want to checkout your own branch (name it something useful) and push it to the git repo
 ```
 git branch myBranch
-```
-And push it to your gitlab repo
-```
 git push --set-upstream origin myBranch
+git checkout myBranch
 ```
 
 ## Running the Framework
@@ -66,7 +64,7 @@ To start, you will need a file containing a list of data and mc files in the for
 ```
 type	treeName	filePath
 ```
-where *type* is either "data" or "sim", *treeName* is the name of the tree in the root file containing the events you wish to analyze, and *filePath* is the full file path to the root file 
+where *type* is either "data" or "sim", *treeName* is the name of the tree in the root file containing the events you wish to analyze, and *filePath* is the full file path to the root file. An example of this can be seen ![here](config/UltraLegacy2018.dat) 
 
 You can now run the pruner:
 ```

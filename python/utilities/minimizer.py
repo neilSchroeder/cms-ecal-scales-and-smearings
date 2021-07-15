@@ -1,5 +1,27 @@
+
+import gc
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import uproot as up
+import statistics as stats
+from scipy.optimize import basinhopping as basinHop
+from scipy.optimize import  differential_evolution as diffEvolve
+from scipy.optimize import minimize as minz
+from scipy.special import xlogy
+from scipy import stats as scistat 
+
+import python.plotters.plot_cats as plotter
+from python.utilities.smear_mc import smear
+from python.classes.zcat_class import zcat
+
+__num_scales__ = 0
+__num_smears__ = 0
+
 """
-Author: Neil Schroeder, schr1077@umn.edu, neil.raymond.schroeder@cern.ch
+Author: 
+    Neil Schroeder, schr1077@umn.edu, neil.raymond.schroeder@cern.ch
+
 About:
     This suite of functions will perform the minimization of the scales and 
     smearings using the zcat class defined in python/zcat_class.py 
@@ -43,33 +65,14 @@ About:
                           case of start_style='specify'
         _kAutoBin -> used to deliberately deactivate the auto_binning feature
                      in the zcat invariant mass distributions.
+        _kFixScales -> used to prevent the scales from floating in the fit, 
+                        they will be held at 1. and only the smearings will
+                        be allowed to float
         
 """
-##################################################################################################################
-import gc
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import uproot as up
-import statistics as stats
-from scipy.optimize import basinhopping as basinHop
-from scipy.optimize import  differential_evolution as diffEvolve
-from scipy.optimize import minimize as minz
-from scipy.special import xlogy
-from scipy import stats as scistat 
 
-import python.plotters.plot_cats as plotter
-from python.utilities.smear_mc import smear
-from python.classes.zcat_class import zcat
-
-__num_scales__ = 0
-__num_smears__ = 0
 
 def minimize(data, mc, cats, **options):
-
-    """ 
-    This is the control/main function for minimizing global scales and smearings 
-    """
 
     #don't let the minimizer start with a bad start_style
     allowed_start_styles = ('scan', 'random', 'specify')
@@ -93,21 +96,12 @@ def minimize(data, mc, cats, **options):
     #extract the categories
     __ZCATS__ = helper_minimizer.extract_cats(data, mc, cats, options)
 
+    #once categories are extracted, data and mc can be released to make more room.
+    del data
+    del mc
+
     #set up boundaries on starting location of scales
-    bounds = helper_minimizer.set_bounds(options) #reduce v
-    if _kClosure: 
-        bounds = [(0.99,1.01) for i in range(__num_scales__)]# + [(0., 0.03) for i in range(__num_smears__)]
-        if cats.iloc[1,3] != -1 or cats.iloc[1,5] != -1:
-            bounds=[(0.95,1.05) for i in range(__num_scales__)]
-    elif _kTestMethodAccuracy: 
-        bounds = [(0.96,1.04) for i in range(__num_scales__)] 
-        bounds += [(0., 0.05) for i in range(__num_smears__)]
-    elif _kFixScales:
-        bounds = [(0.999999999,1.000000001) for i in range(__num_scales__)]
-        bounds += [(0., 0.05) for i in range(__num_smears__)]
-    else: 
-        bounds = [(0.96,1.04) for i in range(__num_scales__)] 
-        bounds += [(0.000, 0.05) for i in range(__num_smears__)]
+    bounds = helper_minimizer.set_bounds(cats, num_scales=__num_scales__, num_smears=__num_smears__,options) #reduce v
 
     #it is important to test the accuracy with which a known scale can be recovered,
     #here we assign the known scales and inject them.
@@ -139,32 +133,30 @@ def minimize(data, mc, cats, **options):
     #deactivate invalid categories
     helper_minimizer.deactivate_cats(__ZCATS__, options['ignore_cats']) 
 
-    #once categories are extracted, data and mc can be released to make more room.
-    del data
-    del mc
-    gc.collect()
-
-
     #set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
     __GUESS__ = [0 for x in guess]
-    helper_minimizer.target_function(guess) #initializes the categories
+    helper_minimizer.target_function(guess, (__GUESS__,__ZCATS__)) #initializes the categories
 
     #if we're plotting, just plot and return, don't run a minimization
     if options['_kPlot']:
-        target_function(guess)
+        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__))
         plotter.plot_cats(plot_dir, __ZCATS__, __CATS__)
         return [], []
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
     if options['_kScan']:
-        target_function(guess)
+        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__))
         plotter.plot_1Dscan(plot_dir, _specify_file_, __ZCATS__)
         return [], []
 
     if start_style == 'scan':
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
-        guess = scan_nll(guess, scan_min, scan_max, scan_step)
+        guess = helper_minimizer.scan_nll(guess, scan_min, scan_max, scan_step,
+                                          zcats=__ZCATS__,
+                                          num_smears=__num_smears__,
+                                          num_scales=__num_scales__
+                                        )
 
     if start_style == 'random':
         xlow_scales = [0.99 for i in range(__num_scales__)]
@@ -191,13 +183,13 @@ def minimize(data, mc, cats, **options):
         guess = scan_file_df.loc[:,9].values
         guess = np.append(guess,[0.005 for x in range(__num_smears__)])
         
-    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess)))
+    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess, (__GUESS__,__ZCATS__) )))
     min_step_dict = {}
     if min_step_size is not None:
         min_step_dict = {"eps":float(min_step_size)}
     optimum = minz(helper_minimizer.target_function,
                    np.array(guess), 
-                   args=(__ZCATS__),
+                   args=(__GUESS__,__ZCATS__),
                    method="L-BFGS-B", 
                    bounds=bounds,
                    options=min_step_dict) 

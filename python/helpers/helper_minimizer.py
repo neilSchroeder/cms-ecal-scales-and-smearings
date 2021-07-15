@@ -70,7 +70,7 @@ def get_smearing_index(cats, cat_index):
     return cats.loc[truth].index[0]
 
 def clean_up(data, mc, cats):
-
+    #cleans up the dataframes, adds transverse energy if necessary, drops unnecessary columns
     if (cats.iloc[1, 3] == -1 and cats.iloc[1, 5] == -1) or (cats.iloc[1,3] != -1 and cats.iloc[1,6] != -1):
         data,mc = add_transverse_energy(data, mc)
         gc.collect()
@@ -103,7 +103,8 @@ def clean_up(data, mc, cats):
     
 
 def extract_cats( data, mc, cats, **options):
-    for index1 in range(__num_scales__):
+    #builds zcat classes with data and mc for each category
+    for index1 in range(options['num_scales']):
         for index2 in range(index1+1):
             cat1 = __CATS__.iloc[index1]
             cat2 = __CATS__.iloc[index2]
@@ -196,8 +197,8 @@ def extract_cats( data, mc, cats, **options):
                 raise KeyboardInterrupt
 
             df = mc[entries_eta&entries_r9OrEt]
-            mass_list_mc = np.array(df[c.INVMASS])
-            weight_list_mc = np.array(df['pty_weight'])
+            mass_list_mc = np.array(df[c.INVMASS].values, dtype=np.float32)
+            weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32)
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
             while len(mass_list_mc) < max(100*len(mass_list_data),200000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
                 mass_list_mc = np.append(mass_list_mc,mass_list_mc)
@@ -209,9 +210,22 @@ def extract_cats( data, mc, cats, **options):
             mass_list_mc = mass_list_mc[~np.isnan(mass_list_mc)]
             
             if __num_smears__ > 0:
-                __ZCATS__.append(zcat(index1, index2, get_smearing_index(index1), get_smearing_index(index2), mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
+                __ZCATS__.append(
+                        zcat(
+                            index1, index2, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), 
+                            smear_i=get_smearing_index(index1), smear_j=get_smearing_index(index2), 
+                            options
+                            )
+                        )
             else:
-                __ZCATS__.append(zcat(index1, index2, -1,-1, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), __MIN_RANGE__, __MAX_RANGE__, __AUTO_BIN__, __BIN_SIZE__))
+                __ZCATS__.append(
+                        zcat(
+                            index1, index2, #no smearing categories, so no smearing indices
+                            mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(),
+                            options
+                            )
+                        )
+
             del df
             del entries_eta
             del entries_r9OrEt
@@ -219,27 +233,48 @@ def extract_cats( data, mc, cats, **options):
 
     return __ZCATS__
 
+def set_bounds(cats, **options):
+    #sets the rectangular bounds for the scales and smearings derivation
+
+    bounds = []
+    if options['_kClosure':
+        bounds = [(0.99,1.01) for i in range(__num_scales__)]
+        if cats.iloc[1,3] != -1 or cats.iloc[1,5] != -1:
+            bounds=[(0.95,1.05) for i in range(__num_scales__)]
+    elif options['_kTestMethodAccuracy']:
+        bounds = [(0.96,1.04) for i in range(__num_scales__)]
+        bounds += [(0., 0.05) for i in range(__num_smears__)]
+    elif options['_kFixScales']:
+        bounds = [(0.999999999,1.000000001) for i in range(__num_scales__)]
+        bounds += [(0., 0.05) for i in range(__num_smears__)]
+    else:
+        bounds = [(0.96,1.04) for i in range(__num_scales__)]
+        bounds += [(0.000, 0.05) for i in range(__num_smears__)]
+        
+    return bounds
+
+
 
 def deactivate_cats(__ZCATS__, ignore_cats):
 
-    if ingore_cats != '':
+    if ingore_cats is not None:
         df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
         for cat in __ZCATS__:
             for row in df_ingore.iterrows():
                 if row[0] == cat.lead_index and row[1] == cat.sublead_index:
                     cat.valid=False
 
-    return __ZCATS__
-
-def target_function(x, verbose=False):
+def target_function(x, *args, verbose=False, **options):
     """ 
     This is the target function, which returns an event weighted -2*Delta NLL
     This function features a small verbose option for debugging purposes.
     target_function accepts an iterable of floats and uses them to evaluate the NLL in each category.
     Some 'smart' checks prevent the function from evaluating all N(N+1)/2 categories unless absolutely necessary
     """
-    global __ZCATS__
-    global __GUESS__
+    
+    #unpack args
+    __GUESS__, __ZCATS__ = args
+
     updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
     __GUESS__ = x
     for cat in __ZCATS__:
@@ -264,6 +299,7 @@ def target_function(x, verbose=False):
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
     for cat in __ZCATS__: cat.reset()
+
     if verbose:
         print("------------- total info -------------")
        #print("weighted nll:",ret/tot)
@@ -272,13 +308,14 @@ def target_function(x, verbose=False):
         print("--------------------------------------")
     return ret/tot if tot != 0 else 9e30
 
-def scan_nll(x, scan_min, scan_max, scan_step):
-    global __ZCATS__
-    global __num_scales__
-    global __num_smears__
+def scan_nll(x, scan_min, scan_max, scan_step, **options):
+    #performs the NLL scan to initialize the variables
+    __ZCATS__ = options['__ZCATS__']
+    __num_scales__ = options['num_scales']
+    __num_smears__ = options['num_smears']
     guess = x
     scanned = []
-    if not __FIX_SCALES__:
+    if not options['_kFixScales']:
         while len(scanned) < __num_scales__:
             #find "worst" category and scan that first
             tot = np.sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])/np.sum([cat.weight for cat in __ZCATS__ if cat.valid])
