@@ -95,6 +95,8 @@ From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step
            --closure
 ```
 
+The `--closure` option runs the minimization without any smearings. The MC is smeared ahead of the minimization using the smearings provided and no smearings are given to the minimzer. It can be useful to run this several times if your scales look off.
+
 ## Advanced Options and Additional Tools
 
 What follows is a list of additional options that may be of some use as well as a list of tools which are helpful for the scales and smearings studies
@@ -111,7 +113,29 @@ To specify the bin size used in the NLL evaluation use the `--bin-size` option.
 
 To change how the minimizer chooses the initial value of the scales and smearings use the `--start-style` option. The available choices are "scan", "random", and "specify".
 
+To change the min and max values and the step size of the NLL scan used to seed the minimizer, use the `--scan-min`, `--scan-max`, and `--scan-step` options
 
+To change the minimum step size the minimizer is allowed to take, use the `--min-step-size` option.
+
+To fix the scales, and only derive a set of smearings, use the `--fix-scales` option. 
+
+To submit the minimization to condor, use the `--condor` option, additionally you can specify the job flavour using the `--queue` options, the defualt queue is `tomorrow`
+
+### Additional Use Options
+
+To rewrite the scales/smearings file you've just created, rerun the same command with the `--rewrite` option
+
+To merge an "only-step" file with a scales file, you can use the `--combine-files` option and provide the scales file with `-s` and the only step scales file with `--only-step`
+
+### Plotting Options for pymin
+
+To plot the 1D mass scans for each dielectron category provide the `--plot` option and provide the directory where the plots will be written with `--plot-dir`
+
+### Advanced Diagnostic Options
+
+To test the accuracy of the method, you can use the `--test-method-accuracy` option which will inject scales and smearings to MC in an attempt to derive the injected values back.
+
+To scan the NLL phase space of a set of categories use the `--scan-nll` options, if you wish you specify the scales around which to scan you must also provide a config file to `--scan-scales`
 
 ## Credit
 

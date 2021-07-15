@@ -62,11 +62,11 @@ def main():
 
     parser.add_argument("-c","--cats", 
                     	help="path to file describing categories to use in minimization")
-    parser.add_argument("--time-stability", default=False, dest="time_stability", action='store_true',
+    parser.add_argument("--time-stability", default=False, dest="_kTimeStability", action='store_true',
                     	help="scale data to PDG Z mass, pass the run divide file as your categories")
 
     #options provided to the minimizer
-    parser.add_argument("-s","--scales",
+    parser.add_argument("-s","--scales", default=None,
                     	help="path to scales file to apply to data")
     parser.add_argument("--smearings", default=None,
                         help="path to smearings file to apply to MC")
@@ -74,6 +74,8 @@ def main():
                         help="tsv containing rapidity x ptz weights, if empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.")
     parser.add_argument("-o","--output", default=None,
                     	help="output tag to add to file names")
+    parser.add_argument("--closure", default=False, action='store_true', dest='_kClosure',
+                    	help="derive the closure of the scales for a given step")
     parser.add_argument("--ignore", default=None,
                     	help="list of categories to ignore for the current derivation")
     parser.add_argument("--hist-min", default=80, type=float, dest='hist_min',
@@ -94,13 +96,17 @@ def main():
                     	help="Step size for scan start")
     parser.add_argument("--min-step-size", default=None, dest='min_step_size',
                         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.")
-    parser.add_argument("--closure", default=False, action='store_true',
-                    	help="derive the closure of the scales for a given step")
     parser.add_argument("--fix-scales", default=False, action='store_true', dest='_kFixScales',
                         help="[ADVANCED] flag to keep scales fixed at 1. and only derive smearings")
+    parser.add_argument("--condor", default=False, action='store_true', dest='_kCondor',
+                        help="Submit this job to condor")
+    parser.add_argument("--queue", default='tomorrow',
+                        help="flavour of submitted job")
+    parser.add_argument("--from-condor", default=False, action='store_true', dest='_kFromCondor',
+                        help="[NOT FOR USER] flag added by condor_handler to indicate this has been submitted from condor")
 
     #additional use options
-    parser.add_argument("--rewrite", default=False, action='store_true',
+    parser.add_argument("--rewrite", default=False, action='store_true', dest='_kRewrite',
                     	help="only writes the scales file associated with this step")
     parser.add_argument("--combine-files", default=False, action='store_true', dest='_kCombine',
                     	help="[ADVANCED] combines two specified files, using the --only_step and --step options")
@@ -120,12 +126,6 @@ def main():
                     	help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
     parser.add_argument("--scan-scales", default=None, dest='scan_scales', 
                     	help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
-    parser.add_argument("--condor", default=False, action='store_true',
-                        help="Submit this job to condor")
-    parser.add_argument("--queue", default='tomorrow',
-                        help="flavour of submitted job")
-    parser.add_argument("--from-condor", default=False, action='store_true', dest='_kFromCondor',
-                        help="[NOT FOR USER] flag added by condor_handler to indicate this has been submitted from condor")
 
     args = parser.parse_args()
     print("[INFO] welcome to SS_PyMin")
@@ -133,7 +133,7 @@ def main():
 
     print(helper_pymin.get_run_string(sys.argv))
 
-    if args.closure and args.smearings is None:
+    if args._kClosure and args.smearings is None:
         print("[ERROR] you have submitted a closure test without a smearings file.")
         print("[ERROR] please resubmit this job with a smearings file.")
         return
@@ -141,7 +141,7 @@ def main():
     step = helper_pymin.get_step(args)
 
     #submit this job to condor
-    if args.condor and not args.from_condor:
+    if args._kCondor and not args._kFromCondor:
         #remove the condor/queue information
         if cmd.find('--condor') != -1:
             cmd = cmd.replace("--condor ","")
@@ -151,16 +151,16 @@ def main():
 
     #if you need to rewrite a scales file after making changes by hand
     # you can use these options to do so.
-    if args.rewrite:
+    if args._kRewrite:
         helper_pymin.rewrite(args)
         return
 
-    if args.combine_files:
+    if args._kCombine:
         helper_pymin.combine_files(args)
         return
 
     #prune files to manage running memory usage
-    if args.prune:
+    if args._kPrune:
         pruner.prune(args.inputFile, args.pruned_file_name, args.pruned_file_dest)
         return
 
@@ -172,25 +172,23 @@ def main():
         return
 
     #derive time bins (by run) in which to stabilize data
-    if args.run_divide:
+    if args._kRunDivide:
         outFile = "datFiles/run_divide_"+args.output+".dat"
         write_files.write_runs(divide_by_run.divide(data, args.minEvents), outFile)
         return
 
     #derive the scales for the time stability
-    if args.time_stability:
+    if args._kTimeStability:
         outFile = "datFiles/step1_"+args.output+"_scales.dat"
         write_files.write_time_stability(time_stability.derive(data, args.cats), args.cats, outFile)
         return
 
     #scale the data
-    if args.scales:
+    if args.scales is not None:
         print("[INFO] applying {} to the data".format(args.scales))
         data = scale_data.scale(data, args.scales)
-        gc.collect()
 
     weight_file = args.weights
-    print(args.weights)
     if args.weights is None:
         print("[INFO] deriving Y(Z), Pt(Z) weights")
         weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
@@ -203,7 +201,7 @@ def main():
     cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
     num_scales = sum([val.find('scale') != -1 for val in cats[0]])
 
-    if args.closure:
+    if args._kClosure:
         mc = smear_mc.smear(mc, args.smearings)
 
 ###############################################################################
@@ -219,16 +217,16 @@ def main():
                                              scan_max=args.scan_max, #max value in scan
                                              scan_step=args.scan_step, #step size of scan
                                              min_step=args.min_step_size, #step size of minimizer
-                                             _kClosure=args.closure, #closure flag
+                                             _kClosure=args._kClosure, #closure flag
                                              scales=args.scales, #scales file
-                                             _kPlot=args.plot, #plot flag
+                                             _kPlot=args._kPlot, #plot flag
                                              plot_dir=args.plot_dir, #directory to put plots
-                                             _kTestMethodAccuracy=args.test_method_accuracy, #test method flag
-                                             _kScan=args.scan_nll, #scan nll flag
+                                             _kTestMethodAccuracy=args._kTestMethodAccuracy, #test method flag
+                                             _kScanNLL=args._kScanNLL, #scan nll flag
                                              scan_scales=args.scan_scales, #scales to seed the scan
-                                             _kFixScales=args.fix_scales, #don't let scales float in fit flag
+                                             _kFixScales=args._kFixScales, #don't let scales float in fit flag
                                              _kAutoBin=(not args.no_auto_bin))
-    if args.plot:
+    if args._kPlot:
         print("[INFO] plotting is done, please review")
         return
     if scales_smears == []:

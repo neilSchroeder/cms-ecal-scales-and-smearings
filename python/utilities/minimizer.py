@@ -145,12 +145,38 @@ def minimize(data, mc, cats, **options):
         return [], []
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
-    if options['_kScan']:
+    if options['_kScanNLL']:
         helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__))
         plotter.plot_1Dscan(plot_dir, _specify_file_, __ZCATS__)
         return [], []
 
-    if start_style == 'scan':
+    if start_style != 'scan':
+        if start_style == 'random':
+            xlow_scales = [0.99 for i in range(__num_scales__)]
+            xhigh_scales = [1.01 for i in range(__num_scales__)]
+            xlow_smears = [0.008 for i in range(__num_smears__)]
+            xhigh_smears = [0.025 for i in range(__num_smears__)]
+
+            #set the initial guess: random for a regular derivation and unity 
+            #for a closure derivation
+            guess_scales = np.random.uniform(low=xlow_scales,
+                    high=xhigh_scales).ravel().tolist()
+            if _kClosure: 
+                guess_scales = [1. for i in range(__num_scales__)]
+            guess_smears = np.random.uniform(low=xlow_smears,
+                    high=xhigh_smears).ravel().tolist()
+            if _kClosure or _kTestMethodAccuracy: 
+                guess_smears = [0.0 for i in range(__num_smears__)]
+            if _kTestMethodAccuracy or not _kClosure: 
+                guess_scales.extend(guess_smears)
+            guess = guess_scales
+
+        if start_style == 'specify':
+            scan_file_df = pd.read_csv(_specify_file_,sep='\t',header=None)
+            guess = scan_file_df.loc[:,9].values
+            guess = np.append(guess,[0.005 for x in range(__num_smears__)])
+
+    else: #this is the default initialization
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
         guess = helper_minimizer.scan_nll(guess, scan_min, scan_max, scan_step,
                                           zcats=__ZCATS__,
@@ -158,35 +184,12 @@ def minimize(data, mc, cats, **options):
                                           num_scales=__num_scales__
                                         )
 
-    if start_style == 'random':
-        xlow_scales = [0.99 for i in range(__num_scales__)]
-        xhigh_scales = [1.01 for i in range(__num_scales__)]
-        xlow_smears = [0.008 for i in range(__num_smears__)]
-        xhigh_smears = [0.025 for i in range(__num_smears__)]
-
-        #set the initial guess: random for a regular derivation and unity 
-        #for a closure derivation
-        guess_scales = np.random.uniform(low=xlow_scales,
-                high=xhigh_scales).ravel().tolist()
-        if _kClosure: 
-            guess_scales = [1. for i in range(__num_scales__)]
-        guess_smears = np.random.uniform(low=xlow_smears,
-                high=xhigh_smears).ravel().tolist()
-        if _kClosure or _kTestMethodAccuracy: 
-            guess_smears = [0.0 for i in range(__num_smears__)]
-        if _kTestMethodAccuracy or not _kClosure: 
-            guess_scales.extend(guess_smears)
-        guess = guess_scales
-
-    if start_style == 'specify':
-        scan_file_df = pd.read_csv(_specify_file_,sep='\t',header=None)
-        guess = scan_file_df.loc[:,9].values
-        guess = np.append(guess,[0.005 for x in range(__num_smears__)])
-        
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess, (__GUESS__,__ZCATS__) )))
     min_step_dict = {}
-    if min_step_size is not None:
-        min_step_dict = {"eps":float(min_step_size)}
+    if options['min_step_size'] is not None:
+        min_step_dict = {"eps":float(options['min_step_size'])}
+
+    #minimize
     optimum = minz(helper_minimizer.target_function,
                    np.array(guess), 
                    args=(__GUESS__,__ZCATS__),
@@ -196,17 +199,6 @@ def minimize(data, mc, cats, **options):
 
     print("[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:")
     print(optimum)
-    #calculate errors using hess_inv
-    ftol = 2.220446049250313e-09
-    tmp_i = np.zeros(len(optimum.x))
-    unc = []
-    for i in range(len(optimum.x)):
-       tmp_i[i] = 1.0
-       hess_inv_i = optimum.hess_inv(tmp_i)[i]
-       uncertainty_i = np.sqrt(max(1, abs(optimum.fun)) * ftol * hess_inv_i)
-       tmp_i[i] = 0.0
-       print('x^{0} = {1:12.4e} +/- {2:.1e}'.format(i, optimum.x[i], uncertainty_i))
-       unc.append(uncertainty_i)
 
     if not optimum.success: 
         print("#"*40)
@@ -215,7 +207,7 @@ def minimize(data, mc, cats, **options):
         print("[ERROR] Please review the output and resubmit")
         print("#"*40)
         print("#"*40)
-        return optimum.x, unc
+        return optimum.x, [5e-05 for par in optimum.x]
 
     if _kTestMethodAccuracy:
         ret = optimum.x
@@ -226,5 +218,5 @@ def minimize(data, mc, cats, **options):
             else:
                 print("[INFO][ACCURACY TEST] The injected smearing was {}, the recovered smearing was {}".format(scales_to_inject[i], ret[i]))
                 ret[i] = 100*(ret[i]/scales_to_inject[i] - 1)
-        return ret, unc
-    return optimum.x, unc
+        return ret, [5e-05 for par in ret]
+    return optimum.x, [5e-05 for par in optimum.x]
