@@ -10,8 +10,7 @@ Additionally, this software serves as a portion of the thesis of Neil Schroeder 
 
 ## Example Results
 
-![money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png](./examples/money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png)
-
+![money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png](./examples/money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png =300x300)
 ## To Do
 
 Initiating overhaul using some better coding practices and improved data handling 
