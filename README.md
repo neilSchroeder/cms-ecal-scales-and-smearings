@@ -68,7 +68,7 @@ where *type* is either "data" or "sim", *treeName* is the name of the tree in th
 
 You can now run the pruner:
 ```
-./pymin.py -i INPUT_FILE --prune --pruned_file_dest='DEST_PATH' --pruned_file_name='DEST_TAG'
+./pymin.py -i config/UltraLegacy2018.dat --prune --pruned_file_dest='/eos/home-<initial>/<username>/pymin/' --pruned_file_name='pruned_ul18'
 ```
 This takes your input files and will write them to tsvs in the folder DEST_PATH using the tage DEST_TAG
 
@@ -85,15 +85,19 @@ With your run bins in hand you can now run the time_stability step:
 From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
 
 ```
-./pymin.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step1_MY_TAG_scales.dat
-./pymin.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step2_MY_TAG_scales.dat --closure
-./pymin.py -i config/ul2018.dat -c config/cats_step3.py -s datFiles/step2_MY_TAG_scales.dat 
-./pymin.py -i config/ul2018.dat -c config/cats_step3.py -s datFiles/step3_MY_TAG_scales.dat --closure
-./pymin.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step3_MY_TAG_scales.dat
-./pymin.py -i config/ul2018.dat -c config/cats_step4_gain.py -s datFiles/step4_MY_TAG_scales.dat --closure
-./pymin.py -i config/ul2018.dat -c config/cats_step4_et.py -s datFiles/step3_MY_TAG_scales.dat
-./pymin.py -i config/ul2018.dat -c config/cats_step4_et.py -s datFiles/step4_MY_TAG_scales.dat --closure
+./pymin.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step1_MY_TAG_scales.dat -o ul18_DATE_v0
+./pymin.py -i config/ul2018.dat \
+           -c config/cats_step2.py \
+           -s datFiles/step2_MY_TAG_scales.dat \
+           -w datFiles/ptz_x_rapidity_weights_ul18_DATE_v0.tsv \
+           -o ul18_step2_DATE_v0_closure \
+           --smearings="datFiles/step2_ul18_DATE_v0_smearings.dat \
+           --closure
 ```
+
+## Advanced Options
+
+
 
 ## Credit
 
