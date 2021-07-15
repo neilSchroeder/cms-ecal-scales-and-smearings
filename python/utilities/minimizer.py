@@ -101,7 +101,7 @@ def minimize(data, mc, cats, **options):
     del mc
 
     #set up boundaries on starting location of scales
-    bounds = helper_minimizer.set_bounds(cats, num_scales=__num_scales__, num_smears=__num_smears__,options) #reduce v
+    bounds = helper_minimizer.set_bounds(cats, num_scales=__num_scales__, num_smears=__num_smears__, **options)
 
     #it is important to test the accuracy with which a known scale can be recovered,
     #here we assign the known scales and inject them.

@@ -74,12 +74,16 @@ def main():
                         help="tsv containing rapidity x ptz weights, if empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.")
     parser.add_argument("-o","--output", default=None,
                     	help="output tag to add to file names")
-    parser.add_argument("--ingore", default=None,
+    parser.add_argument("--ignore", default=None,
                     	help="list of categories to ignore for the current derivation")
     parser.add_argument("--hist_min", default=80, type=float,
                     	help="Min of histogram for binned NLL evaluation")
     parser.add_argument("--hist_max", default=100, type=float,
                     	help="Max of histogram for binned NLL evaluation")
+    parser.add_argument("--no_auto_bin", default=False, action='store_true',
+                    	help="Turns off the auto binning feature (using Freedman-Diaconis method)")
+    parser.add_argument("--bin_size", default=0.25, type=float,
+                    	help="Size of bins for binned NLL evaluation")
     parser.add_argument("--start_style", default='scan', type=str,
                     	help="Determines how the minimizer chooses its starting location. Allowed options are 'scan', 'random', 'specify'. If using specify, used the scan_scales argument to provide the starting location")
     parser.add_argument("--scan_min", default=0.98, type=float,
@@ -92,10 +96,6 @@ def main():
                         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.")
     parser.add_argument("--closure", default=False, action='store_true',
                     	help="derive the closure of the scales for a given step")
-    parser.add_argument("--no_auto_bin", default=False, action='store_true',
-                    	help="Turns off the auto binning feature (using Freedman-Diaconis method)")
-    parser.add_argument("--bin_size", default=0.25, type=float,
-                    	help="Size of bins for binned NLL evaluation")
     parser.add_argument("--fix_scales", default=False, action='store_true',
                         help="[ADVANCED] flag to keep scales fixed at 1. and only derive smearings")
 

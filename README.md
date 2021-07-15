@@ -95,7 +95,22 @@ From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step
            --closure
 ```
 
-## Advanced Options
+## Advanced Options and Additional Tools
+
+What follows is a list of additional options that may be of some use as well as a list of tools which are helpful for the scales and smearings studies
+
+### Advanced Options
+
+To ignore specific categories by index use the `--ignore` option
+```
+--ignore IGNORE_FILE
+```
+
+To change the lower and upper bounds on the histograms used to evaluate the NLL of the dielectron categories use the `--hist-min` and `--hist-max` options
+
+To turn off the auto-binning feature 
+
+To change how the minimizer chooses the initial value of the scales and smearings use the `--start-style` option. The available choices are "scan", "random", and "specify".
 
 
 
