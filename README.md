@@ -64,7 +64,7 @@ To start, you will need a file containing a list of data and mc files in the for
 ```
 type	treeName	filePath
 ```
-where *type* is either "data" or "sim", *treeName* is the name of the tree in the root file containing the events you wish to analyze, and *filePath* is the full file path to the root file. An example of this can be seen ![here](config/UltraLegacy2018.dat) 
+where *type* is either "data" or "sim", *treeName* is the name of the tree in the root file containing the events you wish to analyze, and *filePath* is the full file path to the root file. An example of this can be seen in config/UltraLegacy2018.dat
 
 You can now run the pruner:
 ```
