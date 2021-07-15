@@ -48,21 +48,21 @@ def main():
     parser.add_argument("-i","--inputFile", required=True, 
                     	help="input file containing paths to data and mc")
 
-    parser.add_argument("--prune", default=False, action='store_true',
+    parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
                     	help="prune down the data and mc to keep memory usage low")
-    parser.add_argument("--pruned_file_name", 
+    parser.add_argument("--pruned-file-name", default=None, dest='pruned_file_name', 
                     	help="basic string for naming the pruned files")
-    parser.add_argument("--pruned_file_dest",
+    parser.add_argument("--pruned-file-dest", default=None, dest='pruned_file_dest',
                     	help="destination for the pruned files, a directory in /eos/home-<initial>/<username>/ is recommended")
 
-    parser.add_argument("--run_divide", default=False, action='store_true',
+    parser.add_argument("--run-divide", default=False, dest='_kRunDivide', action='store_true',
                     	help="option to make the run division file for time_stability")
-    parser.add_argument("--minEvents", default=10000,
+    parser.add_argument("--min-events", default=10000, dest='min_events',
                     	help="minimum number of events allowed in a given run bin")
 
     parser.add_argument("-c","--cats", 
                     	help="path to file describing categories to use in minimization")
-    parser.add_argument("--time_stability", default=False, action='store_true',
+    parser.add_argument("--time-stability", default=False, dest="time_stability", action='store_true',
                     	help="scale data to PDG Z mass, pass the run divide file as your categories")
 
     #options provided to the minimizer
@@ -76,55 +76,55 @@ def main():
                     	help="output tag to add to file names")
     parser.add_argument("--ignore", default=None,
                     	help="list of categories to ignore for the current derivation")
-    parser.add_argument("--hist_min", default=80, type=float,
+    parser.add_argument("--hist-min", default=80, type=float, dest='hist_min',
                     	help="Min of histogram for binned NLL evaluation")
-    parser.add_argument("--hist_max", default=100, type=float,
+    parser.add_argument("--hist-max", default=100, type=float, dest='hist_max',
                     	help="Max of histogram for binned NLL evaluation")
-    parser.add_argument("--no_auto_bin", default=False, action='store_true',
+    parser.add_argument("--no-auto-bin", default=False, action='store_true', dest='_kNoAutoBin',
                     	help="Turns off the auto binning feature (using Freedman-Diaconis method)")
-    parser.add_argument("--bin_size", default=0.25, type=float,
+    parser.add_argument("--bin-size", default=0.25, type=float, dest='bin_size',
                     	help="Size of bins for binned NLL evaluation")
-    parser.add_argument("--start_style", default='scan', type=str,
+    parser.add_argument("--start-style", default='scan', type=str, dest='start_style',
                     	help="Determines how the minimizer chooses its starting location. Allowed options are 'scan', 'random', 'specify'. If using specify, used the scan_scales argument to provide the starting location")
-    parser.add_argument("--scan_min", default=0.98, type=float,
+    parser.add_argument("--scan-min", default=0.98, type=float, dest='scan_min',
                     	help="Min value for scan start")
-    parser.add_argument("--scan_max", default=1.02, type=float,
+    parser.add_argument("--scan-max", default=1.02, type=float, dest='scan_max'
                     	help="Max value for scan start")
-    parser.add_argument("--scan_step", default=0.001, type=float,
+    parser.add_argument("--scan-step", default=0.001, type=float, dest='scan_step',
                     	help="Step size for scan start")
-    parser.add_argument("--min_step_size", default=None, 
+    parser.add_argument("--min-step-size", default=None, dest='min_step_size',
                         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.")
     parser.add_argument("--closure", default=False, action='store_true',
                     	help="derive the closure of the scales for a given step")
-    parser.add_argument("--fix_scales", default=False, action='store_true',
+    parser.add_argument("--fix-scales", default=False, action='store_true', dest='_kFixScales',
                         help="[ADVANCED] flag to keep scales fixed at 1. and only derive smearings")
 
     #additional use options
     parser.add_argument("--rewrite", default=False, action='store_true',
                     	help="only writes the scales file associated with this step")
-    parser.add_argument("--combine_files", default=False, action='store_true',
+    parser.add_argument("--combine-files", default=False, action='store_true', dest='_kCombine',
                     	help="[ADVANCED] combines two specified files, using the --only_step and --step options")
-    parser.add_argument("--only_step", default='', type=str,
+    parser.add_argument("--only-step", default='', type=str, dest='only_step'
                     	help="[ADVANCED] only step file, to be used with the --combine_files and --step options")
 
     #plotting options
-    parser.add_argument("--plot", default=False, action='store_true',
+    parser.add_argument("--plot", default=False, action='store_true', dest='_kPlot',
                     	help="Plot the invariant mass distributions for data and mc in the provided categories")
-    parser.add_argument("--plot_dir", default='./',
+    parser.add_argument("--plot-dir", default='./', dest='plot_dir',
                     	help="directory to write the plots")
 
     #advanced diagnostic options
-    parser.add_argument("--test_method_accuracy", default=False, action='store_true',
+    parser.add_argument("--test-method-accuracy", default=False, action='store_true', dest='_kTestMethodAccuracy',
                     	help="Treat MC as data, inject known scales into mc cats, see how well method recovers known scale injection")
-    parser.add_argument("--scan_nll", default=False, action='store_true',
+    parser.add_argument("--scan-nll", default=False, action='store_true', dest='_kScanNLL',
                     	help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
-    parser.add_argument("--scan_scales", default='', 
+    parser.add_argument("--scan-scales", default=None, dest='scan_scales', 
                     	help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
     parser.add_argument("--condor", default=False, action='store_true',
                         help="Submit this job to condor")
     parser.add_argument("--queue", default='tomorrow',
                         help="flavour of submitted job")
-    parser.add_argument("--from_condor", default=False, action='store_true',
+    parser.add_argument("--from-condor", default=False, action='store_true', dest='_kFromCondor',
                         help="[NOT FOR USER] flag added by condor_handler to indicate this has been submitted from condor")
 
     args = parser.parse_args()

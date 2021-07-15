@@ -102,13 +102,12 @@ What follows is a list of additional options that may be of some use as well as 
 ### Advanced Options
 
 To ignore specific categories by index use the `--ignore` option
-```
---ignore IGNORE_FILE
-```
 
 To change the lower and upper bounds on the histograms used to evaluate the NLL of the dielectron categories use the `--hist-min` and `--hist-max` options
 
-To turn off the auto-binning feature 
+To turn off the auto-binning feature use the `--no-auto-bin` option.
+
+To specify the bin size used in the NLL evaluation use the `--bin-size` option.
 
 To change how the minimizer chooses the initial value of the scales and smearings use the `--start-style` option. The available choices are "scan", "random", and "specify".
 
