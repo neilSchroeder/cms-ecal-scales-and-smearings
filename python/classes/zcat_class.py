@@ -20,7 +20,7 @@ class zcat:
         self.weights = weights
         self.hist_min = options['hist_min'] if 'hist_min' in options.keys() else 80.
         self.hist_max = options['hist_max'] if 'hist_max' in options.keys() else 100.
-        self.auto_bin = options['auto_bin'] if '_kAutoBin' in options.keys() else True
+        self.auto_bin = options['_kAutoBin'] if '_kAutoBin' in options.keys() else True
         self.bin_size = options['bin_size'] if 'bin_size' in options.keys() else 0.25
         self.updated = False
         self.NLL = 0

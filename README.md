@@ -74,13 +74,13 @@ This takes your input files and will write them to tsvs in the folder DEST_PATH 
 
 Now you will need to put the output files in a file, preferably in the config folder to run the run divider
 ```
-./pymin.py -i config/ul2018.dat --run_divide
+./pymin.py -i config/ul2018.dat --run-divide -o ul18
 ```
 If you want fewer run bins you can increase the default number of events per run using the `--minEvents` argument
 
 With your run bins in hand you can now run the time_stability step:
 ```
-./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat --time_stability
+./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat --time-stability
 ```
 From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
 

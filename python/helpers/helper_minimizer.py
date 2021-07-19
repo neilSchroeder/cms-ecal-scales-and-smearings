@@ -15,7 +15,7 @@ import python.plotters.plot_cats as plotter
 from python.utilities.smear_mc import smear
 from python.classes.zcat_class import zcat
 
-c = constants.consts()
+c = constants.const()
 
 def add_transverse_energy(data,mc):
     #add a transverse energy column for data and mc 
@@ -81,9 +81,8 @@ def clean_up(data, mc, cats):
                          c.E_SUB, 
                          c.GAIN_LEAD, 
                          c.GAIN_SUB, 
-                         c.PHI_LEAD,
-                         c.PHI_SUB,
                          c.RUN]
+
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
             mc.drop(drop_list, axis=1, inplace=True)
@@ -92,8 +91,6 @@ def clean_up(data, mc, cats):
                          c.E_SUB, 
                          c.R9_LEAD, 
                          c.R9_SUB, 
-                         c.PHI_LEAD,
-                         c.PHI_SUB,
                          c.RUN]
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
@@ -104,10 +101,11 @@ def clean_up(data, mc, cats):
 
 def extract_cats( data, mc, cats, **options):
     #builds zcat classes with data and mc for each category
+    __ZCATS__ = []
     for index1 in range(options['num_scales']):
         for index2 in range(index1+1):
-            cat1 = __CATS__.iloc[index1]
-            cat2 = __CATS__.iloc[index2]
+            cat1 = cats.iloc[index1]
+            cat2 = cats.iloc[index2]
             #thisCat should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
             entries_eta = data[c.ETA_LEAD].between(cat1[1],cat1[2]) & data[c.ETA_SUB].between(cat2[1],cat2[2])
             entries_eta = entries_eta | (data[c.ETA_SUB].between(cat1[1],cat1[2])&data[c.ETA_LEAD].between(cat2[1],cat2[2]))
@@ -209,12 +207,12 @@ def extract_cats( data, mc, cats, **options):
             weight_list_mc = weight_list_mc[~np.isnan(mass_list_mc)]
             mass_list_mc = mass_list_mc[~np.isnan(mass_list_mc)]
             
-            if __num_smears__ > 0:
+            if options['num_smears'] > 0:
                 __ZCATS__.append(
                         zcat(
                             index1, index2, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), 
-                            smear_i=get_smearing_index(index1), smear_j=get_smearing_index(index2), 
-                            options
+                            smear_i=get_smearing_index(cats,index1), smear_j=get_smearing_index(cats,index2), 
+                            **options
                             )
                         )
             else:
@@ -222,7 +220,7 @@ def extract_cats( data, mc, cats, **options):
                         zcat(
                             index1, index2, #no smearing categories, so no smearing indices
                             mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(),
-                            options
+                            **options
                             )
                         )
 
@@ -237,19 +235,19 @@ def set_bounds(cats, **options):
     #sets the rectangular bounds for the scales and smearings derivation
 
     bounds = []
-    if options['_kClosure':
-        bounds = [(0.99,1.01) for i in range(__num_scales__)]
+    if options['_kClosure']:
+        bounds = [(0.99,1.01) for i in range(options['num_scales'])]
         if cats.iloc[1,3] != -1 or cats.iloc[1,5] != -1:
-            bounds=[(0.95,1.05) for i in range(__num_scales__)]
+            bounds=[(0.95,1.05) for i in range(options['num_scales'])]
     elif options['_kTestMethodAccuracy']:
-        bounds = [(0.96,1.04) for i in range(__num_scales__)]
-        bounds += [(0., 0.05) for i in range(__num_smears__)]
+        bounds = [(0.96,1.04) for i in range(options['num_scales'])]
+        bounds += [(0., 0.05) for i in range(options['num_smears'])]
     elif options['_kFixScales']:
-        bounds = [(0.999999999,1.000000001) for i in range(__num_scales__)]
-        bounds += [(0., 0.05) for i in range(__num_smears__)]
+        bounds = [(0.999999999,1.000000001) for i in range(options['num_scales'])]
+        bounds += [(0., 0.05) for i in range(options['num_smears'])]
     else:
-        bounds = [(0.96,1.04) for i in range(__num_scales__)]
-        bounds += [(0.000, 0.05) for i in range(__num_smears__)]
+        bounds = [(0.96,1.04) for i in range(options['num_scales'])]
+        bounds += [(0.000, 0.05) for i in range(options['num_smears'])]
         
     return bounds
 
@@ -257,14 +255,14 @@ def set_bounds(cats, **options):
 
 def deactivate_cats(__ZCATS__, ignore_cats):
 
-    if ingore_cats is not None:
-        df_ignore = pd.read_csv(ingore_cats, sep="\t", header=None)
+    if ignore_cats is not None:
+        df_ignore = pd.read_csv(ignore_cats, sep="\t", header=None)
         for cat in __ZCATS__:
-            for row in df_ingore.iterrows():
+            for row in df_ignore.iterrows():
                 if row[0] == cat.lead_index and row[1] == cat.sublead_index:
                     cat.valid=False
 
-def target_function(x, *args, verbose=False, **options):
+def target_function(x, args, verbose=False, **options):
     """ 
     This is the target function, which returns an event weighted -2*Delta NLL
     This function features a small verbose option for debugging purposes.
@@ -273,7 +271,7 @@ def target_function(x, *args, verbose=False, **options):
     """
     
     #unpack args
-    __GUESS__, __ZCATS__ = args
+    (__GUESS__, __ZCATS__, __num_scales, __num_smears__) = args
 
     updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
     __GUESS__ = x
@@ -308,9 +306,9 @@ def target_function(x, *args, verbose=False, **options):
         print("--------------------------------------")
     return ret/tot if tot != 0 else 9e30
 
-def scan_nll(x, scan_min, scan_max, scan_step, **options):
+def scan_nll(x, **options):
     #performs the NLL scan to initialize the variables
-    __ZCATS__ = options['__ZCATS__']
+    __ZCATS__ = options['zcats']
     __num_scales__ = options['num_scales']
     __num_smears__ = options['num_smears']
     guess = x
@@ -327,7 +325,7 @@ def scan_nll(x, scan_min, scan_max, scan_step, **options):
                     max_nll = cat.NLL*cat.weight/tot
             scanned.append(max_index)
             if max_index != -1:
-                x = np.arange(scan_min,scan_max,scan_step)
+                x = np.arange(options['scan_min'],options['scan_max'],options['scan_step'])
                 my_guesses = []
                 #generate a few guesses             
                 for j,val in enumerate(x): 

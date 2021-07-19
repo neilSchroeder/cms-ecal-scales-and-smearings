@@ -33,7 +33,7 @@ def derive(data, runs, _kWriteData=True):
     for col in headers:
         dictForDf[col] = []
 
-    for i,pair in run_pairs.iterrows():
+    for i,pair in run_bins.iterrows():
         mask_run = np.logical_and(pair[0] <= data[c.RUN].values, data[c.RUN].values <= pair[1])
         mask_mass = np.logical_and(c.MIN_INVMASS <= data[c.INVMASS].values, data[c.INVMASS].values <= c.MAX_INVMASS)
         mask = np.logical_and(mask_run, mask_mass)
@@ -48,14 +48,14 @@ def derive(data, runs, _kWriteData=True):
                 dictForDf['eta_max'].append(eta_max[j])
                 dictForDf['median'].append(stat.median(data[bin_mask][c.INVMASS].values))
                 dictForDf['mean'].append(stat.mean(data[bin_mask][c.INVMASS].values))
-                dictForDf['sigma'].append(stat.stdev(data[bin_mask][c.INVMASS].values))
+                dictForDf['sigma'].append(stat.stdev(np.array(data[bin_mask][c.INVMASS].values,dtype=np.float64)))
                 dictForDf['events'].append(len(data[bin_mask][c.INVMASS].values))
                 dictForDf['scale'].append(eta_bin[-1])
                 invmass = data[bin_mask][c.INVMASS].values * eta_bin[-1]
                 invmass = invmass[ np.logical_and(c.MIN_INVMASS <= invmass, invmass <= c.MAX_INVMASS) ]
                 dictForDf['median_corr'].append(stat.median(invmass))
                 dictForDf['mean_corr'].append(stat.mean(invmass))
-                dictForDf['sigma_corr'].append(stat.stdev(invmass))
+                dictForDf['sigma_corr'].append(stat.stdev(np.array(invmass,dtype=np.float64)))
 
     if _kWriteData: 
         dfOut = pd.DataFrame(dictForDf)

@@ -43,8 +43,12 @@ def apply(arg):
         
         lead_mask = np.logical_and(lead_eta_mask,np.logical_and(lead_r9_mask,lead_gainEt_mask))
         sublead_mask = np.logical_and(sub_eta_mask,np.logical_and(sub_r9_mask,sub_gainEt_mask))
+
+        if len(np.ravel(scales[sublead_mask])) < 10:
+            print(row)
+            print(scales[sublead_mask])
         return (np.ravel(scales[lead_mask])[c.i_scale], np.ravel(scales[lead_mask])[c.i_err],
-                np.ravel(scales[sublead_mask])[c.i_scale], np.ravel(scales[lead_mask])[c.i_err])
+                np.ravel(scales[sublead_mask])[c.i_scale], np.ravel(scales[sublead_mask])[c.i_err])
 
 
     scales = data.apply(find_scales, axis=1)

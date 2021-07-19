@@ -11,9 +11,10 @@ from scipy.optimize import minimize as minz
 from scipy.special import xlogy
 from scipy import stats as scistat 
 
+import python.helpers.helper_minimizer as helper_minimizer
 import python.plotters.plot_cats as plotter
-from python.utilities.smear_mc import smear
 from python.classes.zcat_class import zcat
+from python.utilities.smear_mc import smear
 
 __num_scales__ = 0
 __num_smears__ = 0
@@ -94,7 +95,10 @@ def minimize(data, mc, cats, **options):
     print("[INFO][python/nll] extracting lists from category definitions")
 
     #extract the categories
-    __ZCATS__ = helper_minimizer.extract_cats(data, mc, cats, options)
+    __ZCATS__ = helper_minimizer.extract_cats(data, mc, cats, 
+                                              num_scales=__num_scales__, num_smears=__num_smears__, 
+                                              **options
+                                              )
 
     #once categories are extracted, data and mc can be released to make more room.
     del data
@@ -136,22 +140,22 @@ def minimize(data, mc, cats, **options):
     #set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
     __GUESS__ = [0 for x in guess]
-    helper_minimizer.target_function(guess, (__GUESS__,__ZCATS__)) #initializes the categories
+    helper_minimizer.target_function(guess, (__GUESS__,__ZCATS__, __num_scales__, __num_smears__)) #initializes the categories
 
     #if we're plotting, just plot and return, don't run a minimization
     if options['_kPlot']:
-        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__))
+        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__, __num_scales__, __num_smears__))
         plotter.plot_cats(plot_dir, __ZCATS__, __CATS__)
         return [], []
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
     if options['_kScanNLL']:
-        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__))
+        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__, __num_scales__, __num_smears__))
         plotter.plot_1Dscan(plot_dir, _specify_file_, __ZCATS__)
         return [], []
 
-    if start_style != 'scan':
-        if start_style == 'random':
+    if options['start_style'] != 'scan':
+        if options['start_style'] == 'random':
             xlow_scales = [0.99 for i in range(__num_scales__)]
             xhigh_scales = [1.01 for i in range(__num_scales__)]
             xlow_smears = [0.008 for i in range(__num_smears__)]
@@ -171,20 +175,22 @@ def minimize(data, mc, cats, **options):
                 guess_scales.extend(guess_smears)
             guess = guess_scales
 
-        if start_style == 'specify':
+        if options['start_style'] == 'specify':
             scan_file_df = pd.read_csv(_specify_file_,sep='\t',header=None)
             guess = scan_file_df.loc[:,9].values
             guess = np.append(guess,[0.005 for x in range(__num_smears__)])
 
     else: #this is the default initialization
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
-        guess = helper_minimizer.scan_nll(guess, scan_min, scan_max, scan_step,
+        
+        guess = helper_minimizer.scan_nll(guess, options['scan_min'], options['scan_max'], options['scan_step'],
                                           zcats=__ZCATS__,
                                           num_smears=__num_smears__,
-                                          num_scales=__num_scales__
-                                        )
+                                          num_scales=__num_scales__,
+                                          **options
+                                          )
 
-    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess, (__GUESS__,__ZCATS__) )))
+    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess, (__GUESS__,__ZCATS__,__num_scales__, __num_smears__) )))
     min_step_dict = {}
     if options['min_step_size'] is not None:
         min_step_dict = {"eps":float(options['min_step_size'])}
@@ -192,7 +198,7 @@ def minimize(data, mc, cats, **options):
     #minimize
     optimum = minz(helper_minimizer.target_function,
                    np.array(guess), 
-                   args=(__GUESS__,__ZCATS__),
+                   args=(__GUESS__,__ZCATS__,__num_scales__, __num_smears__),
                    method="L-BFGS-B", 
                    bounds=bounds,
                    options=min_step_dict) 

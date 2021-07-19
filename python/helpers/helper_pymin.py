@@ -26,7 +26,7 @@ def get_run_string(args):
 def get_step(args):
     #gets the step number from the category file
 
-    if args.cats is not None and not args.time_stability:
+    if args.cats is not None and not args._kTimeStability:
         return int(args.cats[args.cats.find("step")+4])
 
     return -1
@@ -58,7 +58,7 @@ def combine_files(args):
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
     write_files.combine( args.only_step, args.scales, scales_out )
 
-def load_dataframes(files):
+def load_dataframes(files, args):
 
     data = None
     mc = None
@@ -95,7 +95,7 @@ def load_dataframes(files):
     else:
         print("[ERROR] could not find a data file to open")
         return
-    if args.test_method_accuracy:
+    if args._kTestMethodAccuracy:
         data = mc.copy()
 
     #clean the data a bit before sending back

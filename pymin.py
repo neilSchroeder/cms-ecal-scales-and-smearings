@@ -90,7 +90,7 @@ def main():
                     	help="Determines how the minimizer chooses its starting location. Allowed options are 'scan', 'random', 'specify'. If using specify, used the scan_scales argument to provide the starting location")
     parser.add_argument("--scan-min", default=0.98, type=float, dest='scan_min',
                     	help="Min value for scan start")
-    parser.add_argument("--scan-max", default=1.02, type=float, dest='scan_max'
+    parser.add_argument("--scan-max", default=1.02, type=float, dest='scan_max',
                     	help="Max value for scan start")
     parser.add_argument("--scan-step", default=0.001, type=float, dest='scan_step',
                     	help="Step size for scan start")
@@ -110,7 +110,7 @@ def main():
                     	help="only writes the scales file associated with this step")
     parser.add_argument("--combine-files", default=False, action='store_true', dest='_kCombine',
                     	help="[ADVANCED] combines two specified files, using the --only_step and --step options")
-    parser.add_argument("--only-step", default='', type=str, dest='only_step'
+    parser.add_argument("--only-step", default='', type=str, dest='only_step',
                     	help="[ADVANCED] only step file, to be used with the --combine_files and --step options")
 
     #plotting options
@@ -165,7 +165,7 @@ def main():
         return
 
     #load data/mc
-    data, mc = helper_pymin.load_dataframes(args.inputFile)
+    data, mc = helper_pymin.load_dataframes(args.inputFile, args)
     
     if data is None or mc is None:
         print("[ERROR] data or MC is empty")
@@ -174,7 +174,7 @@ def main():
     #derive time bins (by run) in which to stabilize data
     if args._kRunDivide:
         outFile = "datFiles/run_divide_"+args.output+".dat"
-        write_files.write_runs(divide_by_run.divide(data, args.minEvents), outFile)
+        write_files.write_runs(divide_by_run.divide(data, args.min_events), outFile)
         return
 
     #derive the scales for the time stability
@@ -207,25 +207,27 @@ def main():
 ###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears, unc = nll_wClass.minimize(data, mc, cats, 
-                                             ignore_cats=args.ignore, #categories to ignore
-                                             hist_min=round(float(args.hist_min),2), #bottom edge of histogram
-                                             hist_max=round(float(args.hist_max),2), #top edge of histogram
-                                             bin_size=round(float(args.bin_size),2), #bin size
-                                             start_style=args.start_style, #seed method for scales/smearings
-                                             scan_min=args.scan_min, #min value in scan
-                                             scan_max=args.scan_max, #max value in scan
-                                             scan_step=args.scan_step, #step size of scan
-                                             min_step=args.min_step_size, #step size of minimizer
-                                             _kClosure=args._kClosure, #closure flag
-                                             scales=args.scales, #scales file
-                                             _kPlot=args._kPlot, #plot flag
-                                             plot_dir=args.plot_dir, #directory to put plots
-                                             _kTestMethodAccuracy=args._kTestMethodAccuracy, #test method flag
-                                             _kScanNLL=args._kScanNLL, #scan nll flag
-                                             scan_scales=args.scan_scales, #scales to seed the scan
-                                             _kFixScales=args._kFixScales, #don't let scales float in fit flag
-                                             _kAutoBin=(not args.no_auto_bin))
+    scales_smears, unc = minimizer.minimize(data, mc, cats, 
+            ignore_cats=args.ignore, #categories to ignore
+            hist_min=round(float(args.hist_min),2), #bottom edge of histogram
+            hist_max=round(float(args.hist_max),2), #top edge of histogram
+            bin_size=round(float(args.bin_size),2), #bin size
+            start_style=args.start_style, #seed method for scales/smearings
+            scan_min=args.scan_min, #min value in scan
+            scan_max=args.scan_max, #max value in scan
+            scan_step=args.scan_step, #step size of scan
+            min_step=args.min_step_size, #step size of minimizer
+            _kClosure=args._kClosure, #closure flag
+            scales=args.scales, #scales file
+            _kPlot=args._kPlot, #plot flag
+            plot_dir=args.plot_dir, #directory to put plots
+            _kTestMethodAccuracy=args._kTestMethodAccuracy, #test method flag
+            _kScanNLL=args._kScanNLL, #scan nll flag
+            scan_scales=args.scan_scales, #scales to seed the scan
+            _kFixScales=args._kFixScales, #don't let scales float in fit flag
+            _kAutoBin=(not args._kNoAutoBin)
+        )
+
     if args._kPlot:
         print("[INFO] plotting is done, please review")
         return
