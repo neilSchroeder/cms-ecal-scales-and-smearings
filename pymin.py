@@ -131,7 +131,8 @@ def main():
     print("[INFO] welcome to SS_PyMin")
     print("[INFO] you have run the following command:")
 
-    print(helper_pymin.get_run_string(sys.argv))
+    cmd = helper_pymin.get_cmd(sys.argv)
+    print(cmd)
 
     if args._kClosure and args.smearings is None:
         print("[ERROR] you have submitted a closure test without a smearings file.")
@@ -139,6 +140,7 @@ def main():
         return
 
     step = helper_pymin.get_step(args)
+    print(step)
 
     #submit this job to condor
     if args._kCondor and not args._kFromCondor:

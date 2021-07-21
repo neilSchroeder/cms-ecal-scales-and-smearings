@@ -31,7 +31,7 @@ def add_transverse_energy(data,mc):
     eta_1 = np.array(mc[c.ETA_SUB].values)
     mc['transverse_energy[0]'] = np.divide(energy_0,np.cosh(eta_0))
     mc['transverse_energy[1]'] = np.divide(energy_1,np.cosh(eta_1))
-    drop_list = [c.E_LEAD, c.E_SUB, c.GAIN_LEAD, c.GAIN_SUB, c.PHI_LEAD, c.PHI_SUB, c.RUN]
+    drop_list = [c.E_LEAD, c.E_SUB, c.GAIN_LEAD, c.GAIN_SUB, c.RUN]
     data.drop(drop_list, axis=1, inplace=True)
     mc.drop(drop_list, axis=1, inplace=True)
     #impose an et cut of 32 on leading and 20 on subleading
@@ -262,7 +262,7 @@ def deactivate_cats(__ZCATS__, ignore_cats):
                 if row[0] == cat.lead_index and row[1] == cat.sublead_index:
                     cat.valid=False
 
-def target_function(x, args, verbose=False, **options):
+def target_function(x, *args, verbose=False, **options):
     """ 
     This is the target function, which returns an event weighted -2*Delta NLL
     This function features a small verbose option for debugging purposes.
@@ -309,12 +309,11 @@ def target_function(x, args, verbose=False, **options):
 def scan_nll(x, **options):
     #performs the NLL scan to initialize the variables
     __ZCATS__ = options['zcats']
-    __num_scales__ = options['num_scales']
-    __num_smears__ = options['num_smears']
+    __GUESS__ = options['__GUESS__']
     guess = x
     scanned = []
     if not options['_kFixScales']:
-        while len(scanned) < __num_scales__:
+        while len(scanned) < options['num_scales']:
             #find "worst" category and scan that first
             tot = np.sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])/np.sum([cat.weight for cat in __ZCATS__ if cat.valid])
             max_index = -1
@@ -332,7 +331,7 @@ def scan_nll(x, **options):
                     guess[max_index] = val
                     my_guesses.append(guess.copy())
                 #evaluate nll for each guess
-                nll_vals = np.array([ target_function(g) for g in my_guesses])
+                nll_vals = np.array([ target_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
                 mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
                 x = x[mask]
                 nll_vals = nll_vals[mask]
@@ -341,8 +340,8 @@ def scan_nll(x, **options):
                     print("[INFO][python/nll] best guess for scale {} is {}".format(max_index, guess[max_index]))
 
     print("[INFO][python/nll] scanning smearings:")
-    if __num_smears__ > 0:
-        for i in range(__num_scales__,__num_scales__+__num_smears__,1):
+    if options['num_smears'] > 0:
+        for i in range(options['num_scales'],options['num_scales']+options['num_smears'],1):
             #smearings are different, so use different values for low,high,step 
             low = 0.000
             high = 0.025
@@ -354,7 +353,7 @@ def scan_nll(x, **options):
                 guess[i] = val
                 my_guesses.append(guess.copy())
             #evaluate nll for each guess
-            nll_vals = np.array([ target_function(g) for g in my_guesses])
+            nll_vals = np.array([ target_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
             mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
             x = x[mask]
             nll_vals = nll_vals[mask]

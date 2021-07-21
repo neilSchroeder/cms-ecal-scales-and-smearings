@@ -11,7 +11,7 @@ import uproot as up
 
 import python.classes.const_class as constants
 
-def get_run_string(args):
+def get_cmd(args):
     #reconstructs and returns the command line string used to run the program
 
     cmd = ''
@@ -125,7 +125,8 @@ def load_dataframes(files, args):
     return data, mc
 
 def write_results(args, scales_smears, unc):
-
+    step = get_step(args.scales)
+    scale_path = args.scales if args.scales is not None else os.getcwd()+"/blah.dat"
     scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
     if args.scales != '':
         scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"

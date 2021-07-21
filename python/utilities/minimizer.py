@@ -140,17 +140,17 @@ def minimize(data, mc, cats, **options):
     #set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
     __GUESS__ = [0 for x in guess]
-    helper_minimizer.target_function(guess, (__GUESS__,__ZCATS__, __num_scales__, __num_smears__)) #initializes the categories
+    helper_minimizer.target_function(guess, __GUESS__,__ZCATS__, __num_scales__, __num_smears__) #initializes the categories
 
     #if we're plotting, just plot and return, don't run a minimization
     if options['_kPlot']:
-        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__, __num_scales__, __num_smears__))
+        helper_minimizer.target_function(guess, __GUESS__, __ZCATS__, __num_scales__, __num_smears__)
         plotter.plot_cats(plot_dir, __ZCATS__, __CATS__)
         return [], []
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
     if options['_kScanNLL']:
-        helper_minimizer.target_function(guess, (__GUESS__, __ZCATS__, __num_scales__, __num_smears__))
+        helper_minimizer.target_function(guess, __GUESS__, __ZCATS__, __num_scales__, __num_smears__)
         plotter.plot_1Dscan(plot_dir, _specify_file_, __ZCATS__)
         return [], []
 
@@ -183,17 +183,22 @@ def minimize(data, mc, cats, **options):
     else: #this is the default initialization
         print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
         
-        guess = helper_minimizer.scan_nll(guess, options['scan_min'], options['scan_max'], options['scan_step'],
+        guess = helper_minimizer.scan_nll(guess,
                                           zcats=__ZCATS__,
+                                          __GUESS__=__GUESS__,
+                                          cats=cats,
                                           num_smears=__num_smears__,
                                           num_scales=__num_scales__,
                                           **options
                                           )
 
-    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess,target_function(guess, (__GUESS__,__ZCATS__,__num_scales__, __num_smears__) )))
+    print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess, 
+        helper_minimizer.target_function(guess, __GUESS__,__ZCATS__,__num_scales__, __num_smears__)))
     min_step_dict = {}
-    if options['min_step_size'] is not None:
-        min_step_dict = {"eps":float(options['min_step_size'])}
+    if options['min_step'] is not None:
+        min_step_dict = {"eps":float(options['min_step'])}
+    else:
+        min_step_dict = {"eps":0.00001}
 
     #minimize
     optimum = minz(helper_minimizer.target_function,

@@ -15,9 +15,9 @@ class zcat:
         self.sublead_index=j
         self.lead_smear_index=options['smear_i'] if 'smear_i' in options.keys() else -1
         self.sublead_smear_index=options['smear_j'] if 'smear_j' in options.keys() else -1
-        self.data = data
-        self.mc = mc
-        self.weights = weights
+        self.data = np.array(data, dtype=np.float32)
+        self.mc = np.array(mc, dtype=np.float32)
+        self.weights = np.array(weights, dtype=np.float32)
         self.hist_min = options['hist_min'] if 'hist_min' in options.keys() else 80.
         self.hist_max = options['hist_max'] if 'hist_max' in options.keys() else 100.
         self.auto_bin = options['_kAutoBin'] if '_kAutoBin' in options.keys() else True
@@ -79,8 +79,8 @@ class zcat:
         #apply the smearings second
         if lead_smear!=0 or sublead_smear!=0:
             np.random.seed(self.seed)
-            lead_smear_list = np.random.normal(1, np.abs(lead_smear), len(temp_mc), dtype=np.float32) if lead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
-            sublead_smear_list = np.random.normal(1, np.abs(sublead_smear), len(temp_mc), dtype=np.float32) if sublead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
+            lead_smear_list = np.array(np.random.normal(1, np.abs(lead_smear), len(temp_mc)), dtype=np.float32) if lead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
+            sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(temp_mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
             temp_mc = np.multiply(temp_mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
 
         #determinite binning using the Freedman-Diaconis rule
