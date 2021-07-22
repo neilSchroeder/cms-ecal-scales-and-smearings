@@ -98,6 +98,8 @@ def main():
                         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.")
     parser.add_argument("--fix-scales", default=False, action='store_true', dest='_kFixScales',
                         help="[ADVANCED] flag to keep scales fixed at 1. and only derive smearings")
+    parser.add_argument("--no-reweight", default=False, action='store_true', dest='_kNoReweight',
+                        help="[ADVANCED] flag to turn off deriving pt(Z),y(Z) weights")
     parser.add_argument("--condor", default=False, action='store_true', dest='_kCondor',
                         help="Submit this job to condor")
     parser.add_argument("--queue", default='tomorrow',
@@ -135,12 +137,14 @@ def main():
     print(cmd)
 
     if args._kClosure and args.smearings is None:
-        print("[ERROR] you have submitted a closure test without a smearings file.")
-        print("[ERROR] please resubmit this job with a smearings file.")
-        return
+        if args._kTestMethodAccuracy:
+            pass
+        else:
+            print("[ERROR] you have submitted a closure test without a smearings file.")
+            print("[ERROR] please resubmit this job with a smearings file.")
+            return
 
     step = helper_pymin.get_step(args)
-    print(step)
 
     #submit this job to condor
     if args._kCondor and not args._kFromCondor:
@@ -190,23 +194,28 @@ def main():
         print("[INFO] applying {} to the data".format(args.scales))
         data = scale_data.scale(data, args.scales)
 
-    weight_file = args.weights
-    if args.weights is None:
-        print("[INFO] deriving Y(Z), Pt(Z) weights")
-        weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
-    mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
+    #reweight MC or deriving the weights
+    if args._kNoReweight:
+        pass #don't reweight
+    else:
+        weight_file = args.weights
+        if args.weights is None:
+            print("[INFO] deriving Y(Z), Pt(Z) weights")
+            weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
+        mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
 
 
-###############################################################################
     #load categories for the derivation
     print("[INFO] importing categories from {}".format(args.cats))
     cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
     num_scales = sum([val.find('scale') != -1 for val in cats[0]])
 
     if args._kClosure:
-        mc = smear_mc.smear(mc, args.smearings)
+        if args._kTestMethodAccuracy:
+            pass
+        else:
+            mc = smear_mc.smear(mc, args.smearings)
 
-###############################################################################
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
     scales_smears, unc = minimizer.minimize(data, mc, cats, 
@@ -230,9 +239,12 @@ def main():
             _kAutoBin=(not args._kNoAutoBin)
         )
 
+    #if we're plotting there's nothing to write, so just print a done message and exit
     if args._kPlot:
         print("[INFO] plotting is done, please review")
         return
+
+    #minimization may not succeed, in this case the program will just end
     if scales_smears == []:
         print("[ERROR] Review code, minimization did not succeed") 
         return

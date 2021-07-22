@@ -165,13 +165,13 @@ def minimize(data, mc, cats, **options):
             #for a closure derivation
             guess_scales = np.random.uniform(low=xlow_scales,
                     high=xhigh_scales).ravel().tolist()
-            if _kClosure: 
+            if options['_kClosure']: 
                 guess_scales = [1. for i in range(__num_scales__)]
             guess_smears = np.random.uniform(low=xlow_smears,
                     high=xhigh_smears).ravel().tolist()
-            if _kClosure or _kTestMethodAccuracy: 
+            if options['_kClosure'] or options['_kTestMethodAccuracy']: 
                 guess_smears = [0.0 for i in range(__num_smears__)]
-            if _kTestMethodAccuracy or not _kClosure: 
+            if options['_kTestMethodAccuracy'] or not options['_kClosure']: 
                 guess_scales.extend(guess_smears)
             guess = guess_scales
 
@@ -220,7 +220,7 @@ def minimize(data, mc, cats, **options):
         print("#"*40)
         return optimum.x, [5e-05 for par in optimum.x]
 
-    if _kTestMethodAccuracy:
+    if options['_kTestMethodAccuracy']:
         ret = optimum.x
         for i in range(len(scales_to_inject)): 
             if i < __num_scales__:
