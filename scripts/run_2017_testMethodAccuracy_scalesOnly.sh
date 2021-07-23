@@ -3,6 +3,10 @@
     -c config/cats_step2.tsv \
     -o ul17_testMethodAccuracy_scaleOnly \
     --no-reweight \
+    --scan-min=0.99 \
+    --scan-max=1.01 \
+    --scan-step=0.0001 \
+    --min-step=0.00005 \
     --test-method-accuracy \
     --closure \
     --condor \

@@ -198,9 +198,8 @@ class zcat:
         pen_min[pen_min==-np.inf] = 0
         pen_min = np.sum(pen_min)/len(pen_min)
 
-        self.NLL = (-2*(nll+penalty)-(-2*(nll_min+pen_min)))*chi_sqr
-        #self.NLL = -2*(nll+penalty)
-        self.weight = np.sum(binned_data)
+        #self.NLL = (-2*(nll+penalty)-(-2*(nll_min+pen_min)))*chi_sqr
+        self.NLL = -2*(nll+penalty)*chi_sqr
         #penalize off-diagonal categories in the fit
         #self.weight = np.sum(binned_data) if self.lead_index == self.sublead_index else 0.01*np.sum(binned_data)
         if np.isnan(self.NLL):

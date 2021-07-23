@@ -125,7 +125,7 @@ def load_dataframes(files, args):
     return data, mc
 
 def write_results(args, scales_smears, unc):
-    step = get_step(args.scales)
+    step = get_step(args)
     scale_path = args.scales if args.scales is not None else os.getcwd()+"/blah.dat"
     scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
     if args.scales != '':
