@@ -4,6 +4,7 @@
     -w datFiles/ptz_x_rapidity_weights_ul18_2021-07-15_testOverhaul.tsv \
     -s ~/public/scales/Run2018/Run2018_2021-07-08_RunFineEtaR9Et_stochastic_v3-02_scales.dat \
     -o ul18_2021-07-15_testOverhaul_v3-04 \
+    --min-step=0.0001 \
     --scan-min=0.995 \
     --scan-max=1.005 \
     --scan-step=0.0005 \
