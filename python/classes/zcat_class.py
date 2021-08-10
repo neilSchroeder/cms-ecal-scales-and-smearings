@@ -68,6 +68,31 @@ class zcat:
             self.data = self.data*np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32)
         return
 
+    def smear(mc, lead_smear, sublead_smear, seed):
+        np.random.seed(seed)
+        lead_smear_list = np.array(np.random.normal(1, np.abs(lead_smear), len(temp_mc)), dtype=np.float32) if lead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
+        sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(temp_mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
+        return np.multiply(temp_mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
+
+    def get_nllChiSqr(binned_data, norm_binned_mc):
+        #eval chi squared
+        scaled_mc = norm_binned_mc*np.sum(binned_data)
+        err_mc = np.sqrt(scaled_mc, dtype=np.float32)
+        err_data = np.sqrt(binned_data, dtype=np.float32)
+        err = np.sqrt(np.add(np.multiply(err_mc,err_mc, dtype=np.float32), np.multiply(err_data,err_data, dtype=np.float32), dtype=np.float32), dtype=np.float32)
+        chi_sqr = np.sum( np.divide(np.multiply(binned_data-scaled_mc,binned_data-scaled_mc, dtype=np.float32),err, dtype=np.float32))/num_bins
+
+        #evalute nll
+        nll = xlogy(binned_data, norm_binned_mc)
+        nll[nll==-np.inf] = 0
+        nll = np.sum(nll)/len(nll)
+        #evaluate penalty
+        penalty = xlogy(np.sum(binned_data)-binned_data, 1 - norm_binned_mc)
+        penalty[penalty==-np.inf] = 0
+        penalty = np.sum(penalty)/len(penalty)
+
+        return -2*(nll + penalty)*chi_sqr
+
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
         #updates the value of nll for the class using the appropriate scales and smearings
         self.updated=True
@@ -78,17 +103,15 @@ class zcat:
 
         #apply the smearings second
         if lead_smear!=0 or sublead_smear!=0:
-            np.random.seed(self.seed)
-            lead_smear_list = np.array(np.random.normal(1, np.abs(lead_smear), len(temp_mc)), dtype=np.float32) if lead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
-            sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(temp_mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
-            temp_mc = np.multiply(temp_mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
+            temp_mc = smear(temp_mc, lead_smear, sublead_smear, self.seed) 
 
         #determinite binning using the Freedman-Diaconis rule
+        data_width, mc_width = get_binning( )
         if self.auto_bin and self.bin_size == 0.25:
             #prune and check data and mc for validity
             temp_data = self.data[self.data >= self.hist_min]
             temp_data = temp_data[temp_data <= self.hist_max]
-            mask_mc = (temp_mc >= self.hist_min)&(temp_mc <= self.hist_max)
+            mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
             temp_weights = temp_weights[mask_mc]
             temp_mc = temp_mc[mask_mc]
             if len(temp_data) < 10 or len(temp_mc) < 1000: 
@@ -128,7 +151,6 @@ class zcat:
         temp_mc = temp_mc[mask_mc]
         temp_weights = np.append(temp_weights,np.array([0,0], dtype=np.float32))
         temp_mc = np.append(temp_mc,np.array([self.hist_min,self.hist_max]))
-
 
         num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
         binned_data,edges = numba_hist.numba_histogram(temp_data,num_bins)
@@ -174,31 +196,7 @@ class zcat:
         #normalize mc to use as a pdf
         norm_binned_mc = binned_mc/np.sum(binned_mc)
 
-        #eval chi squared
-        scaled_mc = norm_binned_mc*np.sum(binned_data)
-        err_mc = np.sqrt(scaled_mc, dtype=np.float32)
-        err_data = np.sqrt(binned_data, dtype=np.float32)
-        err = np.sqrt(np.add(np.multiply(err_mc,err_mc, dtype=np.float32), np.multiply(err_data,err_data, dtype=np.float32), dtype=np.float32), dtype=np.float32)
-        chi_sqr = np.sum( np.divide(np.multiply(binned_data-scaled_mc,binned_data-scaled_mc, dtype=np.float32),err, dtype=np.float32))/num_bins
-
-        #evalute nll
-        nll = xlogy(binned_data, norm_binned_mc)
-        nll[nll==-np.inf] = 0
-        nll = np.sum(nll)/len(nll)
-        #evaluate penalty
-        penalty = xlogy(np.sum(binned_data)-binned_data, 1 - norm_binned_mc)
-        penalty[penalty==-np.inf] = 0
-        penalty = np.sum(penalty)/len(penalty)
-
-        #evaluate minimum nll, i.e. nll of mc to mc
-        nll_min = xlogy(binned_mc, norm_binned_mc)
-        nll_min[nll_min==-np.inf] = 0
-        nll_min = np.sum(nll_min)/len(nll_min)
-        pen_min = xlogy(np.sum(binned_mc)-binned_mc, 1 - norm_binned_mc)
-        pen_min[pen_min==-np.inf] = 0
-        pen_min = np.sum(pen_min)/len(pen_min)
-
-        self.NLL = -2*(nll+penalty)*chi_sqr
+        self.NLL = get_nllChiSqr(binned_data, norm_binned_mc)
         #penalize off-diagonal categories in the fit
         #self.weight = np.sum(binned_data) if self.lead_index == self.sublead_index else 0.01*np.sum(binned_data)
         if np.isnan(self.NLL):
@@ -207,5 +205,6 @@ class zcat:
             del self.data
             del self.mc
             del self.weights
+
         return
 
