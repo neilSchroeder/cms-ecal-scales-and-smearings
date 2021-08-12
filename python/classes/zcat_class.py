@@ -74,12 +74,13 @@ class zcat:
         sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(temp_mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
         return np.multiply(temp_mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
 
-    def get_nllChiSqr(binned_data, norm_binned_mc):
+    def get_nllChiSqr(self, binned_data, norm_binned_mc):
         #eval chi squared
         scaled_mc = norm_binned_mc*np.sum(binned_data)
         err_mc = np.sqrt(scaled_mc, dtype=np.float32)
         err_data = np.sqrt(binned_data, dtype=np.float32)
         err = np.sqrt(np.add(np.multiply(err_mc,err_mc, dtype=np.float32), np.multiply(err_data,err_data, dtype=np.float32), dtype=np.float32), dtype=np.float32)
+        num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
         chi_sqr = np.sum( np.divide(np.multiply(binned_data-scaled_mc,binned_data-scaled_mc, dtype=np.float32),err, dtype=np.float32))/num_bins
 
         #evalute nll
@@ -106,7 +107,7 @@ class zcat:
             temp_mc = smear(temp_mc, lead_smear, sublead_smear, self.seed) 
 
         #determinite binning using the Freedman-Diaconis rule
-        data_width, mc_width = get_binning( )
+        #data_width, mc_width = get_binning()
         if self.auto_bin and self.bin_size == 0.25:
             #prune and check data and mc for validity
             temp_data = self.data[self.data >= self.hist_min]
@@ -196,7 +197,7 @@ class zcat:
         #normalize mc to use as a pdf
         norm_binned_mc = binned_mc/np.sum(binned_mc)
 
-        self.NLL = get_nllChiSqr(binned_data, norm_binned_mc)
+        self.NLL = self.get_nllChiSqr(binned_data, norm_binned_mc)
         #penalize off-diagonal categories in the fit
         #self.weight = np.sum(binned_data) if self.lead_index == self.sublead_index else 0.01*np.sum(binned_data)
         if np.isnan(self.NLL):

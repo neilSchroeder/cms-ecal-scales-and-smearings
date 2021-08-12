@@ -1,4 +1,5 @@
 
+import os
 import gc
 import numpy as np
 import matplotlib.pyplot as plt
@@ -99,6 +100,7 @@ def minimize(data, mc, cats, **options):
                                               num_scales=__num_scales__, num_smears=__num_smears__, 
                                               **options
                                               )
+    os.system("touch ./categories-done")
 
     #once categories are extracted, data and mc can be released to make more room.
     del data
@@ -191,6 +193,7 @@ def minimize(data, mc, cats, **options):
                                           num_scales=__num_scales__,
                                           **options
                                           )
+        os.system("touch ./scan-done")
 
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess, 
         helper_minimizer.target_function(guess, __GUESS__,__ZCATS__,__num_scales__, __num_smears__)))
@@ -201,6 +204,7 @@ def minimize(data, mc, cats, **options):
         min_step_dict = {"eps":0.00001}
 
     #minimize
+    os.system("touch ./minimizing")
     optimum = minz(helper_minimizer.target_function,
                    np.array(guess), 
                    args=(__GUESS__,__ZCATS__,__num_scales__, __num_smears__),

@@ -193,6 +193,7 @@ def main():
     if args.scales is not None:
         print("[INFO] applying {} to the data".format(args.scales))
         data = scale_data.scale(data, args.scales)
+        os.system("touch ./scales-done")
 
     #reweight MC or deriving the weights
     if args._kNoReweight:
@@ -203,6 +204,7 @@ def main():
             print("[INFO] deriving Y(Z), Pt(Z) weights")
             weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
         mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
+        os.system("touch ./weights-done")
 
 
     #load categories for the derivation
@@ -238,6 +240,7 @@ def main():
             _kFixScales=args._kFixScales, #don't let scales float in fit flag
             _kAutoBin=(not args._kNoAutoBin)
         )
+    os.system("touch ./minimize-done")
 
     #if we're plotting there's nothing to write, so just print a done message and exit
     if args._kPlot:
