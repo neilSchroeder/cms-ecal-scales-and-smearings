@@ -7,7 +7,7 @@
     --scan-max=1.01 \
     --scan-step=0.0005 \
     --min-step=0.0001 \
-    --test-method-accuracy \
-    --closure \
-    --condor \
-    --queue='nextweek'
+#    --closure \
+#    --test-method-accuracy \
+#    --condor \
+#    --queue='nextweek'

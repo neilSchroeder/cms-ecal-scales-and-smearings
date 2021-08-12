@@ -7,6 +7,7 @@
     --min-step=0.0001 \
     --scan-min=0.995 \
     --scan-max=1.005 \
-    --scan-step=0.0005 \
+    --scan-step=0.001 \
+    --fix-scales \
     --condor \
     --queue="nextweek"
