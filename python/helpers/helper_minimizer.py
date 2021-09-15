@@ -312,17 +312,17 @@ def scan_nll(x, **options):
     __GUESS__ = options['__GUESS__']
     guess = x
     scanned = []
+    #find most sensitive category and scan that first
+    weights = [(cat.weight, cat.lead_index) for cat in __ZCATS__ if cat.valid and cat.lead_index == cat.sublead_index]
+    weights.sort(key=lambda x: x[0])
     if not options['_kFixScales']:
         while len(scanned) < options['num_scales']:
-            #find "worst" category and scan that first
-            tot = np.sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])/np.sum([cat.weight for cat in __ZCATS__ if cat.valid])
             max_index = -1
-            max_nll = 0
-            for cat in __ZCATS__:
-                if cat.NLL*cat.weight/tot > max_nll and cat.valid and cat.lead_index not in scanned:
-                    max_index = cat.lead_index
-                    max_nll = cat.NLL*cat.weight/tot
-            scanned.append(max_index)
+            for tup in weights:
+                if tup[1] not in scanned:
+                    max_index = tup[1]
+                    scanned.append(tup[1])
+                    break
             if max_index != -1:
                 x = np.arange(options['scan_min'],options['scan_max'],options['scan_step'])
                 my_guesses = []
@@ -340,26 +340,36 @@ def scan_nll(x, **options):
                     print("[INFO][python/nll] best guess for scale {} is {}".format(max_index, guess[max_index]))
 
     print("[INFO][python/nll] scanning smearings:")
+    scanned = []
+    weights = [(cat.weight, cat.lead_smear_index) for cat in __ZCATS__ if cat.valid and cat.lead_smear_index == cat.sublead_smear_index]
+    weights.sort(key=lambda x: x[0])
     if options['num_smears'] > 0:
-        for i in range(options['num_scales'],options['num_scales']+options['num_smears'],1):
+        while len(scanned) < options['num_smears']:
+            max_index = -1
+            for tup in weights:
+                if tup[1] not in scanned:
+                    max_index = tup[1]
+                    scanned.append(tup[1])
+                    break
             #smearings are different, so use different values for low,high,step 
-            low = 0.000
-            high = 0.025
-            step = 0.00025
-            x = np.arange(low,high,step)
-            my_guesses = []
-            #generate a few guesses             
-            for j,val in enumerate(x): 
-                guess[i] = val
-                my_guesses.append(guess.copy())
-            #evaluate nll for each guess
-            nll_vals = np.array([ target_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
-            mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
-            x = x[mask]
-            nll_vals = nll_vals[mask]
-            if len(nll_vals) > 0:
-                guess[i] = x[nll_vals.argmin()]
-                print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
+            if max_index != -1:
+                low = 0.000
+                high = 0.025
+                step = 0.00025
+                x = np.arange(low,high,step)
+                my_guesses = []
+                #generate a few guesses             
+                for j,val in enumerate(x): 
+                    guess[options['num_scales']+max_index] = val
+                    my_guesses.append(guess.copy())
+                #evaluate nll for each guess
+                nll_vals = np.array([ target_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
+                mask = [y > 0 for y in nll_vals] #addresses edge cases of scale being too large/small
+                x = x[mask]
+                nll_vals = nll_vals[mask]
+                if len(nll_vals) > 0:
+                    guess[options['num_scales']+max_index] = x[nll_vals.argmin()]
+                    print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
 
     print("[INFO][python/nll] scan complete")
     return guess

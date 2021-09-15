@@ -19,6 +19,7 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 ## To Do
 
 Initiating overhaul using some better coding practices and improved data handling 
+Time permitting, or for whoever takes over development here, multiprocessing the Zcat.update() calls would likely speed things up by a fair margin.
 
 ## Features
 

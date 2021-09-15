@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 import pandas as pd
 from scipy import stats 
@@ -61,6 +59,7 @@ class zcat:
         return
 
     def inject(self, lead_scale, sublead_scale, lead_smear, sublead_smear):
+        #this function artificially injects scales and smearings in to the "toy mc" labelled here as data
         self.data = self.data*np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
         if lead_smear != 0 and sublead_smear != 0:
             lead_smear_list = np.random.normal(1, np.abs(lead_smear), len(self.data), dtype=np.float32)
@@ -68,11 +67,11 @@ class zcat:
             self.data = self.data*np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32)
         return
 
-    def smear(mc, lead_smear, sublead_smear, seed):
+    def smear(self, mc, lead_smear, sublead_smear, seed):
         np.random.seed(seed)
-        lead_smear_list = np.array(np.random.normal(1, np.abs(lead_smear), len(temp_mc)), dtype=np.float32) if lead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
-        sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(temp_mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(temp_mc), dtype=np.float32)
-        return np.multiply(temp_mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
+        lead_smear_list = np.array(np.random.normal(1, np.abs(lead_smear), len(mc)), dtype=np.float32) if lead_smear != 0 else np.ones(len(mc), dtype=np.float32)
+        sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(mc), dtype=np.float32)
+        return np.multiply(mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
 
     def get_nllChiSqr(self, binned_data, norm_binned_mc):
         #eval chi squared
@@ -91,7 +90,6 @@ class zcat:
         penalty = xlogy(np.sum(binned_data)-binned_data, 1 - norm_binned_mc)
         penalty[penalty==-np.inf] = 0
         penalty = np.sum(penalty)/len(penalty)
-
         return -2*(nll + penalty)*chi_sqr
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
@@ -99,19 +97,19 @@ class zcat:
         self.updated=True
 
         #apply the scales first 
-        temp_mc = self.mc * np.sqrt(1./(lead_scale*sublead_scale), dtype=np.float32)
-        temp_weights = self.weights
-
+        temp_data = np.copy(self.data) * np.sqrt(1./(lead_scale*sublead_scale), dtype=np.float32)
+        temp_weights = np.copy(self.weights)
+        
+        temp_mc = np.copy(self.mc)
         #apply the smearings second
         if lead_smear!=0 or sublead_smear!=0:
-            temp_mc = smear(temp_mc, lead_smear, sublead_smear, self.seed) 
+            temp_mc = self.smear(temp_mc, lead_smear, sublead_smear, self.seed) 
 
         #determinite binning using the Freedman-Diaconis rule
         #data_width, mc_width = get_binning()
         if self.auto_bin and self.bin_size == 0.25:
             #prune and check data and mc for validity
-            temp_data = self.data[self.data >= self.hist_min]
-            temp_data = temp_data[temp_data <= self.hist_max]
+            temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, self.hist_max <= self.hist_max)]
             mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
             temp_weights = temp_weights[mask_mc]
             temp_mc = temp_mc[mask_mc]
@@ -144,10 +142,9 @@ class zcat:
 
         #prune the data and add a single entry at either end of the histogram range
         #these end entries ensure the same number of bins in data and mc returned by np.bincount
-        temp_data = self.data[self.data >= self.hist_min]
-        temp_data = temp_data[temp_data <= self.hist_max]
+        temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, temp_data <= self.hist_max)]
         temp_data = np.append(temp_data,np.array([self.hist_min,self.hist_max], dtype=np.float32))
-        mask_mc = (temp_mc >= self.hist_min)&(temp_mc <= self.hist_max)
+        mask_mc = np.logical_and(self.hist_min <= temp_mc, temp_mc <= self.hist_max)
         temp_weights = temp_weights[mask_mc]
         temp_mc = temp_mc[mask_mc]
         temp_weights = np.append(temp_weights,np.array([0,0], dtype=np.float32))
@@ -188,9 +185,6 @@ class zcat:
             del temp_weights
             return
 
-        del temp_mc
-        del temp_weights
-        
         #clean binned data and mc, log of 0 is a problem
         binned_mc[binned_mc == 0] = 1e-15
 

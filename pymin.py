@@ -45,7 +45,7 @@ def main():
     #setup options
     parser = ap.ArgumentParser(description="Derivation of Scales and Smearings")
 
-    parser.add_argument("-i","--inputFile", required=True, 
+    parser.add_argument("-i","--inputFile",  
                     	help="input file containing paths to data and mc")
 
     parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
@@ -193,7 +193,6 @@ def main():
     if args.scales is not None:
         print("[INFO] applying {} to the data".format(args.scales))
         data = scale_data.scale(data, args.scales)
-        os.system("touch ./scales-done")
 
     #reweight MC or deriving the weights
     if args._kNoReweight:
@@ -204,7 +203,6 @@ def main():
             print("[INFO] deriving Y(Z), Pt(Z) weights")
             weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
         mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
-        os.system("touch ./weights-done")
 
 
     #load categories for the derivation
@@ -220,7 +218,7 @@ def main():
 
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears, unc = minimizer.minimize(data, mc, cats, 
+    scales_smears = minimizer.minimize(data, mc, cats, 
             ignore_cats=args.ignore, #categories to ignore
             hist_min=round(float(args.hist_min),2), #bottom edge of histogram
             hist_max=round(float(args.hist_max),2), #top edge of histogram
@@ -240,7 +238,6 @@ def main():
             _kFixScales=args._kFixScales, #don't let scales float in fit flag
             _kAutoBin=(not args._kNoAutoBin)
         )
-    os.system("touch ./minimize-done")
 
     #if we're plotting there's nothing to write, so just print a done message and exit
     if args._kPlot:
@@ -253,7 +250,8 @@ def main():
         return
 
     #write the results
-    helper_pymin.write_results(args, scales_smears, unc)
+    print(scales_smears)
+    helper_pymin.write_results(args, scales_smears)
 
     return
 

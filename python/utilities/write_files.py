@@ -185,6 +185,7 @@ def write_scales(scales, cats, out):
     for col in headers:
         dictForDf[col] = []
     
+    print(scales)
     print(len(scales),sum(cats.loc[:,0] == 'scale'))
     for index,row in cats.iterrows():
         if row[0] != 'smear':
@@ -197,8 +198,8 @@ def write_scales(scales, cats, out):
             dictForDf['etMin'].append(row[6] if row[6] != -1 else 0)
             dictForDf['etMax'].append(row[7] if row[7] != -1 else 14000)
             dictForDf['gain'].append(row[5] if row[5] != -1 else 0)
-            dictForDf['scale'].append(scales[index][0])
-            dictForDf['err'].append(scales[index][1])
+            dictForDf['scale'].append(scales[index])
+            dictForDf['err'].append(5e-05)
 
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='\t',header=False,index=False)

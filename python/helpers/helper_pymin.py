@@ -10,6 +10,7 @@ import numpy as np
 import uproot as up
 
 import python.classes.const_class as constants
+import python.utilities.write_files as write_files
 
 def get_cmd(args):
     #reconstructs and returns the command line string used to run the program
@@ -33,28 +34,28 @@ def get_step(args):
 
 def rewrite(args):
     #rewrites a set of scales/smearings files
-
+    step = get_step(args)
     scales_out = os.getcwd()+"/datFiles/step"+str(step)+"_"+args.output+"_scales.dat"
     if args.scales != '':
         scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.from_condor:
+    if args._kFromCondor:
         scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
+    if args._kClosure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
     new_scales = scales_out.replace("step", "onlystep")
     new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
-    if not args.closure: write_files.rewrite_smearings(args.cats, new_smears)
+    if not args._kClosure: write_files.rewrite_smearings(args.cats, new_smears)
     write_files.combine( new_scales, args.scales, scales_out )
 
 def combine_files(args):
     #combines an onlystep file and a step file
-
+    step = get_step(args)
     scales_out = os.getcwd()+"/datFiles/step"+str(step)+"_"+args.output+"_scales.dat"
     if args.scales != '':
         scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.from_condor:
+    if args._kFromCondor:
         scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
+    if args._kClosure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
     write_files.combine( args.only_step, args.scales, scales_out )
 
@@ -124,23 +125,25 @@ def load_dataframes(files, args):
 
     return data, mc
 
-def write_results(args, scales_smears, unc):
+def write_results(args, scales_smears):
     step = get_step(args)
-    scale_path = args.scales if args.scales is not None else os.getcwd()+"/blah.dat"
+    cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
+    num_scales = sum([row[0] =='scale' for row in cats.iterrows()])
+    scales_path = args.scales if args.scales is not None else os.getcwd()+"/blah.dat"
     scales_out = os.path.dirname(scales_path)+"/step"+str(step)+"_"+args.output+"_scales.dat"
     if args.scales != '':
         scales_out = os.path.dirname(scales_path)+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.from_condor:
+    if args._kFromCondor:
         scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.closure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
+    if args._kClosure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
     else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
 
     new_scales = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("step", "onlystep")
     new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
 
-    scales_smears = [(scales_smears[i], unc[i]) for i,x in enumerate(unc)]
-    write_files.write_scales(scales_smears[:num_scales], cats, new_scales)
-    if not args.closure: write_files.write_smearings(scales_smears, cats, new_smears)
+    print(scales_smears)
+    write_files.write_scales(scales_smears, cats, new_scales)
+    if not args._kClosure: write_files.write_smearings(scales_smears, cats, new_smears)
 ###############################################################################
 
 ###############################################################################

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import uproot as up
 import statistics as stats
+import time
 from scipy.optimize import basinhopping as basinHop
 from scipy.optimize import  differential_evolution as diffEvolve
 from scipy.optimize import minimize as minz
@@ -100,7 +101,6 @@ def minimize(data, mc, cats, **options):
                                               num_scales=__num_scales__, num_smears=__num_smears__, 
                                               **options
                                               )
-    os.system("touch ./categories-done")
 
     #once categories are extracted, data and mc can be released to make more room.
     del data
@@ -193,7 +193,6 @@ def minimize(data, mc, cats, **options):
                                           num_scales=__num_scales__,
                                           **options
                                           )
-        os.system("touch ./scan-done")
 
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess, 
         helper_minimizer.target_function(guess, __GUESS__,__ZCATS__,__num_scales__, __num_smears__)))
@@ -204,7 +203,6 @@ def minimize(data, mc, cats, **options):
         min_step_dict = {"eps":0.00001}
 
     #minimize
-    os.system("touch ./minimizing")
     optimum = minz(helper_minimizer.target_function,
                    np.array(guess), 
                    args=(__GUESS__,__ZCATS__,__num_scales__, __num_smears__),
@@ -222,7 +220,7 @@ def minimize(data, mc, cats, **options):
         print("[ERROR] Please review the output and resubmit")
         print("#"*40)
         print("#"*40)
-        return optimum.x, [5e-05 for par in optimum.x]
+        return optimum.x
 
     if options['_kTestMethodAccuracy']:
         ret = optimum.x
@@ -233,5 +231,5 @@ def minimize(data, mc, cats, **options):
             else:
                 print("[INFO][ACCURACY TEST] The injected smearing was {}, the recovered smearing was {}".format(scales_to_inject[i], ret[i]))
                 ret[i] = 100*(ret[i]/scales_to_inject[i] - 1)
-        return ret, [5e-05 for par in ret]
-    return optimum.x, [5e-05 for par in optimum.x]
+        return ret
+    return optimum.x
