@@ -4,27 +4,39 @@ import numpy as np
 import multiprocessing as mp
 from collections import OrderedDict
 
+import python.classes.const_class as constants
+
 def get_zpt(df):
     #calculates the transverse momentum of the dielectron event
-    theta_lead = 2*np.arctan(np.exp(-1*np.array(df['etaEle[0]'].values)))
-    theta_sub = 2*np.arctan(np.exp(-1*np.array(df['etaEle[1]'].values)))
-    p_lead_x = np.multiply(np.array(df['energy_ECAL_ele[0]'].values), np.multiply(np.sin(theta_lead),np.cos(np.array(df['phiEle[0]'].values))))
-    p_lead_y = np.multiply(df['energy_ECAL_ele[0]'].values, np.multiply(np.sin(theta_lead),np.sin(df['phiEle[0]'].values)))
-    p_sub_x = np.multiply(df['energy_ECAL_ele[1]'].values, np.multiply(np.sin(theta_sub),np.cos(df['phiEle[1]'].values)))
-    p_sub_y = np.multiply(df['energy_ECAL_ele[1]'].values, np.multiply(np.sin(theta_sub),np.sin(df['phiEle[1]'].values)))
+
+    #constants
+    c = constants.const()
+
+    theta_lead = 2*np.arctan(np.exp(-1*np.array(df[c.ETA_LEAD].values)))
+    theta_sub = 2*np.arctan(np.exp(-1*np.array(df[c.ETA_SUB].values)))
+    p_lead_x = np.multiply(np.array(df[c.E_LEAD].values), 
+            np.multiply(np.sin(theta_lead),np.cos(np.array(df[c.PHI_LEAD].values))))
+    p_lead_y = np.multiply(df[c.E_LEAD].values, 
+            np.multiply(np.sin(theta_lead),np.sin(df[c.PHI_LEAD].values)))
+    p_sub_x = np.multiply(df[c.E_LEAD].values, 
+            np.multiply(np.sin(theta_sub),np.cos(df[c.PHI_SUB].values)))
+    p_sub_y = np.multiply(df[c.E_SUB].values, np.multiply(np.sin(theta_sub),np.sin(df[c.PHI_SUB].values)))
 
     return np.sqrt( np.add( np.multiply( np.add(p_lead_x,p_sub_x), np.add(p_lead_x,p_sub_x)), np.multiply( np.add(p_lead_y,p_sub_y), np.add(p_lead_y,p_sub_y))))
 
 def get_rapidity(df):
     #calculates the rapidity of the dielectron event
-    theta_lead = 2*np.arctan(np.exp(-1*np.array(df['etaEle[0]'].values)))
-    theta_sub = 2*np.arctan(np.exp(-1*np.array(df['etaEle[1]'].values)))
+    #constants
+    c = constants.const()
 
-    p_lead_z = np.multiply(df['energy_ECAL_ele[0]'].values,np.cos(theta_lead))
-    p_sub_z = np.multiply(df['energy_ECAL_ele[1]'].values,np.cos(theta_sub))
+    theta_lead = 2*np.arctan(np.exp(-1*np.array(df[c.ETA_LEAD].values)))
+    theta_sub = 2*np.arctan(np.exp(-1*np.array(df[c.ETA_SUB].values)))
+
+    p_lead_z = np.multiply(df[c.E_LEAD].values,np.cos(theta_lead))
+    p_sub_z = np.multiply(df[c.E_SUB].values,np.cos(theta_sub))
 
     z_pz = np.add(p_lead_z,p_sub_z)
-    z_energy = np.add(df['energy_ECAL_ele[0]'].values, df['energy_ECAL_ele[1]'].values)
+    z_energy = np.add(df[c.E_LEAD].values, df[c.E_SUB].values)
 
     return np.abs(0.5*np.log( np.divide( np.add(z_energy, z_pz), np.subtract(z_energy, z_pz))))
 
@@ -57,11 +69,6 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     yz_bins = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5]
 
     #calculate pt(z) and y(z) for each event
-    pt_lead = np.divide( df_data['energy_ECAL_ele[0]'].values, np.cosh( df_data['etaEle[0]'].values))
-    pt_sub = np.divide( df_data['energy_ECAL_ele[1]'].values, np.cosh( df_data['etaEle[1]'].values))
-    pt_mask = (pt_lead > 32)&(pt_sub > 20)
-    df_data = df_data[pt_mask&(df_data['invMass_ECAL_ele'].between(80,100))]
-
     zpt_data = get_zpt(df_data)
     zpt_mc = get_zpt(df_mc)
 
@@ -82,17 +89,30 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     
     return write_weights(basename, weights, d_hist_x_edges, d_hist_y_edges)
 
-def add(arg):
-#adds the pt x rapidity weights to the df
+def add(arg): 
+    #adds the pt x rapidity weights to the df
     df, weights = arg
-    for i,row in enumerate(weights):
-        mask_rapidity = (np.array(df['rapidity'].values) > row[0])&(np.array(df['rapidity'].values) < row[1])
-        mask_ptz = (np.array(df['ptZ'].values) > row[2])&(np.array(df['ptZ'].values) < row[3])
-        df.loc[mask_rapidity&mask_ptz,'pty_weight'] = row[4]
 
-    return df
+    i_rapidity_min = 0
+    i_rapidity_max = 1
+    i_ptz_min = 2
+    i_ptz_max = 3
+    i_weight = 4
+
+    def find_weight(ptz):
+        """ 
+        finds the corresponding weight by ptZ 
+        weights are divided by rapidity before being provided as arguments, so no need to check rapidity compatibility
+        """
+        mask_ptz = (weights[:,i_ptz_min] <= ptz) & (ptz < weights[:,i_ptz_max])
+        return np.ravel(weights[mask_ptz])[i_weight] if any(mask_ptz) else 0.
+
+    return df.apply(find_weight)
         
 def add_pt_y_weights(df, weight_file):
+    #constants
+    c = constants.const()
+
     #adds the pt x y weight as a column to the df
     print("[INFO][python/reweight_pt_y][add_pt_y_weights] applying weights from {}".format(weight_file))
     ptz = np.array(get_zpt(df))
@@ -102,13 +122,15 @@ def add_pt_y_weights(df, weight_file):
     df['ptZ'] = ptz
     df['rapidity'] = rapidity
 
-    df_weight = pd.read_csv(weight_file, delimiter='\t', dtype=float)
+    df.drop([c.PHI_LEAD, c.PHI_SUB], axis=1, inplace=True)
+
+    df_weight = pd.read_csv(weight_file, delimiter='\t', dtype=np.float32)
     df['pty_weight'] = np.zeros(len(df.iloc[:,0].values))
 
     #split by rapidity
     y_low = df_weight.loc[:,'y_min'].unique().tolist()
     y_high = df_weight.loc[:,'y_max'].unique().tolist()
-    divided_df = [df.loc[df['rapidity'].between(y_low[i], y_high[i])] for i in range(len(y_low))]
+    divided_df = [(df.loc[(df['rapidity'].values >= y_low[i]) & (df['rapidity'].values < y_high[i])])['ptZ'] for i in range(len(y_low))]
 
     #pack up the divided dataframe and the corresponding weights
     divided_weights = [(divided_df[i],df_weight.loc[df_weight.loc[:,'y_min'] == y_low[i]].values) for i in range(len(y_low))]
@@ -120,9 +142,7 @@ def add_pt_y_weights(df, weight_file):
     pool.close()
     pool.join()
 
-    df = pd.concat(scaled_data)
+    df['pty_weight'] = pd.concat(scaled_data).values
     df.drop(['ptZ', 'rapidity'], axis=1, inplace=True)
 
     return df
-
-

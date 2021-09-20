@@ -1,4 +1,6 @@
-datFiles/
-datFiles/*
-*/__pycache__/
-
+datFiles/*.dat
+python/__pycache__
+python/classes/__pycache__
+python/helpers/__pycache__
+python/plotters/__pycache__
+python/utilities/__pycache__

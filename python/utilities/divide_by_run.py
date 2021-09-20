@@ -1,6 +1,22 @@
 import numpy as np
 import pandas as pd
 
+"""
+Author:
+    Neil Schroeder, schr1077@umn.edu, neil.raymond.schroeder@cern.ch
+
+About:
+    This function takes in data, and a min number of events. From this
+    it will bin the data by run number using the min number of events
+    to find the edges of the bins. The bins will not overlap.
+
+    The required arguments are:
+        data -> pandas dataframe, must contain a column named "runNumber"
+        min_num_events -> Integer which sets the criteria for the minimum
+                          number of events per run bin. The default value
+                          for this is 10,000.
+"""
+
 def divide(data, min_num_events):
     print("[INFO][python/divide_by_run][divide] Dividing the data by run with minimum event requirement set to {}".format(min_num_events))
     runs = data.loc[:,'runNumber'].unique()
@@ -26,5 +42,4 @@ def divide(data, min_num_events):
             bins.append( (runs[i], runs[high_edge]) )
             i = high_edge + 1
 
-    print(bins)
     return bins
