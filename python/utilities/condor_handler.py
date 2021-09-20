@@ -29,7 +29,7 @@ def make_script(cwd, cmd, script, done):
     lines.append("eval `scramv1 runtime -sh`  uname -a\n")
     lines.append("echo $CMSSW_VERSION\n")
     lines.append('\n')
-    lines.append(cmd+"--from_condor\n")
+    lines.append(cmd+"--from-condor\n")
     lines.append('\n')
     lines.append("touch "+done)
 

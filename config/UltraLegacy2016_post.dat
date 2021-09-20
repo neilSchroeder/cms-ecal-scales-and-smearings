@@ -1,0 +1,4 @@
+data	selected	/eos/cms/store/group/dpg_ecal/alca_ecalcalib/ecalelf/ntuples/13TeV/MINIAODNTUPLE//106X_dataRun2_UL16/EGamma-106X-2016UL-PostVFP-F/278769-278808/2016_271036-284044_SS_Try/2016UL_SS/EGamma-106X-2016UL-PostVFP-F-278769-278808.root
+data	selected	/eos/cms/store/group/dpg_ecal/alca_ecalcalib/ecalelf/ntuples/13TeV/MINIAODNTUPLE//106X_dataRun2_UL16/EGamma-106X-2016UL-PostVFP-G/278820-280385/2016_271036-284044_SS_Try/2016UL_SS/EGamma-106X-2016UL-PostVFP-G-278820-280385.root
+data	selected	/eos/cms/store/group/dpg_ecal/alca_ecalcalib/ecalelf/ntuples/13TeV/MINIAODNTUPLE//106X_dataRun2_UL16/EGamma-106X-2016UL-PostVFP-H/281613-284044/2016_271036-284044_SS_Try/2016UL_SS/EGamma-106X-2016UL-PostVFP-H-281613-284044.root
+mc	selected	/eos/cms/store/group/dpg_ecal/alca_ecalcalib/ecalelf/ntuples/13TeV/MINIAODNTUPLE//106X_MCRun2_UL16_Post/DYJets_M50-CP5-amcatnlo-Run2016UL-MC-PostVFP/allRange/2016ULPostVFP/DYJets_M50-CP5-amcatnlo-Run2016UL-MC-PostVFP-allRange.root

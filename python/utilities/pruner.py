@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 import uproot as up
 
+import python.classes.const_class as constants
+
+c = constants.const()
+
 def prune(files, out, out_dir):
     #files is a text file with a list of data and mc root files
     print("[INFO][python/pruner][prune] You've chose to prune the files listed in {}".format(files))
@@ -24,20 +28,24 @@ def prune(files, out, out_dir):
         df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
         
         #drop events in the transition region or outside the tracker
-        transition_mask_0 = ~df['etaEle[0]'].between(1.4442, 1.566)&(~df['etaEle[0]'].between(-1.566, -1.4442))
-        transition_mask_1 = ~df['etaEle[1]'].between(1.4442, 1.566)&(~df['etaEle[1]'].between(-1.566, -1.4442))
-        tracker_mask_0 = ~df['etaEle[0]'].between(2.5, 10)&(~df['etaEle[0]'].between(-10, -2.5)) 
-        tracker_mask_1 = ~df['etaEle[1]'].between(2.5, 10)&(~df['etaEle[1]'].between(-10, -2.5))
-        df = df.loc[transition_mask_0&transition_mask_1&tracker_mask_0&tracker_mask_1]
+        df[c.ETA_LEAD] = np.abs(df[c.ETA_LEAD].values)
+        df[c.ETA_SUB] = np.abs(df[c.ETA_SUB].values)
+
+        mask_lead = np.logical_or(df[c.ETA_LEAD].values < c.MAX_EB, c.MIN_EE < df[c.ETA_LEAD].values)
+        mask_lead = np.logical_and(mask_lead, df[c.ETA_LEAD].values <= 2.5)
+        mask_sub = np.logical_or(df[c.ETA_SUB].values < c.MAX_EB, c.MIN_EE < df[c.ETA_SUB].values)
+        mask_sub = np.logical_and(mask_sub, df[c.ETA_SUB].values <= 2.5)
+
+        df = df[np.logical_and(mask_lead,mask_sub)]
 
         #drop events which are non-sensical
-        sublead_energy_mask = df['energy_ECAL_ele[0]'].between(0, 14000)&df['energy_ECAL_ele[1]'].between(0, 14000)
-        df = df.loc[sublead_energy_mask]
+        energy_mask = np.logical_and( df[c.E_LEAD].values > 0, df[c.E_LEAD].values < 14000)
+        energy_mask = np.logical_and( energy_mask, np.logical_and( df[c.E_SUB].values > 0, df[c.E_SUB].values < 14000))
+        df = df[energy_mask]
 
         #drop events with invmass less than 60 or greater than 120
-        invmass_mask = df['invMass_ECAL_ele'].values
-        invmass_mask = [60 < val and val < 120 for val in invmass_mask]
-        df = df.loc[invmass_mask]
+        invmass_mask = np.logical_and(c.invmass_min < df[c.INVMASS].values, df[c.INVMASS].values < c.invmass_max)
+        df = df[invmass_mask]
         drop_list = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]']
         df.drop(drop_list,axis=1,inplace=True)
 
