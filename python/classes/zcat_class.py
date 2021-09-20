@@ -97,7 +97,7 @@ class zcat:
         self.updated=True
 
         #apply the scales first 
-        temp_data = np.copy(self.data) * np.sqrt(1./(lead_scale*sublead_scale), dtype=np.float32)
+        temp_data = np.copy(self.data) * np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
         temp_weights = np.copy(self.weights)
         
         temp_mc = np.copy(self.mc)
