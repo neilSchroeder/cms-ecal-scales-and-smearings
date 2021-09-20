@@ -1,0 +1,201 @@
+Linux b7g41n4709.cern.ch 3.10.0-1160.36.2.el7.x86_64 #1 SMP Wed Jul 21 11:57:15 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+CMSSW_10_2_14
+[INFO] welcome to SS_PyMin
+[INFO] you have run the following command:
+./pymin.py  -i  config/ul2018.dat  -c  config/cats_step5_stochastic.tsv  -w  datFiles/ptz_x_rapidity_weights_ul18_2021-07-15_testOverhaul.tsv  -s  /afs/cern.ch/user/n/nschroed/public/scales/Run2018/Run2018_2021-07-08_RunFineEtaR9Et_stochastic_v3-02_scales.dat  -o  ul18_2021-07-15_testOverhaul_v3-04  --min-step=0.0001  --scan-min=0.995  --scan-max=1.005  --scan-step=0.001  --fix-scales  --queue=nextweek  --from-condor  
+[INFO] importing data and mc to dataframes (this might take a bit) ...
+[INFO] applying /afs/cern.ch/user/n/nschroed/public/scales/Run2018/Run2018_2021-07-08_RunFineEtaR9Et_stochastic_v3-02_scales.dat to the data
+[INFO][python/reweight_pt_y][add_pt_y_weights] applying weights from datFiles/ptz_x_rapidity_weights_ul18_2021-07-15_testOverhaul.tsv
+[INFO] importing categories from config/cats_step5_stochastic.tsv
+[INFO] initiating minimization using scipy.optimize.minimize
+[INFO][python/nll] extracting lists from category definitions
+[INFO][zcat] category (4,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (5,3, data = 2, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (6,3, data = 8, mc = 4) was deactivated due to insufficient statistics
+[INFO][zcat] category (8,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (8,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (9,3, data = 3, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (9,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (10,3, data = 3, mc = 3) was deactivated due to insufficient statistics
+[INFO][zcat] category (10,7, data = 2, mc = 6) was deactivated due to insufficient statistics
+[INFO][zcat] category (12,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (12,6, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (12,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (12,10, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (12,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (13,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (13,6, data = 1, mc = 6) was deactivated due to insufficient statistics
+[INFO][zcat] category (13,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (13,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (14,3, data = 2, mc = 6) was deactivated due to insufficient statistics
+[INFO][zcat] category (14,7, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (14,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (16,3, data = 1, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (16,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (16,11, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (16,14, data = 6, mc = 7) was deactivated due to insufficient statistics
+[INFO][zcat] category (16,15, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (16,16, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (17,3, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (17,7, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (17,11, data = 2, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (17,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (18,3, data = 6, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (18,7, data = 3, mc = 6) was deactivated due to insufficient statistics
+[INFO][zcat] category (18,15, data = 1, mc = 3) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,6, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,10, data = 6, mc = 7) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,11, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,14, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,16, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,19, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (20,20, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (21,3, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (21,6, data = 2, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (21,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (21,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (21,14, data = 0, mc = 2) was deactivated due to insufficient statistics
+[INFO][zcat] category (21,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (21,19, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (22,3, data = 3, mc = 6) was deactivated due to insufficient statistics
+[INFO][zcat] category (22,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (22,11, data = 1, mc = 3) was deactivated due to insufficient statistics
+[INFO][zcat] category (22,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (22,19, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,2, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,6, data = 1, mc = 2) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,10, data = 6, mc = 5) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,14, data = 6, mc = 4) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,19, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,23, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (24,24, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,2, data = 3, mc = 4) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,6, data = 2, mc = 3) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,19, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (25,23, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (26,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (26,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (26,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (26,15, data = 1, mc = 3) was deactivated due to insufficient statistics
+[INFO][zcat] category (26,19, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (26,23, data = 3, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,2, data = 1, mc = 2) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,6, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,10, data = 6, mc = 4) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,14, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,19, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,22, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,23, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,24, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,26, data = 5, mc = 7) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,27, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (28,28, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,2, data = 2, mc = 3) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,6, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,11, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,14, data = 0, mc = 1) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,19, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,22, data = 3, mc = 2) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,23, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (29,27, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (30,3, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (30,7, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (30,11, data = 1, mc = 3) was deactivated due to insufficient statistics
+[INFO][zcat] category (30,15, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (30,19, data = 3, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (30,23, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (30,27, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:
+[INFO][python/nll] scanning smearings:
+[INFO][python/nll] best guess for smearing 32 is 0.01925
+[INFO][python/nll] best guess for smearing 33 is 0.0115
+[INFO][python/nll] best guess for smearing 34 is 0.0
+[INFO][python/nll] best guess for smearing 35 is 0.00175
+[INFO][python/nll] best guess for smearing 36 is 0.01925
+[INFO][python/nll] best guess for smearing 37 is 0.00475
+[INFO][python/nll] best guess for smearing 38 is 0.00025
+[INFO][python/nll] best guess for smearing 39 is 0.0005
+[INFO][python/nll] best guess for smearing 40 is 0.0175
+[INFO][python/nll] best guess for smearing 41 is 0.0165
+[INFO][python/nll] best guess for smearing 42 is 0.00475
+[INFO][python/nll] best guess for smearing 43 is 0.01175
+[INFO][python/nll] best guess for smearing 44 is 0.01725
+[INFO][python/nll] best guess for smearing 45 is 0.01325
+[INFO][python/nll] best guess for smearing 46 is 0.00475
+[INFO][python/nll] best guess for smearing 47 is 0.0115
+[INFO][python/nll] best guess for smearing 48 is 0.01725
+[INFO][python/nll] best guess for smearing 49 is 0.01425
+[INFO][python/nll] best guess for smearing 50 is 0.010750000000000001
+[INFO][python/nll] best guess for smearing 51 is 0.02075
+[INFO][python/nll] best guess for smearing 52 is 0.01525
+[INFO][python/nll] best guess for smearing 53 is 0.012750000000000001
+[INFO][python/nll] best guess for smearing 54 is 0.0115
+[INFO][python/nll] best guess for smearing 55 is 0.016
+[INFO][python/nll] best guess for smearing 56 is 0.00575
+[INFO][python/nll] best guess for smearing 57 is 0.01025
+[INFO][python/nll] best guess for smearing 58 is 0.009000000000000001
+[INFO][python/nll] best guess for smearing 59 is 0.0185
+[INFO][python/nll] best guess for smearing 60 is 0.00125
+[INFO][python/nll] best guess for smearing 61 is 0.00775
+[INFO][python/nll] best guess for smearing 62 is 0.006
+[INFO][python/nll] best guess for smearing 63 is 0.0185
+[INFO][python/nll] scan complete
+[INFO][python/nll] the initial guess is [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.01925, 0.0115, 0.0, 0.00175, 0.01925, 0.00475, 0.00025, 0.0005, 0.0175, 0.0165, 0.00475, 0.01175, 0.01725, 0.01325, 0.00475, 0.0115, 0.01725, 0.01425, 0.010750000000000001, 0.02075, 0.01525, 0.012750000000000001, 0.0115, 0.016, 0.00575, 0.01025, 0.009000000000000001, 0.0185, 0.00125, 0.00775, 0.006, 0.0185] with nll 620255.7274641935
+[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:
+      fun: 549223.3522601215
+ hess_inv: <64x64 LbfgsInvHessProduct with dtype=float64>
+      jac: array([-2.34492978e+07,  3.71866465e+07,  8.10178124e+05,  1.41311279e+05,
+       -9.69822903e+06,  1.49051902e+07,  5.99665871e+06, -4.55339105e+05,
+       -1.49644002e+07,  2.53956181e+07,  3.51715662e+06, -1.86354881e+04,
+       -7.15947468e+06,  1.06978716e+07,  1.50479885e+06,  4.63688090e+04,
+        2.27491311e+05,  1.02024912e+07,  4.39852646e+06,  4.81171687e+05,
+        9.84752794e+05,  8.80301506e+06,  1.79556998e+06,  1.70663530e+05,
+       -4.28387939e+06,  7.24696845e+06,  3.14223432e+06,  3.51995467e+05,
+       -2.49036446e+06,  1.10967920e+07,  3.77935688e+06,  3.84485687e+05,
+        1.47684799e+05,  2.67674961e+05, -1.57033120e+05, -1.26384155e+05,
+        6.06926235e+05, -2.71360432e+05, -5.02382771e+04, -8.56613472e+04,
+        9.56912958e+05,  5.55124922e+05, -7.47754800e+05, -1.26004206e+05,
+        1.04503302e+05,  4.98539519e+05, -2.65562576e+05,  3.87434213e+04,
+        3.46060707e+04, -1.30541481e+05,  3.45443057e+04,  1.79076532e+04,
+       -3.35281298e+05,  2.08989350e+05, -8.28170107e+04, -1.41558713e+04,
+       -1.40378960e+05,  4.71359038e+05, -9.70003411e+04, -7.77619398e+04,
+        4.06540575e+05, -1.16703898e+05,  7.38341770e+04, -4.70201713e+04])
+  message: b'CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH'
+     nfev: 2730
+      nit: 16
+   status: 0
+  success: True
+        x: array([1.00000000e+00, 9.99999999e-01, 9.99999999e-01, 9.99999999e-01,
+       1.00000000e+00, 9.99999999e-01, 9.99999999e-01, 1.00000000e+00,
+       1.00000000e+00, 9.99999999e-01, 9.99999999e-01, 9.99999999e-01,
+       1.00000000e+00, 9.99999999e-01, 9.99999999e-01, 1.00000000e+00,
+       9.99999999e-01, 9.99999999e-01, 9.99999999e-01, 9.99999999e-01,
+       9.99999999e-01, 9.99999999e-01, 9.99999999e-01, 9.99999999e-01,
+       1.00000000e+00, 9.99999999e-01, 9.99999999e-01, 9.99999999e-01,
+       1.00000000e+00, 9.99999999e-01, 9.99999999e-01, 9.99999999e-01,
+       1.54004216e-02, 9.04976228e-03, 4.79047079e-04, 1.54846520e-03,
+       1.48075984e-02, 4.90724076e-03, 6.63174993e-04, 5.52358797e-04,
+       1.80364706e-02, 1.73907137e-02, 5.99567832e-03, 1.36879060e-02,
+       1.70817422e-02, 1.59808063e-02, 6.98820911e-03, 1.12592798e-02,
+       1.88100162e-02, 1.54995734e-02, 1.12231146e-02, 2.17977326e-02,
+       1.61205796e-02, 1.37643619e-02, 1.29446268e-02, 1.54661158e-02,
+       6.56698122e-03, 1.08817758e-02, 8.92094269e-03, 1.79781600e-02,
+       1.26832394e-03, 7.89771532e-03, 7.56121782e-03, 1.78611770e-02])

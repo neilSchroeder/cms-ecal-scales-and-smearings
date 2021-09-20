@@ -1,0 +1,47 @@
+Linux b7s02p4684.cern.ch 3.10.0-1160.36.2.el7.x86_64 #1 SMP Wed Jul 21 11:57:15 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+CMSSW_10_2_14
+[INFO] welcome to SS_PyMin
+[INFO] you have run the following command:
+./pymin.py  -i  config/ul2018.dat  -c  config/cats_step2.tsv  -s  /afs/cern.ch/user/n/nschroed/public/scales/Run2018/Run2018_2021-07-08_RunFineEtaR9Et_stochastic_v3-02_scales.dat  --smearings=/afs/cern.ch/user/n/nschroed/public/scales/Run2018/Run2018_2021-09-03_RunFineEtaR9Et_stochastic_v3-04_smearings.dat  -w  datFiles/ptz_x_rapidity_weights_ul18_2021-07-15_testOverhaul.tsv  -o  ul18_2021-09-08_testOverhaul_v3-05  --closure  --min-step=0.0001  --scan-min=0.995  --scan-max=1.005  --scan-step=0.001  --hist-min=84  --hist-max=96  --queue=tomorrow  --from-condor  
+[INFO] importing data and mc to dataframes (this might take a bit) ...
+[INFO] applying /afs/cern.ch/user/n/nschroed/public/scales/Run2018/Run2018_2021-07-08_RunFineEtaR9Et_stochastic_v3-02_scales.dat to the data
+[INFO][python/reweight_pt_y][add_pt_y_weights] applying weights from datFiles/ptz_x_rapidity_weights_ul18_2021-07-15_testOverhaul.tsv
+[INFO] importing categories from config/cats_step2.tsv
+[INFO] initiating minimization using scipy.optimize.minimize
+[INFO][python/nll] dropping ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'runNumber']
+[INFO][python/nll] extracting lists from category definitions
+[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:
+[INFO][python/nll] best guess for scale 0 is 1.0
+[INFO][python/nll] best guess for scale 1 is 1.001
+[INFO][python/nll] best guess for scale 2 is 0.999
+[INFO][python/nll] best guess for scale 3 is 1.001
+[INFO][python/nll] best guess for scale 4 is 1.0
+[INFO][python/nll] best guess for scale 5 is 1.001
+[INFO][python/nll] best guess for scale 6 is 1.0
+[INFO][python/nll] best guess for scale 7 is 1.001
+[INFO][python/nll] scanning smearings:
+[INFO][python/nll] scan complete
+[INFO][python/nll] the initial guess is [1.0, 1.001, 0.999, 1.001, 1.0, 1.001, 1.0, 1.001] with nll 15372750.436005794
+[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:
+      fun: 14380810.80200981
+ hess_inv: <8x8 LbfgsInvHessProduct with dtype=float64>
+      jac: array([ 7.27706560e+08, -2.98154299e+07, -4.08037248e+08,  2.13795244e+08,
+        3.58358852e+08,  2.71258314e+08, -9.13422468e+07,  8.64910280e+06])
+  message: b'CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH'
+     nfev: 288
+      nit: 6
+   status: 0
+  success: True
+        x: array([0.99971477, 1.0007027 , 0.99939024, 1.00061023, 0.9996466 ,
+       1.00135818, 0.99964263, 1.00136345])
+[0.99971477 1.0007027  0.99939024 1.00061023 0.9996466  1.00135818
+ 0.99964263 1.00136345]
+[0.99971477 1.0007027  0.99939024 1.00061023 0.9996466  1.00135818
+ 0.99964263 1.00136345]
+[0.99971477 1.0007027  0.99939024 1.00061023 0.9996466  1.00135818
+ 0.99964263 1.00136345]
+8 8
+[INFO] creating new scales file: /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_testOverhaul_v3-05/step2closure_ul18_2021-09-08_testOverhaul_v3-05_scales.dat
+[INFO][python/write_files][combine] producing combined scales file from /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_testOverhaul_v3-05/onlystep2closure_ul18_2021-09-08_testOverhaul_v3-05_scales.dat and /afs/cern.ch/user/n/nschroed/public/scales/Run2018/Run2018_2021-07-08_RunFineEtaR9Et_stochastic_v3-02_scales.dat
+[INFO][python/write_files][combine] this output will be written to /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_testOverhaul_v3-05/step2closure_ul18_2021-09-08_testOverhaul_v3-05_scales.dat
+[INFO][python/write_files][writeJsonFromDF] producing json file in /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_testOverhaul_v3-05/step2closure_ul18_2021-09-08_testOverhaul_v3-05_scales.json

@@ -1,1 +1,4 @@
-datFiles/*.dat
+datFiles/
+datFiles/*
+*/__pychache__/
+

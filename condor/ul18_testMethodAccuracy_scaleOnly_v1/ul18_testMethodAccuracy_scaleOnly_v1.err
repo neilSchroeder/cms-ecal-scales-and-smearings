@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "./pymin.py", line 258, in <module>
+    main()
+  File "./pymin.py", line 253, in main
+    helper_pymin.write_results(args, scales_smears, unc)
+  File "/afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/python/helpers/helper_pymin.py", line 130, in write_results
+    scales_out = os.path.dirname(scales_path)+"/step"+str(step)+"_"+args.output+"_scales.dat"
+NameError: name 'scales_path' is not defined

@@ -1,0 +1,44 @@
+Linux b7s01p2709.cern.ch 3.10.0-1160.31.1.el7.x86_64 #1 SMP Thu Jun 10 13:32:12 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+CMSSW_10_2_14
+[INFO] welcome to SS_PyMin
+[INFO] you have run the following command:
+./pymin.py  -i  config/ul2018.dat  -c  config/cats_step2.tsv  -o  ul18_testMethodAccuracy_scaleOnly_v1  --no-reweight  --scan-min=0.99  --scan-max=1.01  --scan-step=0.0005  --min-step=0.0001  --test-method-accuracy  --closure  --queue=nextweek  --from-condor  
+[INFO] importing data and mc to dataframes (this might take a bit) ...
+[INFO] importing categories from config/cats_step2.tsv
+[INFO] initiating minimization using scipy.optimize.minimize
+[INFO][python/nll] dropping ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'runNumber']
+[INFO][python/nll] extracting lists from category definitions
+[INFO][python/nll] the injected scales and smearings are: [1.007198, 1.000031, 0.993175, 0.997308, 0.993058, 1.000942, 1.0047, 1.009793]
+[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:
+[INFO][python/nll] best guess for scale 0 is 0.9939999999999996
+[INFO][python/nll] best guess for scale 5 is 0.998499999999999
+[INFO][python/nll] best guess for scale 4 is 1.0069999999999981
+[INFO][python/nll] best guess for scale 7 is 0.9904999999999999
+[INFO][python/nll] best guess for scale 6 is 0.9949999999999994
+[INFO][python/nll] best guess for scale 2 is 1.0064999999999982
+[INFO][python/nll] best guess for scale 1 is 0.9999999999999989
+[INFO][python/nll] best guess for scale 3 is 1.0029999999999986
+[INFO][python/nll] scanning smearings:
+[INFO][python/nll] scan complete
+[INFO][python/nll] the initial guess is [0.9939999999999996, 0.9999999999999989, 1.0064999999999982, 1.0029999999999986, 1.0069999999999981, 0.998499999999999, 0.9949999999999994, 0.9904999999999999] with nll 4138069.003818648
+[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:
+      fun: 148262.0309846899
+ hess_inv: <8x8 LbfgsInvHessProduct with dtype=float64>
+      jac: array([ 64467319.65138052, -13721417.37993632,  -8985247.47914576,
+        10800317.351064  ,   5954356.51372594,  -5416040.39686383,
+       -13949971.5742204 ,   4069080.69971047])
+  message: b'CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH'
+     nfev: 387
+      nit: 15
+   status: 0
+  success: True
+        x: array([0.9928257 , 0.9999412 , 1.0068471 , 1.00268185, 1.0069621 ,
+       0.9990285 , 0.99529466, 0.99027813])
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.0027943753606929356 %
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.0027800866173821603 %
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.0024633760070114086 %
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.0017371654022935168 %
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.002822880384945048 %
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.0030414817980717324 %
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.002745876289100835 %
+[INFO][ACCURACY TEST] The injected scale was recovered to -0.002407638605139706 %

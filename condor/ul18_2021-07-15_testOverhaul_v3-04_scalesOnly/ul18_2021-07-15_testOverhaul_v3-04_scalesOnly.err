@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "./pymin.py", line 258, in <module>
+    main()
+  File "./pymin.py", line 253, in main
+    helper_pymin.write_results(args, scales_smears, unc)
+  File "/afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/python/helpers/helper_pymin.py", line 133, in write_results
+    if args.from_condor:
+AttributeError: 'Namespace' object has no attribute 'from_condor'

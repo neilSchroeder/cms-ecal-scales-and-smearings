@@ -1,0 +1,7 @@
+executable = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_stochastic_v3-05/htcondor.sh
+output = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_stochastic_v3-05/ul18_2021-09-08_stochastic_v3-05.out
+error = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_stochastic_v3-05/ul18_2021-09-08_stochastic_v3-05.err
+log = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_2021-09-08_stochastic_v3-05/ul18_2021-09-08_stochastic_v3-05.log
++JobFlavour = "tomorrow"
+RequestCpus = 12
+queue 1

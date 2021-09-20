@@ -1,0 +1,7 @@
+executable = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_testMethodAccuracy_scaleOnly/htcondor.sh
+output = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_testMethodAccuracy_scaleOnly/ul18_testMethodAccuracy_scaleOnly.out
+error = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_testMethodAccuracy_scaleOnly/ul18_testMethodAccuracy_scaleOnly.err
+log = /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul18_testMethodAccuracy_scaleOnly/ul18_testMethodAccuracy_scaleOnly.log
++JobFlavour = "nextweek"
+RequestCpus = 12
+queue 1
