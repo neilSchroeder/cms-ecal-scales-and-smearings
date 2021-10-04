@@ -5,3 +5,4 @@ python/helpers/__pycache__
 python/plotters/__pycache__
 python/utilities/__pycache__
 */__pycache__/*
+*.cc
