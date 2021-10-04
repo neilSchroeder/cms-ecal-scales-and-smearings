@@ -3,15 +3,14 @@ import pandas as pd
 
 def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_up, mc_down, mc_weights):
 
-    d, _ = np.histogram(data, bins=bins, range=[80,100])
-    d_up, _ = np.histogram(data_up, bins=bins, range=[80.,100.])
-    d_down, _ = np.histogram(data_down, bins=bins, range=[80.,100.])
-    m, _ = np.histogram(mc, bins=bins, range=[80,100], weights=mc_weights)
-    m = m*sum(d)/sum(m)
-    m_up, _ = np.histogram(mc_up, bins=bins, range=[80.,100.], weights=mc_weights)
-    m_up = m_up*sum(m)/sum(m_up)
-    m_down, _ = np.histogram(mc_down, bins=bins, range=[80.,100.], weights=mc_weights)
-    m_down = m_down*sum(m)/sum(m_down)
+    d, d_bins = np.histogram(data, bins=bins, range=[80,100])
+    d_up, _ = np.histogram(data_up, bins=d_bins)
+    d_up = d_up*sum(d)/sum(d_up)
+    d_down, _ = np.histogram(data_down, bins=d_bins)
+    d_down = d_down*sum(d)/sum(d_down)
+    m, m_bins = np.histogram(mc, bins=bins, range=[80,100], weights=mc_weights)
+    m_up, _ = np.histogram(mc_up, bins=m_bins, weights=mc_weights)
+    m_down, _ = np.histogram(mc_down, bins=m_bins, weights=mc_weights)
 
     diff_up_data = np.abs(np.subtract(d, d_up))
     diff_down_data = np.abs(np.subtract(d, d_down))

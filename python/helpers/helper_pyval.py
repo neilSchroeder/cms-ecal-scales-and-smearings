@@ -118,7 +118,7 @@ def standard_cuts(df):
     mask_sub = np.logical_and(mask_sub,np.logical_or(df[c.ETA_SUB].values < c.MAX_EB, c.MIN_EE < df[c.ETA_SUB].values))
     mask_sub = np.logical_and(mask_sub, df[c.ETA_SUB].values < c.MAX_EE)
 
-    mask_invmass = np.logical_and(df[c.INVMASS].values, df[c.INVMASS].values <= c.MAX_INVMASS)
+    mask_invmass = np.logical_and(c.MIN_INVMASS <= df[c.INVMASS].values, df[c.INVMASS].values <= c.MAX_INVMASS)
 
     mask = np.logical_and(mask_lead,mask_sub)
     mask = np.logical_and(mask, mask_invmass)

@@ -2,10 +2,15 @@ import pandas as pd
 import numpy as np
 import time
 
-import python.classes.constants as constants
+import python.classes.const_class as constants
 
 def smear(mc,smearings):
     #applies gaussian smearings to the MC
+
+    def weighted_std(x_vals, y_vals):
+        avg = np.average(x_vals, weights=y_vals)
+        var = np.average(np.power(x_vals - avg,2), weights=y_vals)
+        return np.sqrt(var)
         
     #constants
     c = constants.const()
@@ -53,12 +58,7 @@ def smear(mc,smearings):
             mask_et_sub = np.logical_and(et_min <= mc["et_sub"].values, mc["et_sub"].values < et_max)
     
         mask_lead = np.logical_and(mask_eta_lead,np.logical_and(mask_r9_lead,mask_et_lead))
-        tot -= np.sum(mask_lead)
-        assert tot >= 0 #will catch you if you're double counting
         mask_sub = np.logical_and(mask_eta_sub,np.logical_and(mask_r9_sub,mask_et_sub))
-
-        count_lead = np.logical_or(count_lead, mask_lead)
-        count_sub = np.logical_or(count_sub, mask_sub)
 
         #smear the mc
         smears_lead = np.multiply(mask_lead, np.random.normal(1, row[3], len(mask_lead)),dtype=np.float32)
@@ -77,19 +77,22 @@ def smear(mc,smearings):
         #get energies and smear them
         mc[c.E_LEAD] = np.multiply(mc[c.E_LEAD].values, smears_lead,dtype=np.float32)
         mc[c.E_SUB] = np.multiply(mc[c.E_SUB].values, smears_sub,dtype=np.float32)
-        mc["invmass_up"] = np.multiply(mc["invmass_up"].values, np.sqrt(smears_lead_up),dtype=np.float32)
-        mc["invmass_up"] = np.multiply(mc["invmass_up"].values, np.sqrt(smears_sub_up),dtype=np.float32)
-        mc["invmass_down"] = np.multiply(mc["invmass_down"].values, np.sqrt(smears_lead_down),dtype=np.float32)
-        mc["invmass_down"] = np.multiply(mc["invmass_down"].values, np.sqrt(smears_sub_down),dtype=np.float32)
-        mc[c.INVMASS] = np.multiply(mc[c.INVMASS].values, np.sqrt(smears_lead),dtype=np.float32)
-        mc[c.INVMASS] = np.multiply(mc[c.INVMASS].values, np.sqrt(smears_sub),dtype=np.float32)
+        mc["invmass_up"] = np.multiply(mc["invmass_up"].values, np.sqrt(np.multiply(smears_lead_up,smears_sub_up)),dtype=np.float32)
+        mc["invmass_down"] = np.multiply(mc["invmass_down"].values, np.sqrt(np.multiply(smears_lead_down,smears_sub_down)),dtype=np.float32)
+        mc[c.INVMASS] = np.multiply(mc[c.INVMASS].values, np.sqrt(np.multiply(smears_lead,smears_sub)),dtype=np.float32)
 
     mc.drop(["et_lead", "et_sub"], axis=1, inplace=True)
 
-    hist_up, _ = np.histogram(mc["invmass_up"].values, bins=80, range=[80.,100.])
-    hist, _ = np.histogram(mc[c.INVMASS].values, bins=80, range=[80.,100.])
-    hist_down, _ = np.histogram(mc["invmass_down"].values, bins=80, range=[80.,100.])
+    h_down, _ = np.histogram(mc["invmass_down"].values, bins=80, range=[80.,100.])
+    h, _ = np.histogram(mc[c.INVMASS].values, bins=80, range=[80.,100.])
+    h_up, _ = np.histogram(mc["invmass_up"].values, bins=80, range=[80.,100.])
 
-    print(hist_up[-1], hist[-1], hist_down[-1])
+
+    bins = np.arange(80.,100.25,0.25)
+    mids = np.array([(bins[i]+bins[i+1])/2. for i in range(len(bins)-1)])
+    print("h_down", weighted_std(mids, h_down))
+    print("h", weighted_std(mids, h))
+    print("h_up", weighted_std(mids, h_up))
+
 
     return mc

@@ -74,13 +74,10 @@ def get_var(df, info, _isData=True):
                )
 
     mask = np.logical_and(mask_lead,mask_sub)
+    df_new = df[mask]
+
     if var_key == c.INVMASS:
         if not _isData:
-            print(np.std(df[mask]["invmass_down"].values), np.std(df[mask][var_key].values), np.std(df[mask]["invmass_up"].values))
-            h_up, _ = np.histogram(df[mask]["invmass_up"].values, bins=80, range=[80.,100.])
-            h, _ = np.histogram(df[mask][var_key].values, bins=80, range=[80.,100.])
-            h_down, _ = np.histogram(df[mask]["invmass_down"].values, bins=80, range=[80.,100.])
-            print(h_up[-1], h[-1], h_down[-1])
             return [np.array(df[mask][var_key].values),
                     np.array(df[mask]["invmass_up"].values),
                     np.array(df[mask]["invmass_down"].values),
@@ -99,6 +96,7 @@ def plot(data, mc, cats, **options):
 
     #loop over cats
     for i,row in df_cats.iterrows():
+        print(row[c.i_plot_name])
         c.get_plotting_function(row[c.i_plot_style])( #gets the plotting function
             get_var(data, row[c.i_plot_var::]), #gets events from data to plot
             get_var(mc, row[c.i_plot_var::], False), #gets events from mc to plot

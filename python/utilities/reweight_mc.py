@@ -100,10 +100,6 @@ def add(arg):
     i_weight = 4
 
     def find_weight(ptz):
-        """ 
-        finds the corresponding weight by ptZ 
-        weights are divided by rapidity before being provided as arguments, so no need to check rapidity compatibility
-        """
         mask_ptz = (weights[:,i_ptz_min] <= ptz) & (ptz < weights[:,i_ptz_max])
         return np.ravel(weights[mask_ptz])[i_weight] if any(mask_ptz) else 0.
 
@@ -113,6 +109,8 @@ def add_pt_y_weights(df, weight_file):
     #constants
     c = constants.const()
 
+    print(min(df['invMass_ECAL_ele'].values))
+    print(max(df['invMass_ECAL_ele'].values))
     #adds the pt x y weight as a column to the df
     print("[INFO][python/reweight_pt_y][add_pt_y_weights] applying weights from {}".format(weight_file))
     ptz = np.array(get_zpt(df))

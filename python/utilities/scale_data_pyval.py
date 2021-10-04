@@ -62,6 +62,10 @@ def apply(arg):
     data["invmass_up"] = np.multiply(data[c.INVMASS].values, np.sqrt(np.multiply(LEAD_scales_up,SUB_scales_up)), dtype=np.float32)
     data["invmass_down"] = np.multiply(data[c.INVMASS].values, np.sqrt(np.multiply(LEAD_scales_down,SUB_scales_down)), dtype=np.float32)
     data[c.INVMASS] = np.multiply(data[c.INVMASS].values, np.sqrt(np.multiply(LEAD_scales,SUB_scales)), dtype=np.float32)
+    data["lead_scales"] = LEAD_scales
+    data["lead_scales_err"] = LEAD_scales_err
+    data["sub_scales"] = SUB_scales
+    data["sub_scales_err"] = SUB_scales_err
 
     return data
 

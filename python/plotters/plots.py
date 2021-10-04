@@ -130,7 +130,7 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     #histogram data and mc
     h_data, h_bins = np.histogram(data, bins=binning, range=[hist_min,hist_max])
-    h_mc, h_bins = np.histogram(mc, bins=h_bins, range=[hist_min,hist_max], weights=mc_weights)
+    h_mc, h_bins = np.histogram(mc, bins=h_bins, weights=mc_weights)
     bin_width = round(h_bins[1] - h_bins[0], 4)
     marker_size = 20*bin_width
 
@@ -213,6 +213,8 @@ def plot_style_paper(data, mc, plot_title, **options):
         if 'syst' in options.keys():
             err = np.sqrt(np.add(np.power(y_err_mc,2),np.power(syst_unc,2)))
             syst_err = np.divide(err,h_mc)
+            for i in range(len(err)):
+                print(err[i], h_mc[i], syst_err[i])
             axs[1].fill_between(mids_full, syst_err+1, 1-syst_err, step='mid', alpha=0.3, color='red', label='mc stat. $\oplus$ syst. unc.')
             
         axs[1].errorbar(mids, ratio, 

@@ -97,3 +97,10 @@
     Local schedd and job shadow died, schedd now running again
     Trying to reconnect to slot1_10@b7s02p8011.cern.ch <128.142.57.15:9618?addrs=128.142.57.15-9618+[2001-1458-301-7--100-e]-9618&alias=b7s02p8011.cern.ch&noUDP&sock=startd_6711_c42a>
 ...
+023 (5674359.000.000) 09/22 10:38:44 Job reconnected to slot1_10@b7s02p8011.cern.ch
+    startd address: <128.142.57.15:9618?addrs=128.142.57.15-9618+[2001-1458-301-7--100-e]-9618&alias=b7s02p8011.cern.ch&noUDP&sock=startd_6711_c42a>
+    starter address: <128.142.57.15:9618?addrs=128.142.57.15-9618+[2001-1458-301-7--100-e]-9618&alias=b7s02p8011.cern.ch&noUDP&sock=slot1_10_8487_9bf2_38897>
+...
+009 (5674359.000.000) 09/28 11:51:32 Job was aborted.
+	Job removed by SYSTEM_PERIODIC_REMOVE due to wall time exceeded allowed max.
+...
