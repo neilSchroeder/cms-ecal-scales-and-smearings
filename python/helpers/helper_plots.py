@@ -1,6 +1,16 @@
 import numpy as np
 import pandas as pd
 
+def get_bin_uncertainties(bins, values, weights):
+    """ calculates the uncertainty of weighted bins """
+
+    ret = []
+    for i in range(len(bins)-1):
+        val_mask = np.logical_and(bins[i] <= values, values < bins[i+1])
+        ret.append(np.sqrt(np.sum(np.power(weights[val_mask], 2))))
+
+    return np.array(ret)
+
 def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_up, mc_down, mc_weights):
 
     d, d_bins = np.histogram(data, bins=bins, range=[80,100])

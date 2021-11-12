@@ -13,20 +13,15 @@ Usage/Order of Operations:
         over time.
     time_stability: this step will produce the scales required per run bin to align the data with the pdg Z mass.
         this stabilizes the data as a function of time and eta.
-    standard use: once the previous steps have been completed you can now provide the data and mc on which you will 
-        derive the scales and smearings, the scales which will be applied to the data prior to derivation, and the 
+    standard use: once the previous steps have been completed you can now provide the data and mc on which you will
+        derive the scales and smearings, the scales which will be applied to the data prior to derivation, and the
         categories in which you wish to derive the scales and smearings. The result will automatically be written to
         a table in the datFiles/ directory with the appropriate name.
 
 """
 
 import argparse as ap
-import gc
-import numpy as np
-import os
-import pandas as pd
 import sys
-import uproot as up
 
 import python.helpers.helper_pymin as helper_pymin
 
@@ -45,12 +40,12 @@ def main():
     #setup options
     parser = ap.ArgumentParser(description="Derivation of Scales and Smearings")
 
-    parser.add_argument("-i","--inputFile",  
+    parser.add_argument("-i","--inputFile",
                     	help="input file containing paths to data and mc")
 
     parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
                     	help="prune down the data and mc to keep memory usage low")
-    parser.add_argument("--pruned-file-name", default=None, dest='pruned_file_name', 
+    parser.add_argument("--pruned-file-name", default=None, dest='pruned_file_name',
                     	help="basic string for naming the pruned files")
     parser.add_argument("--pruned-file-dest", default=None, dest='pruned_file_dest',
                     	help="destination for the pruned files, a directory in /eos/home-<initial>/<username>/ is recommended")
@@ -60,7 +55,7 @@ def main():
     parser.add_argument("--min-events", default=10000, dest='min_events',
                     	help="minimum number of events allowed in a given run bin")
 
-    parser.add_argument("-c","--cats", 
+    parser.add_argument("-c","--cats",
                     	help="path to file describing categories to use in minimization")
     parser.add_argument("--time-stability", default=False, dest="_kTimeStability", action='store_true',
                     	help="scale data to PDG Z mass, pass the run divide file as your categories")
@@ -126,7 +121,7 @@ def main():
                     	help="Treat MC as data, inject known scales into mc cats, see how well method recovers known scale injection")
     parser.add_argument("--scan-nll", default=False, action='store_true', dest='_kScanNLL',
                     	help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
-    parser.add_argument("--scan-scales", default=None, dest='scan_scales', 
+    parser.add_argument("--scan-scales", default=None, dest='scan_scales',
                     	help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
 
     args = parser.parse_args()
@@ -152,7 +147,7 @@ def main():
         if cmd.find('--condor') != -1:
             cmd = cmd.replace("--condor ","")
 
-        condor_handler.manage(cmd, args.output, args.queue) 
+        condor_handler.manage(cmd, args.output, args.queue)
         return
 
     #if you need to rewrite a scales file after making changes by hand
@@ -172,7 +167,7 @@ def main():
 
     #load data/mc
     data, mc = helper_pymin.load_dataframes(args.inputFile, args)
-    
+
     if data is None or mc is None:
         print("[ERROR] data or MC is empty")
         return
@@ -218,7 +213,7 @@ def main():
 
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = minimizer.minimize(data, mc, cats, 
+    scales_smears = minimizer.minimize(data, mc, cats,
             ignore_cats=args.ignore, #categories to ignore
             hist_min=round(float(args.hist_min),2), #bottom edge of histogram
             hist_max=round(float(args.hist_max),2), #top edge of histogram
@@ -239,6 +234,7 @@ def main():
             _kAutoBin=(not args._kNoAutoBin)
         )
 
+
     #if we're plotting there's nothing to write, so just print a done message and exit
     if args._kPlot:
         print("[INFO] plotting is done, please review")
@@ -246,7 +242,7 @@ def main():
 
     #minimization may not succeed, in this case the program will just end
     if scales_smears == []:
-        print("[ERROR] Review code, minimization did not succeed") 
+        print("[ERROR] Review code, minimization did not succeed")
         return
 
     #write the results

@@ -45,16 +45,15 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
     fig.subplots_adjust(left=0.12, right=0.99, top=0.95, bottom=0.1,
             hspace=None if 'no_ratio' in options.keys() else 0.06)
 
-
     x_err = (h_bins[1]-h_bins[0])/2
-    axs[0].errorbar(mids, h_mc, #plot mc
+    axs[0].errorbar(mids, h_mc, # plot mc
             xerr=x_err,
             label = 'mc', 
             color='cornflowerblue',
             drawstyle='steps-mid',
             capsize=0.,
             )
-    axs[0].errorbar(mids, h_mc_up, #plot data
+    axs[0].errorbar(mids, h_mc_up, # plot data
             xerr=x_err, yerr=np.sqrt(h_mc_up), 
             label = 'data', 
             linestyle='None', 
@@ -63,7 +62,7 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
             markersize=marker_size, 
             capsize=0., 
             capthick=0.)
-    axs[0].errorbar(mids, h_mc_down, #plot data
+    axs[0].errorbar(mids, h_mc_down, # plot data
             xerr=x_err, yerr=np.sqrt(h_mc_down), 
             label = 'data', 
             linestyle='None', 
@@ -72,11 +71,12 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
             markersize=marker_size, 
             capsize=0., 
             capthick=0.)
+
     axs[0].set_ylim(bottom=0)
     axs[0].set_xlim(hist_min-1, hist_max+1)
     axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5)
 
-    #invert legend order because python is a hassle
+    # invert legend order because python is a hassle
     handles, labels = axs[0].get_legend_handles_labels()
     axs[0].legend(handles[::-1], labels[::-1],loc='best')
     y_err_mc = np.sqrt(h_mc)
@@ -84,9 +84,9 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
     if 'no_ratio' in options.keys():
         axs[0].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right',x=1.)
     else:
-        ratio = np.maximum(np.abs(np.subtract(h_mc, h_mc_up)), np.abs(np.subtract(h_mc,h_mc_down)))
+        ratio = np.maximum(np.abs(np.subtract(h_mc, h_mc_up)), np.abs(np.subtract(h_mc, h_mc_down)))
         axs[1].plot(mids, [1. for x in mids], linestyle='dashed', color='black', alpha=0.5)
-        #add syst+unc band to unity line
+        # add syst+unc band to unity line
             
         axs[1].errorbar(mids, ratio, 
                 xerr=x_err, yerr=[0 for x in mids],
@@ -98,9 +98,9 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
                 capsize=0.,)
         #invert legend order because python is a hassle
         handles, labels = axs[1].get_legend_handles_labels()
-        axs[1].legend(handles[::-1], labels[::-1],loc='best')
-        axs[1].set_ylabel('data/mc',horizontalalignment='right',y=1.)
-        axs[1].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right',x=1.)
+        axs[1].legend(handles[::-1], labels[::-1], loc='best')
+        axs[1].set_ylabel('data/mc',horizontalalignment='right', y=1.)
+        axs[1].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right', x=1.)
         axs[1].set_xlim(hist_min-1, hist_max+1)
 
     plt.grid(which='major',axis='both')
@@ -111,24 +111,23 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
     plt.close(fig)
 
 
-
 def plot_style_paper(data, mc, plot_title, **options):
     style = "paperStyle_"
     print("plotting {}".format(plot_title))
 
-    #systematics
+    # systematics
     if options['syst']:
         data, data_up, data_down = data
         mc, mc_up, mc_down, mc_weights = mc
 
-    #binning scheme
+    # binning scheme
     binning = 'auto'
     hist_min = 80.
     hist_max = 100.
     if options['bins'] is not None or options['bins'] is not 'auto':
         binning = [hist_min + float(i)*(hist_max-hist_min)/float(options['bins']) for i in range(int(options['bins'])+1)]
 
-    #histogram data and mc
+    # histogram data and mc
     h_data, h_bins = np.histogram(data, bins=binning, range=[hist_min,hist_max])
     h_mc, h_bins = np.histogram(mc, bins=h_bins, weights=mc_weights)
     bin_width = round(h_bins[1] - h_bins[0], 4)
@@ -144,41 +143,41 @@ def plot_style_paper(data, mc, plot_title, **options):
     mids_full[0], mids_full[-1] = hist_min, hist_max
     x_err = (h_bins[1]-h_bins[0])/2
 
-    #calculate errors
+    # calculate errors
     y_err_data = np.sqrt(h_data)
-    y_err_mc = np.sqrt(h_mc)
+    y_err_mc = helper_plots.get_bin_uncertainties(h_bins, mc, mc_weights)
     y_err_ratio = np.array([])
 
     mc_err_max = np.add(h_mc,y_err_mc)
     mc_err_min = np.subtract(h_mc,y_err_mc)
-    #include syst uncertainties if they exist
+
+    # include syst uncertainties if they exist
     syst_unc = []
     if options['syst']:
         syst_unc = helper_plots.get_systematic_uncertainty(h_bins, data, data_up, data_down, mc, mc_up, mc_down, mc_weights)
-        err = np.sqrt(np.add(np.power(y_err_mc,2),np.power(syst_unc,2)))
+        err = np.sqrt(np.add(np.power(y_err_mc, 2), np.power(syst_unc, 2)))
         mc_err_max, mc_err_min = np.add(h_mc, err), np.subtract(h_mc, err)
-        y_err_ratio = np.divide(y_err_data,h_data)
+        y_err_ratio = np.divide(y_err_data, h_data)
 
-
-    #define figure
+    # define figure
     rows = 2
     if 'no_ratio' in options.keys(): rows = 1
     fig,axs = plt.subplots(nrows=rows, ncols=1)
     fig.subplots_adjust(left=0.12, right=0.99, top=0.95, bottom=0.1,
             hspace=None if 'no_ratio' in options.keys() else 0.06)
 
-    #top plot
+    # top plot
     axs[0].set_xticklabels([])
     axs[0].fill_between(mids_full,h_mc,y2=0,step='mid',alpha=0.2,color='cornflowerblue') #fill mc area
     axs[0].fill_between(mids_full,mc_err_max,y2=mc_err_min,step='mid', alpha=0.3, color='red', label='mc stat. $\oplus$ syst. unc.') #fill mc error
-    axs[0].errorbar(mids, h_mc, #plot mc
+    axs[0].errorbar(mids, h_mc, # plot mc
             xerr=x_err,
             label = 'mc', 
             color='cornflowerblue',
             drawstyle='steps-mid',
             capsize=0.,
             )
-    axs[0].errorbar(mids, h_data, #plot data
+    axs[0].errorbar(mids, h_data, # plot data
             xerr=x_err, yerr=y_err_data, 
             label = 'data', 
             linestyle='None', 
@@ -191,11 +190,11 @@ def plot_style_paper(data, mc, plot_title, **options):
     axs[0].set_xlim(hist_min-1, hist_max+1)
     axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5)
 
-    #invert legend order because python is a hassle
+    # invert legend order because python is a hassle
     handles, labels = axs[0].get_legend_handles_labels()
-    axs[0].legend(handles[::-1], labels[::-1],loc='best')
+    axs[0].legend( handles[::-1], labels[::-1], loc='best')
 
-    #labels
+    # labels
     axs[0].annotate("$\\bf{CMS} \ \\it{Preliminary}$", 
             xy=(0,1.), xycoords='axes fraction', 
             ha='left', va='bottom')
@@ -204,12 +203,13 @@ def plot_style_paper(data, mc, plot_title, **options):
             xy=(1,1.), xycoords='axes fraction', 
             ha='right', va='bottom')
     
-    #ratio pad
+    # ratio pad
     if 'no_ratio' in options.keys():
         axs[0].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right',x=1.)
     else:
         axs[1].plot(mids, [1. for x in mids], linestyle='dashed', color='black', alpha=0.5)
-        #add syst+unc band to unity line
+
+        # add syst+unc band to unity line
         if 'syst' in options.keys():
             err = np.sqrt(np.add(np.power(y_err_mc,2),np.power(syst_unc,2)))
             syst_err = np.divide(err,h_mc)
@@ -225,16 +225,17 @@ def plot_style_paper(data, mc, plot_title, **options):
                 marker='o',
                 markersize=marker_size,
                 capsize=0.,)
-        #invert legend order because python is a hassle
+
+        # invert legend order because python is a hassle
         handles, labels = axs[1].get_legend_handles_labels()
-        axs[1].legend(handles[::-1], labels[::-1],loc='best')
-        axs[1].set_ylabel('data/mc',horizontalalignment='right',y=1.)
-        axs[1].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right',x=1.)
+        axs[1].legend(handles[::-1], labels[::-1], loc='best')
+        axs[1].set_ylabel('data/mc',horizontalalignment='right', y=1.)
+        axs[1].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right', x=1.)
         axs[1].set_ylim(0.75, 1.25)
         axs[1].set_xlim(hist_min-1, hist_max+1)
 
     plt.grid(which='major',axis='both')
-    #save fig
+    # save fig
     fig.savefig(plot_dir+style+plot_title+".png")
     fig.savefig(plot_dir+style+plot_title+".pdf")
 
