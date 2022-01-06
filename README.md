@@ -18,8 +18,9 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 
 ## To Do
 
-Initiating overhaul using some better coding practices and improved data handling 
-Time permitting, or for whoever takes over development here, multiprocessing the Zcat.update() calls would likely speed things up by a fair margin.
+* Time permitting, or for whoever takes over development, multiprocessing the `zcat.update()` calls would likely speed things up.
+* Implement `--systematics-study` feature in `pyval`.
+
 
 ## Features
 
@@ -27,12 +28,16 @@ This software has a number of interesting features:
 * A pruner to convert root files into tsv files with only relevant branches
 * A run divider to derive run bins 
 * A time stabilizer which uses medians to stabilize the scale as a function of run number
-* A minimzer to evaluate the scales and smearings:
+* A minimizer to evaluate the scales and smearings:
 	* Auto-binning of dielectron category invariant mass distributions using the Freedman-Diaconis Rule
     * Numba histograms to dramatically increase the speed of binning invariant mass distributions and NLL evaluation
     * 1D scanning or random start styles of the scales/smearings for the minimizer
     * SciPi minimizer using the 'L-BFGS-B' method for speed and memory preservation
     * Smart handling of low stats categories in the NLL evaluation
+* A program for producing plots showing the agreement of data and MC
+    * Any variable from the trees can be plotted
+    * Cuts on both leading and subleading Eta, Et, and R9 can be made
+    * different styles of plots can be selected for different kinds of validation
 
 ## Getting Started
 
@@ -97,6 +102,59 @@ From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step
 ```
 
 The `--closure` option runs the minimization without any smearings. The MC is smeared ahead of the minimization using the smearings provided and no smearings are given to the minimzer. It can be useful to run this several times if your scales look off.
+
+## Validation
+
+Along side the `pymin.py` program comes the `pyval.py` program. This program is used to make validation plots which can be used to inspect the agreement of data and MC after application of the scales produced in `pymin.py`. 
+
+### Setup
+
+To get started you'll need a .cfg file to provide to `pyval`. The .cfg file contains tab separated values and is structured as follows:
+
+```
+DATA    path/to/data/csv/file.csv
+MC  path/to/MC/csv/file.csv
+SCALES  path/to/scales/file.dat
+SMEARINGS   path/to/smearings/file.dat
+WEIGHTS path/to/pt/and/rapidity/weights/for/mc.tsv
+CATS    path/to/category/definition/file.tsv
+```
+
+The data, mc, scales, smearings, and weights files are all produced by `pymin` and should already exist, but the category definition file is one you'll either have to make, or adjust the example files available to you.
+
+The category definition file is a .tsv file and is structured as follows:
+
+```
+style   name    variable    eta0    r90 et0    eta1    r91 et1
+plotStyle   nameOfPlot  variableToPlot  (minLeadEta,maxLeadEta) (minLeadR9,maxLeadR9)   (minLeadEt,maxLeadEt)   (minSubEta,maxSubEta)   (minSubR9,maxSubR9) (minSubEt,maxSubEt)
+```
+
+For most plots, you'll choose the style `paper`, and the variable will likely be `invMass_ECAL_ele`. 
+If you don't want to place a cut on a particular variable, just set the min and max to -1 like so: `(-1,-1)`.
+
+An example of the category definition file can be found in `config/pyval/plot_cats_standard.tsv`.
+
+### Usage
+
+The basic usage looks like this:
+
+```
+./pyval.py \
+    -i config/pyval/my_config.cfg \
+    -o 'my_output_tag' \
+    --data-title="Title Of Data" \
+    --mc-title="Title Of MC" \
+    --lumi-label="XX.X fb$^{-1}$ (13 TeV) 20XX" \
+    --binning=NumBinsInHist \
+    --write=/path/to/write/cleaned/events/
+```
+
+### Additional Options
+
+pyval has the following additional options:
+
+* `--log`: sets the logging level, this is mostly for debugging purposes
+* `--systematics-study`: runs the systematics study by varying R9, Et, and working point ID. (Not yet working)
 
 ## Advanced Options and Additional Tools
 
