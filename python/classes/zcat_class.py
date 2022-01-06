@@ -16,6 +16,9 @@ class zcat:
         self.data = np.array(data, dtype=np.float32)
         self.mc = np.array(mc, dtype=np.float32)
         self.weights = np.array(weights, dtype=np.float32)
+        self.smearings = np.array()
+        self.last_lead_smear = 0
+        self.last_sub_smear = 0
         self.hist_min = options['hist_min'] if 'hist_min' in options.keys() else 80.
         self.hist_max = options['hist_max'] if 'hist_max' in options.keys() else 100.
         self.auto_bin = options['_kAutoBin'] if '_kAutoBin' in options.keys() else True

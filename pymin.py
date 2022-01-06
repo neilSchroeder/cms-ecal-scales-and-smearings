@@ -21,6 +21,7 @@ Usage/Order of Operations:
 """
 
 import argparse as ap
+import pandas as pd
 import sys
 
 import python.helpers.helper_pymin as helper_pymin

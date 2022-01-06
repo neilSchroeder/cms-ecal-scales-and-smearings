@@ -152,7 +152,7 @@ def minimize(data, mc, cats, **options):
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
     if options['_kScanNLL']:
-        helper_minimizer.target_function(guess, __GUESS__, __ZCATS__, __num_scales__, __num_smears__)
+        helper_minimizer.target_function(guess, __GUESS__, __ZCATS__, __num_scales__, __num_smears__, verbose=True)
         plotter.plot_1Dscan(plot_dir, _specify_file_, __ZCATS__)
         return [], []
 
