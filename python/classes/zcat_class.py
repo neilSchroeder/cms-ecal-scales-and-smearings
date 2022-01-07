@@ -9,14 +9,15 @@ class zcat:
     """ produces a 'z category' object to be used in the scales and smearing derivation """
 
     def __init__(self, i, j, data, mc, weights, **options):
+        print(len(data), len(mc))
         self.lead_index=i
         self.sublead_index=j
         self.lead_smear_index=options['smear_i'] if 'smear_i' in options.keys() else -1
         self.sublead_smear_index=options['smear_j'] if 'smear_j' in options.keys() else -1
-        self.data = np.array(data, dtype=np.float32)
-        self.mc = np.array(mc, dtype=np.float32)
-        self.weights = np.array(weights, dtype=np.float32)
-        self.smearings = np.array()
+        self.data = np.array(data.copy(), dtype=np.float32)
+        self.mc = np.array(mc.copy(), dtype=np.float32)
+        self.weights = np.array(weights.copy(), dtype=np.float32)
+        self.smearings = np.array([])
         self.last_lead_smear = 0
         self.last_sub_smear = 0
         self.hist_min = options['hist_min'] if 'hist_min' in options.keys() else 80.
@@ -29,6 +30,9 @@ class zcat:
         self.seed = 3543136929 #use a fixed random integer for your seed to avoid fluctuations in nll value from smearings
         self.valid=True
         self.bins=np.array([])
+        del data
+        del mc
+        del weights
 
     def __delete__(self):
         del self.lead_index

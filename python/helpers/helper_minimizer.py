@@ -1,8 +1,9 @@
 import gc
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import uproot as up
+import uproot3 as up
 import statistics as stats
 from scipy.optimize import basinhopping as basinHop
 from scipy.optimize import  differential_evolution as diffEvolve
@@ -198,7 +199,7 @@ def extract_cats( data, mc, cats, **options):
             mass_list_mc = np.array(df[c.INVMASS].values, dtype=np.float32)
             weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32) if 'pty_weight' in df.columns else np.ones(len(mass_list_mc))
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc) < max(100*len(mass_list_data),200000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
+            while len(mass_list_mc) < max(50*len(mass_list_data),50000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 1000000:
                 mass_list_mc = np.append(mass_list_mc,mass_list_mc)
                 weight_list_mc = np.append(weight_list_mc,weight_list_mc)
 
@@ -210,7 +211,7 @@ def extract_cats( data, mc, cats, **options):
             if options['num_smears'] > 0:
                 __ZCATS__.append(
                         zcat(
-                            index1, index2, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), 
+                            index1, index2, mass_list_data, mass_list_mc, weight_list_mc,
                             smear_i=get_smearing_index(cats,index1), smear_j=get_smearing_index(cats,index2), 
                             **options
                             )
@@ -219,7 +220,7 @@ def extract_cats( data, mc, cats, **options):
                 __ZCATS__.append(
                         zcat(
                             index1, index2, #no smearing categories, so no smearing indices
-                            mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(),
+                            mass_list_data, mass_list_mc, weight_list_mc,
                             **options
                             )
                         )

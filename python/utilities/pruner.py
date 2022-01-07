@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import uproot as up
+import uproot3 as up
 
 import python.classes.const_class as constants
 

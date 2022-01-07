@@ -7,7 +7,7 @@ import sys
 
 import pandas as pd
 import numpy as np
-import uproot as up
+import uproot3 as up
 
 import python.classes.const_class as constants
 import python.utilities.write_files as write_files
