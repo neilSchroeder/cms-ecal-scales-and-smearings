@@ -132,6 +132,7 @@ def main():
         print("[INFO] loading data")
         df_data = helper_pyval.get_dataframe(dict_config[KEY_DAT])
         if len(dict_config[KEY_SC]) > 0:
+            print("[INFO] scaling data")
             df_data = scale_data.scale(df_data, dict_config[KEY_SC][0])
         df_data = helper_pyval.standard_cuts(df_data)
 
@@ -166,6 +167,7 @@ def main():
     make_plots.plot(df_data, df_mc, dict_config[KEY_CAT][0],
             lumi=args.lumi_label,
             bins=args.bins,
+            tag=args.output_file,
             )
 
     return

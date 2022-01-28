@@ -105,8 +105,8 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
 
     plt.grid(which='major',axis='both')
     #save fig
-    fig.savefig(plot_dir+style+plot_title+".png")
-    fig.savefig(plot_dir+style+plot_title+".pdf")
+    fig.savefig(f"{plot_dir}{style}{options['tag']}_{plot_title}.png")
+    fig.savefig(f"{plot_dir}{style}{options['tag']}_{plot_title}.pdf")
 
     plt.close(fig)
 
@@ -213,8 +213,6 @@ def plot_style_paper(data, mc, plot_title, **options):
         if 'syst' in options.keys():
             err = np.sqrt(np.add(np.power(y_err_mc,2),np.power(syst_unc,2)))
             syst_err = np.divide(err,h_mc)
-            for i in range(len(err)):
-                print(err[i], h_mc[i], syst_err[i])
             axs[1].fill_between(mids_full, syst_err+1, 1-syst_err, step='mid', alpha=0.3, color='red', label='mc stat. $\oplus$ syst. unc.')
             
         axs[1].errorbar(mids, ratio, 
@@ -236,8 +234,8 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     plt.grid(which='major',axis='both')
     # save fig
-    fig.savefig(plot_dir+style+plot_title+".png")
-    fig.savefig(plot_dir+style+plot_title+".pdf")
+    fig.savefig(f"{plot_dir}{style}{options['tag']}_{plot_title}.png")
+    fig.savefig(f"{plot_dir}{style}{options['tag']}_{plot_title}.pdf")
 
     plt.close(fig)
 

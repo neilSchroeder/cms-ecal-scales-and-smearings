@@ -1,0 +1,128 @@
+Linux b7s03p7113.cern.ch 3.10.0-1160.49.1.el7.x86_64 #1 SMP Tue Nov 30 15:51:32 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+CMSSW_10_2_14
+[INFO] welcome to SS_PyMin
+[INFO] you have run the following command:
+./pymin.py  -i  config/ul16_pre.dat  -c  config/cats_step3_ul2016.tsv  -s  /afs/cern.ch/user/n/nschroed/public/scales/Run2016/Run2016_2021-02-01_UltraLegacy_preVFP_RunEtaR9_v2_scales.dat  -o  ul16_preVFP_step3closure_2022-01-18_v0  --smearings  /afs/cern.ch/user/n/nschroed/public/scales/Run2016/Run2016_2021-02-04_UltraLegacy_preVFP_RunFineEtaR9_v0_smearings.dat  --closure  --queue  nextweek  --from-condor  
+[INFO] importing data and mc to dataframes (this might take a bit) ...
+[INFO] applying /afs/cern.ch/user/n/nschroed/public/scales/Run2016/Run2016_2021-02-01_UltraLegacy_preVFP_RunEtaR9_v2_scales.dat to the data
+[INFO] deriving Y(Z), Pt(Z) weights
+[INFO][python/reweight_pt_y][derive_pt_y_weights] deriving pt y weights
+[INFO][python/reweight_pt_y][add_pt_y_weights] applying weights from datFiles/ptz_x_rapidity_weights_ul16_preVFP_step3closure_2022-01-18_v0.tsv
+[INFO] importing categories from config/cats_step3_ul2016.tsv
+[INFO] initiating minimization using scipy.optimize.minimize
+[INFO][python/nll] dropping ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'runNumber']
+[INFO][python/nll] extracting lists from category definitions
+[INFO][zcat] category (26,26, data = 7, mc = 5) was deactivated due to insufficient statistics
+[INFO][zcat] category (35,27, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (35,28) was deactivated due to insufficient statistics in data
+[INFO][zcat] category (35,35, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (36,27) was deactivated due to insufficient statistics in data
+[INFO][zcat] category (36,35, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (36,36, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (37,35, data = 3, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (38,35, data = 5, mc = 32768) was deactivated due to insufficient statistics
+[INFO][zcat] category (39,35, data = 9, mc = 73728) was deactivated due to insufficient statistics
+[INFO][zcat] category (40,35, data = 9, mc = 98304) was deactivated due to insufficient statistics
+[INFO][zcat] category (41,35, data = 9, mc = 55296) was deactivated due to insufficient statistics
+[INFO][zcat] category (42,35, data = 9, mc = 36864) was deactivated due to insufficient statistics
+[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:
+[INFO][python/nll] best guess for scale 0 is 1.001
+[INFO][python/nll] best guess for scale 1 is 0.999
+[INFO][python/nll] best guess for scale 2 is 0.999
+[INFO][python/nll] best guess for scale 3 is 0.998
+[INFO][python/nll] best guess for scale 4 is 0.997
+[INFO][python/nll] best guess for scale 5 is 0.997
+[INFO][python/nll] best guess for scale 6 is 1.0
+[INFO][python/nll] best guess for scale 7 is 0.999
+[INFO][python/nll] best guess for scale 8 is 0.998
+[INFO][python/nll] best guess for scale 9 is 1.002
+[INFO][python/nll] best guess for scale 10 is 0.999
+[INFO][python/nll] best guess for scale 11 is 0.998
+[INFO][python/nll] best guess for scale 12 is 0.997
+[INFO][python/nll] best guess for scale 13 is 0.996
+[INFO][python/nll] best guess for scale 14 is 0.995
+[INFO][python/nll] best guess for scale 15 is 0.999
+[INFO][python/nll] best guess for scale 16 is 0.998
+[INFO][python/nll] best guess for scale 17 is 0.997
+[INFO][python/nll] best guess for scale 18 is 1.004
+[INFO][python/nll] best guess for scale 19 is 1.001
+[INFO][python/nll] best guess for scale 20 is 0.999
+[INFO][python/nll] best guess for scale 21 is 0.997
+[INFO][python/nll] best guess for scale 22 is 0.997
+[INFO][python/nll] best guess for scale 23 is 0.997
+[INFO][python/nll] best guess for scale 24 is 1.001
+[INFO][python/nll] best guess for scale 25 is 1.0
+[INFO][python/nll] best guess for scale 27 is 1.0070000000000001
+[INFO][python/nll] best guess for scale 28 is 1.005
+[INFO][python/nll] best guess for scale 29 is 1.0030000000000001
+[INFO][python/nll] best guess for scale 30 is 1.0
+[INFO][python/nll] best guess for scale 31 is 0.996
+[INFO][python/nll] best guess for scale 32 is 0.995
+[INFO][python/nll] best guess for scale 33 is 1.0
+[INFO][python/nll] best guess for scale 34 is 0.999
+[INFO][python/nll] best guess for scale 37 is 1.001
+[INFO][python/nll] best guess for scale 38 is 0.999
+[INFO][python/nll] best guess for scale 39 is 0.997
+[INFO][python/nll] best guess for scale 40 is 0.995
+[INFO][python/nll] best guess for scale 41 is 1.0
+[INFO][python/nll] best guess for scale 42 is 1.0
+[INFO][python/nll] scanning smearings:
+[INFO][python/nll] scan complete
+[INFO][python/nll] the initial guess is [1.001, 0.999, 0.999, 0.998, 0.997, 0.997, 1.0, 0.999, 0.998, 1.002, 0.999, 0.998, 0.997, 0.996, 0.995, 0.999, 0.998, 0.997, 1.004, 1.001, 0.999, 0.997, 0.997, 0.997, 1.001, 1.0, 1, 1.0070000000000001, 1.005, 1.0030000000000001, 1.0, 0.996, 0.995, 1.0, 0.999, 1, 1, 1.001, 0.999, 0.997, 0.995, 1.0, 1.0] with nll 58211.58030681779
+[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:
+      fun: 57719.41279069092
+ hess_inv: <43x43 LbfgsInvHessProduct with dtype=float64>
+      jac: array([  718056.72380142,  -137527.40529089, -1961214.41202849,
+        -619295.40484707,   693890.68473683,  -250768.28380552,
+        1699721.41745238,  1229138.28298842,  -129792.37747277,
+        -101099.68744   ,   257888.99085528,   423798.31126455,
+         -87845.17445019,   408885.3408859 ,    84782.49107502,
+        -161840.29642027,   448257.70390235,   236537.77326763,
+         952006.12161279,   365304.01577838,  -168421.29279903,
+         -79428.22698096,   490504.25708047,  -186526.18000124,
+        -268373.78644123,  -176481.23849067,    82582.82977113,
+          -8641.52504655,   -73501.81885049,  2181511.92224032,
+         629729.36770166,   356283.43396384,  -278236.65639662,
+         258247.06091807, -1088655.3690747 ,   -78068.14207142,
+          -4594.44921289,    36347.50620477,  -298210.20203672,
+        -584983.87868603,   159858.32358201,   442428.50285009,
+         474292.09426773])
+  message: b'CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH'
+     nfev: 1452
+      nit: 8
+   status: 0
+  success: True
+        x: array([1.00138961, 0.99943538, 0.99941346, 0.99841569, 0.99743723,
+       0.99660775, 1.00034752, 0.99858864, 0.99837346, 1.00156358,
+       0.99940831, 0.99841261, 0.99743886, 0.99563719, 0.99462728,
+       0.9986106 , 0.99760668, 0.9974243 , 1.00439248, 1.00058909,
+       0.99943698, 0.99742594, 0.99742343, 0.99741957, 1.00058345,
+       0.99958731, 1.00041188, 1.00734979, 1.00456114, 1.00334729,
+       0.99959826, 0.99643379, 0.99461889, 1.00038943, 0.99860642,
+       0.99959743, 1.0003999 , 1.00137603, 0.99859343, 0.9966165 ,
+       0.99462329, 1.00041162, 0.99955886])
+[1.00138961 0.99943538 0.99941346 0.99841569 0.99743723 0.99660775
+ 1.00034752 0.99858864 0.99837346 1.00156358 0.99940831 0.99841261
+ 0.99743886 0.99563719 0.99462728 0.9986106  0.99760668 0.9974243
+ 1.00439248 1.00058909 0.99943698 0.99742594 0.99742343 0.99741957
+ 1.00058345 0.99958731 1.00041188 1.00734979 1.00456114 1.00334729
+ 0.99959826 0.99643379 0.99461889 1.00038943 0.99860642 0.99959743
+ 1.0003999  1.00137603 0.99859343 0.9966165  0.99462329 1.00041162
+ 0.99955886]
+[1.00138961 0.99943538 0.99941346 0.99841569 0.99743723 0.99660775
+ 1.00034752 0.99858864 0.99837346 1.00156358 0.99940831 0.99841261
+ 0.99743886 0.99563719 0.99462728 0.9986106  0.99760668 0.9974243
+ 1.00439248 1.00058909 0.99943698 0.99742594 0.99742343 0.99741957
+ 1.00058345 0.99958731 1.00041188 1.00734979 1.00456114 1.00334729
+ 0.99959826 0.99643379 0.99461889 1.00038943 0.99860642 0.99959743
+ 1.0003999  1.00137603 0.99859343 0.9966165  0.99462329 1.00041162
+ 0.99955886]
+[1.00138961 0.99943538 0.99941346 0.99841569 0.99743723 0.99660775
+ 1.00034752 0.99858864 0.99837346 1.00156358 0.99940831 0.99841261
+ 0.99743886 0.99563719 0.99462728 0.9986106  0.99760668 0.9974243
+ 1.00439248 1.00058909 0.99943698 0.99742594 0.99742343 0.99741957
+ 1.00058345 0.99958731 1.00041188 1.00734979 1.00456114 1.00334729
+ 0.99959826 0.99643379 0.99461889 1.00038943 0.99860642 0.99959743
+ 1.0003999  1.00137603 0.99859343 0.9966165  0.99462329 1.00041162
+ 0.99955886]
+43 43

@@ -28,36 +28,21 @@ def get_step(args):
     #gets the step number from the category file
 
     if args.cats is not None and not args._kTimeStability:
-        return int(args.cats[args.cats.find("step")+4])
+        return int(args.cats.split("_")[1][-1])
 
     return -1
 
 def rewrite(args):
-    #rewrites a set of scales/smearings files
+    # rewrites a set of scales/smearings files
     step = get_step(args)
-    scales_out = os.getcwd()+"/datFiles/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.scales != '':
-        scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args._kFromCondor:
-        scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args._kClosure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
-    else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
-    new_scales = scales_out.replace("step", "onlystep")
-    new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
-    if not args._kClosure: write_files.rewrite_smearings(args.cats, new_smears)
-    write_files.combine( new_scales, args.scales, scales_out )
+    file_name_only_step = args.only_step
+    only_step_path = os.path.dirname(file_name_only_step)
 
-def combine_files(args):
-    #combines an onlystep file and a step file
-    step = get_step(args)
-    scales_out = os.getcwd()+"/datFiles/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.scales != '':
-        scales_out = os.path.dirname(args.scales)+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args._kFromCondor:
-        scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args._kClosure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
-    else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
-    write_files.combine( args.only_step, args.scales, scales_out )
+    file_name_scales = f"{only_step_path}/step{step}closure_{args.output}_scales.dat" if args._kClosure else f"{only_step_path}/step{step}_{args.output}_scales.dat"
+
+    #if not args._kClosure: write_files.rewrite_smearings(args.cats, new_smears)
+    write_files.combine( file_name_only_step, args.scales, file_name_scales)
+
 
 def load_dataframes(files, args):
 
@@ -128,20 +113,16 @@ def load_dataframes(files, args):
 def write_results(args, scales_smears):
     step = get_step(args)
     cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
-    num_scales = sum([row[0] =='scale' for row in cats.iterrows()])
-    scales_path = args.scales if args.scales is not None else os.getcwd()+"/blah.dat"
-    scales_out = os.path.dirname(scales_path)+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args.scales != '':
-        scales_out = os.path.dirname(scales_path)+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args._kFromCondor:
-        scales_out = os.getcwd()+"/condor/"+args.output+"/step"+str(step)+"_"+args.output+"_scales.dat"
-    if args._kClosure: scales_out = scales_out.replace("step"+str(step), "step"+str(step)+"closure",1)
-    else: scales_out = scales_out.replace("step"+str(step-1),"step"+str(step),1)
 
-    new_scales = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("step", "onlystep")
-    new_smears = os.path.dirname(scales_out)+"/"+os.path.basename(scales_out).replace("scales", "smearings")
+    tag = args.output                                   
+    this_dir = f"{os.getcwd()}/condor/{tag}/" if args._kFromCondor else os.getcwd()     
+    file_name =  f"{this_dir}/step{step}_{tag}" if not args._kClosure else f"{this_dir}/step{step}closure_{tag}"
+    only_step_file_name =  f"{this_dir}/onlystep{step}_{tag}" if not args._kClosure else f"{this_dir}/onlystep{step}closure_{tag}"
 
-    print(scales_smears)
+    new_scales = f"{only_step_file_name}_scales.dat"
+    new_smears = f"{file_name}_smearings.dat"
+    scales_out = f"{file_name}_scales.dat"
+
     write_files.write_scales(scales_smears, cats, new_scales)
     if not args._kClosure: write_files.write_smearings(scales_smears, cats, new_smears)
 ###############################################################################

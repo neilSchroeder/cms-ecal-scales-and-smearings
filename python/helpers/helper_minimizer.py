@@ -198,7 +198,7 @@ def extract_cats( data, mc, cats, **options):
             mass_list_mc = np.array(df[c.INVMASS].values, dtype=np.float32)
             weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32) if 'pty_weight' in df.columns else np.ones(len(mass_list_mc))
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc) < max(100*len(mass_list_data),200000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
+            while len(mass_list_mc) < max(100*len(mass_list_data),100000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
                 mass_list_mc = np.append(mass_list_mc,mass_list_mc)
                 weight_list_mc = np.append(weight_list_mc,weight_list_mc)
 
@@ -316,13 +316,12 @@ def scan_nll(x, **options):
     weights = [(cat.weight, cat.lead_index) for cat in __ZCATS__ if cat.valid and cat.lead_index == cat.sublead_index]
     weights.sort(key=lambda x: x[0])
     if not options['_kFixScales']:
-        while len(scanned) < options['num_scales']:
+        while len(scanned) < len(weights): 
             max_index = -1
-            for tup in weights:
-                if tup[1] not in scanned:
-                    max_index = tup[1]
-                    scanned.append(tup[1])
-                    break
+            tup = weights.pop(0)
+            if tup[1] not in scanned:
+                max_index = tup[1]
+                scanned.append(tup[1])
             if max_index != -1:
                 x = np.arange(options['scan_min'],options['scan_max'],options['scan_step'])
                 my_guesses = []
@@ -344,13 +343,12 @@ def scan_nll(x, **options):
     weights = [(cat.weight, cat.lead_smear_index) for cat in __ZCATS__ if cat.valid and cat.lead_smear_index == cat.sublead_smear_index]
     weights.sort(key=lambda x: x[0])
     if options['num_smears'] > 0:
-        while len(scanned) < options['num_smears']:
+        while weights:
             max_index = -1
-            for tup in weights:
-                if tup[1] not in scanned:
-                    max_index = tup[1]
-                    scanned.append(tup[1])
-                    break
+            tup = weights.pop(0)
+            if tup[1] not in scanned:
+                max_index = tup[1]
+                scanned.append(tup[1])
             #smearings are different, so use different values for low,high,step 
             if max_index != -1:
                 low = 0.000
@@ -360,7 +358,7 @@ def scan_nll(x, **options):
                 my_guesses = []
                 #generate a few guesses             
                 for j,val in enumerate(x): 
-                    guess[options['num_scales']+max_index] = val
+                    guess[max_index] = val
                     my_guesses.append(guess.copy())
                 #evaluate nll for each guess
                 nll_vals = np.array([ target_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
@@ -368,7 +366,7 @@ def scan_nll(x, **options):
                 x = x[mask]
                 nll_vals = nll_vals[mask]
                 if len(nll_vals) > 0:
-                    guess[options['num_scales']+max_index] = x[nll_vals.argmin()]
+                    guess[max_index] = x[nll_vals.argmin()]
                     print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
 
     print("[INFO][python/nll] scan complete")

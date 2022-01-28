@@ -1,0 +1,124 @@
+Linux b7s01p1962.cern.ch 3.10.0-1160.49.1.el7.x86_64 #1 SMP Tue Nov 30 15:51:32 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+CMSSW_10_2_14
+[INFO] welcome to SS_PyMin
+[INFO] you have run the following command:
+./pymin.py  -i  config/ul16_pre.dat  -c  config/cats_step3_ul2016.tsv  -s  condor/ul16_preVFP_RunFineEtaR9_v00_2022-01-19/step3closure_ul16_preVFP_RunFineEtaR9_v00_2022-01-19_scales.dat  -o  ul16_preVFP_RunFineEtaR9_v01_2022-01-19  --smearings  /afs/cern.ch/user/n/nschroed/public/scales/Run2016/Run2016_2021-02-04_UltraLegacy_preVFP_RunFineEtaR9_v0_smearings.dat  --closure  --queue  nextweek  --from-condor  
+[INFO] importing data and mc to dataframes (this might take a bit) ...
+[INFO] applying condor/ul16_preVFP_RunFineEtaR9_v00_2022-01-19/step3closure_ul16_preVFP_RunFineEtaR9_v00_2022-01-19_scales.dat to the data
+[INFO] deriving Y(Z), Pt(Z) weights
+[INFO][python/reweight_pt_y][derive_pt_y_weights] deriving pt y weights
+[INFO][python/reweight_pt_y][add_pt_y_weights] applying weights from datFiles/ptz_x_rapidity_weights_ul16_preVFP_RunFineEtaR9_v01_2022-01-19.tsv
+[INFO] importing categories from config/cats_step3_ul2016.tsv
+[INFO] initiating minimization using scipy.optimize.minimize
+[INFO][python/nll] dropping ['energy_ECAL_ele[0]', 'energy_ECAL_ele[1]', 'gainSeedSC[0]', 'gainSeedSC[1]', 'runNumber']
+[INFO][python/nll] extracting lists from category definitions
+[INFO][zcat] category (26,26, data = 7, mc = 5) was deactivated due to insufficient statistics
+[INFO][zcat] category (35,27, data = 1, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (35,28) was deactivated due to insufficient statistics in data
+[INFO][zcat] category (35,35, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (36,27) was deactivated due to insufficient statistics in data
+[INFO][zcat] category (36,35, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (36,36, data = 0, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (37,35, data = 3, mc = 0) was deactivated due to insufficient statistics
+[INFO][zcat] category (38,35, data = 5, mc = 65536) was deactivated due to insufficient statistics
+[INFO][zcat] category (39,35, data = 9, mc = 147456) was deactivated due to insufficient statistics
+[INFO][zcat] category (40,35, data = 9, mc = 196608) was deactivated due to insufficient statistics
+[INFO][zcat] category (41,35, data = 9, mc = 110592) was deactivated due to insufficient statistics
+[INFO][zcat] category (42,35, data = 9, mc = 73728) was deactivated due to insufficient statistics
+[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:
+[INFO][python/nll] best guess for scale 0 is 1.0
+[INFO][python/nll] best guess for scale 1 is 1.0
+[INFO][python/nll] best guess for scale 2 is 1.0
+[INFO][python/nll] best guess for scale 3 is 1.0
+[INFO][python/nll] best guess for scale 4 is 1.0
+[INFO][python/nll] best guess for scale 5 is 1.001
+[INFO][python/nll] best guess for scale 6 is 1.0
+[INFO][python/nll] best guess for scale 7 is 1.001
+[INFO][python/nll] best guess for scale 8 is 1.0
+[INFO][python/nll] best guess for scale 9 is 1.0
+[INFO][python/nll] best guess for scale 10 is 0.999
+[INFO][python/nll] best guess for scale 11 is 1.0
+[INFO][python/nll] best guess for scale 12 is 0.999
+[INFO][python/nll] best guess for scale 13 is 1.0
+[INFO][python/nll] best guess for scale 14 is 1.0
+[INFO][python/nll] best guess for scale 15 is 0.999
+[INFO][python/nll] best guess for scale 16 is 1.0
+[INFO][python/nll] best guess for scale 17 is 0.999
+[INFO][python/nll] best guess for scale 18 is 1.0
+[INFO][python/nll] best guess for scale 19 is 0.999
+[INFO][python/nll] best guess for scale 20 is 0.999
+[INFO][python/nll] best guess for scale 21 is 0.999
+[INFO][python/nll] best guess for scale 22 is 0.999
+[INFO][python/nll] best guess for scale 23 is 0.998
+[INFO][python/nll] best guess for scale 24 is 1.0
+[INFO][python/nll] best guess for scale 25 is 1.0
+[INFO][python/nll] best guess for scale 27 is 1.005
+[INFO][python/nll] best guess for scale 28 is 1.002
+[INFO][python/nll] best guess for scale 29 is 1.0
+[INFO][python/nll] best guess for scale 30 is 1.0
+[INFO][python/nll] best guess for scale 31 is 0.999
+[INFO][python/nll] best guess for scale 32 is 1.0
+[INFO][python/nll] best guess for scale 33 is 0.999
+[INFO][python/nll] best guess for scale 34 is 1.0
+[INFO][python/nll] best guess for scale 37 is 0.999
+[INFO][python/nll] best guess for scale 38 is 1.0
+[INFO][python/nll] best guess for scale 39 is 1.0
+[INFO][python/nll] best guess for scale 40 is 0.999
+[INFO][python/nll] best guess for scale 41 is 1.0
+[INFO][python/nll] best guess for scale 42 is 1.0
+[INFO][python/nll] scanning smearings:
+[INFO][python/nll] scan complete
+[INFO][python/nll] the initial guess is [1.0, 1.0, 1.0, 1.0, 1.0, 1.001, 1.0, 1.001, 1.0, 1.0, 0.999, 1.0, 0.999, 1.0, 1.0, 0.999, 1.0, 0.999, 1.0, 0.999, 0.999, 0.999, 0.999, 0.998, 1.0, 1.0, 1, 1.005, 1.002, 1.0, 1.0, 0.999, 1.0, 0.999, 1.0, 1, 1, 0.999, 1.0, 1.0, 0.999, 1.0, 1.0] with nll 54432.01274354157
+[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:
+      fun: 54356.26624126879
+ hess_inv: <43x43 LbfgsInvHessProduct with dtype=float64>
+      jac: array([ 1483250.93140447,  -490720.58772144,   226563.84389484,
+         132525.06410718,  -557796.79201587, -1128381.04384427,
+         850756.95661726,  -209438.00550813,   122040.98670118,
+         637021.01246381,   -44350.62966804,  -253226.53558396,
+        -308532.21297439,   193279.78277652,  -324226.59505319,
+         208579.78426575,   169628.52926081,    -8767.31251119,
+         503496.79410647,   244451.94583095,  -128404.81663006,
+         301958.80466199,    54668.919096  ,   153332.28217569,
+         389907.99664243,   327988.91238417,   -98112.22466597,
+         -66776.26240926,   -19550.28150915,  -195112.8699955 ,
+        -956144.08738693,   -10501.59997467,  -141394.5428103 ,
+         138928.67181785,  -434611.56899357,    24340.46248964,
+        -142332.85585578,  -347810.91120094,    71944.28046205,
+          73168.03290378,   250567.06524338,   200836.36546769,
+        -253025.60173805])
+  message: b'CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH'
+     nfev: 1716
+      nit: 6
+   status: 0
+  success: True
+        x: array([1.00001246, 1.00001381, 1.00001311, 0.99999918, 0.99999535,
+       1.00100776, 1.00003154, 1.00100652, 1.0000041 , 0.99999824,
+       0.99900066, 0.99999139, 0.99900757, 0.99999445, 0.99999725,
+       0.99899575, 1.00000806, 0.99901325, 0.99999255, 0.9989882 ,
+       0.9990137 , 0.99899596, 0.99902378, 0.99800699, 1.00001486,
+       0.99997944, 0.99998164, 1.00500644, 1.00200181, 0.99996494,
+       0.99998137, 0.99900091, 0.99998543, 0.99900657, 0.99998237,
+       0.99999486, 1.00000632, 0.99900977, 1.00003171, 0.99999105,
+       0.99899504, 1.00001186, 1.00000118])
+[1.00001246 1.00001381 1.00001311 0.99999918 0.99999535 1.00100776
+ 1.00003154 1.00100652 1.0000041  0.99999824 0.99900066 0.99999139
+ 0.99900757 0.99999445 0.99999725 0.99899575 1.00000806 0.99901325
+ 0.99999255 0.9989882  0.9990137  0.99899596 0.99902378 0.99800699
+ 1.00001486 0.99997944 0.99998164 1.00500644 1.00200181 0.99996494
+ 0.99998137 0.99900091 0.99998543 0.99900657 0.99998237 0.99999486
+ 1.00000632 0.99900977 1.00003171 0.99999105 0.99899504 1.00001186
+ 1.00000118]
+[1.00001246 1.00001381 1.00001311 0.99999918 0.99999535 1.00100776
+ 1.00003154 1.00100652 1.0000041  0.99999824 0.99900066 0.99999139
+ 0.99900757 0.99999445 0.99999725 0.99899575 1.00000806 0.99901325
+ 0.99999255 0.9989882  0.9990137  0.99899596 0.99902378 0.99800699
+ 1.00001486 0.99997944 0.99998164 1.00500644 1.00200181 0.99996494
+ 0.99998137 0.99900091 0.99998543 0.99900657 0.99998237 0.99999486
+ 1.00000632 0.99900977 1.00003171 0.99999105 0.99899504 1.00001186
+ 1.00000118]
+43 43
+[INFO] creating new scales file: /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul16_preVFP_RunFineEtaR9_v01_2022-01-19//step3closure_ul16_preVFP_RunFineEtaR9_v01_2022-01-19_scales.dat
+[INFO][python/write_files][combine] producing combined scales file from /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul16_preVFP_RunFineEtaR9_v01_2022-01-19//onlystep3closure_ul16_preVFP_RunFineEtaR9_v01_2022-01-19_scales.dat and condor/ul16_preVFP_RunFineEtaR9_v00_2022-01-19/step3closure_ul16_preVFP_RunFineEtaR9_v00_2022-01-19_scales.dat
+[INFO][python/write_files][combine] this output will be written to /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul16_preVFP_RunFineEtaR9_v01_2022-01-19//step3closure_ul16_preVFP_RunFineEtaR9_v01_2022-01-19_scales.dat
+[INFO][python/write_files][writeJsonFromDF] producing json file in /afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul16_preVFP_RunFineEtaR9_v01_2022-01-19//step3closure_ul16_preVFP_RunFineEtaR9_v01_2022-01-19_scales.json

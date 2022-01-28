@@ -22,22 +22,20 @@ def congruentCategories(last, this, nameLast, nameThis):
     """
     #this is finer than last categories:
     ret_eta = False
-    if float(round(last[2],4)) <= float(round(this[2],4)):
-        if float(round(last[3],4)) >= float(round(this[3],4)):
-            ret_eta=True
-            if nameLast.find('step1') != -1:
-                return True
-    if float(round(last[2],4)) >= float(round(this[2],4)):
-        if float(round(last[3],4)) <= float(round(this[3],4)):
-            ret_eta=True
+    if float(round(last[2],4)) <= float(round(this[2],4)) and float(round(last[3],4)) >= float(round(this[3],4)):
+        ret_eta=True
+        if nameLast.find('step1') != -1:
+            return True
+    elif float(round(last[2],4)) >= float(round(this[2],4)) and float(round(last[3],4)) <= float(round(this[3],4)):
+        ret_eta=True
+    else: pass
     
     ret_r9 = False
-    if float(round(last[4],4)) <= float(round(this[4],4)):
-        if float(round(last[5],5)) >= float(round(this[5],4)):
-            ret_r9 = True
-    if float(round(last[4],4)) >= float(round(this[4],4)):
-        if float(round(last[5],5)) <= float(round(this[5],4)):
-            ret_r9 = True
+    if float(round(last[4],4)) <= float(round(this[4],4)) and float(round(last[5],5)) >= float(round(this[5],4)):
+        ret_r9 = True
+    elif float(round(last[4],4)) >= float(round(this[4],4)) and float(round(last[5],5)) <= float(round(this[5],4)):
+        ret_r9 = True
+    else: pass
 
     ret_gain = True
     if float(round(last[8],4)) != 0:
@@ -56,7 +54,7 @@ def congruentCategories(last, this, nameLast, nameThis):
  #   if ret_eta and ret_r9 and ret_gain and ret_et:
  #       return True
 
-    if 'step2' in nameLast or 'step3' in nameLast:
+    if 'step2' in nameLast or 'step3' in nameLast or 'RunEtaR9' in nameLast:
         return ret_r9 and ret_eta
 
     if nameThis.find('stochastic') != -1:
@@ -78,7 +76,7 @@ def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
     thisDict['runMin'].append(int(rowLast[0]))
     thisDict['runMax'].append(int(rowLast[1]))
 
-    if round(rowLast[2],4) <= round(rowThis[2],4) and round(rowLast[3]) >= round(rowThis[3],4):
+    if rowThis[3]-rowThis[2] < rowLast[3]-rowLast[2]:
         thisDict['etaMin'].append(round(rowThis[2],4))
         thisDict['etaMax'].append(round(rowThis[3],4))
     else:

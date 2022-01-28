@@ -135,6 +135,8 @@ def main():
     if args._kClosure and args.smearings is None:
         if args._kTestMethodAccuracy:
             pass
+        elif args._kRewrite:
+            pass
         else:
             print("[ERROR] you have submitted a closure test without a smearings file.")
             print("[ERROR] please resubmit this job with a smearings file.")

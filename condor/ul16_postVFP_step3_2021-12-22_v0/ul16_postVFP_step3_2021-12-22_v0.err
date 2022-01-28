@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "./pymin.py", line 256, in <module>
+    main()
+  File "./pymin.py", line 251, in main
+    helper_pymin.write_results(args, scales_smears)
+  File "/afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/python/helpers/helper_pymin.py", line 145, in write_results
+    write_files.write_scales(scales_smears, cats, new_scales)
+  File "/afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/python/utilities/write_files.py", line 205, in write_scales
+    dfOut.to_csv(out, sep='\t',header=False,index=False)
+  File "/cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/py2-pandas/0.23.0/lib/python3.6/site-packages/pandas/core/frame.py", line 1745, in to_csv
+    formatter.save()
+  File "/cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/py2-pandas/0.23.0/lib/python3.6/site-packages/pandas/io/formats/csvs.py", line 136, in save
+    compression=None)
+  File "/cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/py2-pandas/0.23.0/lib/python3.6/site-packages/pandas/io/common.py", line 400, in _get_handle
+    f = open(path_or_buf, mode, encoding=encoding)
+FileNotFoundError: [Errno 2] No such file or directory: '/afs/cern.ch/work/n/nschroed/ss_pyfit/CMSSW_10_2_14/src/cms-ecal-scales-and-smearings/condor/ul16_postVFP_step3closure_2021-12-22_v0/onlystep3_ul16_postVFP_onlystep3_2021-12-22_v0_scales.dat'
