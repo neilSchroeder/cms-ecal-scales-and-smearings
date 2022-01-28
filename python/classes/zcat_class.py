@@ -9,7 +9,6 @@ class zcat:
     """ produces a 'z category' object to be used in the scales and smearing derivation """
 
     def __init__(self, i, j, data, mc, weights, **options):
-        print(len(data), len(mc))
         self.lead_index=i
         self.sublead_index=j
         self.lead_smear_index=options['smear_i'] if 'smear_i' in options.keys() else -1
