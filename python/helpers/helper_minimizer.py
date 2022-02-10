@@ -316,7 +316,7 @@ def scan_nll(x, **options):
     weights = [(cat.weight, cat.lead_index) for cat in __ZCATS__ if cat.valid and cat.lead_index == cat.sublead_index]
     weights.sort(key=lambda x: x[0])
     if not options['_kFixScales']:
-        while len(scanned) < len(weights): 
+        while weights: 
             max_index = -1
             tup = weights.pop(0)
             if tup[1] not in scanned:
@@ -367,7 +367,7 @@ def scan_nll(x, **options):
                 nll_vals = nll_vals[mask]
                 if len(nll_vals) > 0:
                     guess[max_index] = x[nll_vals.argmin()]
-                    print("[INFO][python/nll] best guess for smearing {} is {}".format(i, guess[i]))
+                    print(f"[INFO][python/nll] best guess for smearing {max_index} is {guess[max_index]}")
 
     print("[INFO][python/nll] scan complete")
     return guess
