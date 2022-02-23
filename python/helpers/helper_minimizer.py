@@ -198,7 +198,7 @@ def extract_cats( data, mc, cats, **options):
             mass_list_mc = np.array(df[c.INVMASS].values, dtype=np.float32)
             weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32) if 'pty_weight' in df.columns else np.ones(len(mass_list_mc))
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
-            while len(mass_list_mc) < max(100*len(mass_list_data),100000) and len(mass_list_mc) > 0 and len(mass_list_data) > 10 and len(mass_list_mc) < 10000000:
+            while len(mass_list_mc) < max(50*len(mass_list_data),50000) and len(mass_list_mc) > 100 and len(mass_list_data) > 10 and len(mass_list_mc) < 5000000:
                 mass_list_mc = np.append(mass_list_mc,mass_list_mc)
                 weight_list_mc = np.append(weight_list_mc,weight_list_mc)
 

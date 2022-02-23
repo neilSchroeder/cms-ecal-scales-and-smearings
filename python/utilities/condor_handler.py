@@ -21,7 +21,7 @@ def make_htcondor(out_dir, queue):
     return htcondor, out_dir+"/"+os.path.basename(out_dir)+"-done"
 
 #############################################################################################
-def make_script(cwd, cmd, script, done):
+def make_script(cwd, cmd, out, script, done):
 
     lines = []
     lines.append("#!/bin/bash\n")
@@ -29,7 +29,7 @@ def make_script(cwd, cmd, script, done):
     lines.append("eval `scramv1 runtime -sh`  uname -a\n")
     lines.append("echo $CMSSW_VERSION\n")
     lines.append('\n')
-    lines.append(cmd+"--from-condor\n")
+    lines.append(cmd+f" --from-condor\n")
     lines.append('\n')
     lines.append("touch "+done)
 
@@ -62,7 +62,7 @@ def manage(cmd, out, queue):
             return
 
     htcondor, done = make_htcondor(target_dir, queue) 
-    make_script(cwd, cmd, htcondor, done)
+    make_script(cwd, cmd, out, htcondor, done)
 
     condor_submit = "condor_submit --batch-name "+out+" "+htcondor
     print("[INFO][python/condor_handler][manage] submitting job to condor")
