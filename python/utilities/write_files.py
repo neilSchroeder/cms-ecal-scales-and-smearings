@@ -51,17 +51,11 @@ def congruentCategories(last, this, nameLast, nameThis):
         if float(round(last[7],4)) <= float(round(this[7],4)):
                 ret_et=True
 
- #   if ret_eta and ret_r9 and ret_gain and ret_et:
- #       return True
-
-    if 'step2' in nameLast or 'step3' in nameLast or 'RunEtaR9' in nameLast:
+    if 'step2' in nameLast or 'step3' in nameLast or 'RunEtaR9_' in nameLast:
         return ret_r9 and ret_eta
 
-    if nameThis.find('stochastic') != -1:
+    if 'stochastic' in nameThis or 'step4' in nameLast or 'EtaR9Et_' in nameLast:
         return ret_eta and ret_r9 and ret_et
-
- #   if nameThis.find('step6') != -1:
- #       return ret_eta and ret_et
 
     if nameThis.find('gain') != -1 or nameThis.find('Gain') != -1:
         if nameLast.find('gain') != -1 or nameLast.find('Gain') != -1:
@@ -155,6 +149,7 @@ def combine(thisStep, lastStep, outFile):
 
     #format is: runMin runMax etaMin etaMax r9Min r9Max etMin etMax gain val err
     for iLast,rowLast in dfLastStep.iterrows():
+        num_corrs = 0
         for iThis,rowThis in dfThisStep.iterrows():
             #only build an entry if the two categories are congruent
             kCongruent = congruentCategories(rowLast, rowThis, lastStep, thisStep)
@@ -210,8 +205,11 @@ def write_smearings(smears, cats, out):
     dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
     for col in headers:
         dictForDf[col] = []
+
+    smear_mask = [cats[:][0] == 'smear']
+    smears = smears[smear_mask]
     
-    for index,row in cats.loc[cats[:][0]=='smear'].iterrows():
+    for index,row in cats[smear_mask].iterrows():
         if row[0] != 'scale':
             if row[3] == -1: 
                 row[3] = 0
@@ -223,8 +221,8 @@ def write_smearings(smears, cats, out):
                 dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])))
             dictForDf['Emean'].append(6.6)
             dictForDf['err_Emean'].append(0.0)
-            dictForDf['rho'].append(smears[index][0])
-            dictForDf['err_rho'].append(smears[index][1])
+            dictForDf['rho'].append(smears[index])
+            dictForDf['err_rho'].append(smears[index]*0.005)
             dictForDf['phi'].append('M_PI_2')
             dictForDf['err_phi'].append('M_PI_2')
     

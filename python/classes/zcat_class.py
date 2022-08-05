@@ -193,7 +193,7 @@ class zcat:
 
         self.NLL = self.get_nllChiSqr(binned_data, norm_binned_mc)
         #penalize off-diagonal categories in the fit
-        #self.weight = np.sum(binned_data) if self.lead_index == self.sublead_index else 0.01*np.sum(binned_data)
+        self.weight = 1 if self.lead_index == self.sublead_index else 0.01*np.sum(binned_data)
         if np.isnan(self.NLL):
             self.valid = False
             self.NLL = 0

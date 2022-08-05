@@ -25,12 +25,14 @@ def apply(arg):
         sub_gainEt_mask = np.ones(len(sub_eta_mask),dtype=bool)
 
         if any(scales[:,c.i_et_min] != c.MIN_ET): #these scales are Et dependent
+            print("et_scales")
             lead_et = row[c.E_LEAD]/np.cosh(row[c.ETA_LEAD])
             sub_et = row[c.E_SUB]/np.cosh(row[c.ETA_SUB])
             lead_gainEt_mask = np.logical_and((scales[:,c.i_et_min] <= lead_et), (scales[:,c.i_et_max] > lead_et))
             sub_gainEt_mask = np.logical_and((scales[:,c.i_et_min] <= sub_et), (scales[:,c.i_et_max] > sub_et))
 
         if any(scales[:,c.i_gain] != 0): #these scales are gain dependent
+            print("gain_scales")
             lead_gain = 12
             sub_gain = 12
             if row[c.GAIN_LEAD] == 1: lead_gain = 6
@@ -48,17 +50,17 @@ def apply(arg):
         lead_err = np.ravel(scales[lead_mask])[c.i_err] if len(np.ravel(scales[lead_mask])) > 0 else 0.
         sublead_scale = np.ravel(scales[sublead_mask])[c.i_scale] if len(np.ravel(scales[sublead_mask])) > 0 else 0.
         sublead_err = np.ravel(scales[sublead_mask])[c.i_err] if len(np.ravel(scales[sublead_mask])) > 0 else 0.
-        
+         
         return (lead_scale, lead_err, sublead_scale, sublead_err)
 
 
-    scales = data.apply(find_scales, axis=1)
-    lead_scales = np.array([x[0] if len(x) > 0 else 0. for x in scales])
-    lead_err = np.array([x[1] if len(x) > 0 else 0. for x in scales])
+    these_scales = data.apply(find_scales, axis=1)
+    lead_scales = np.array([x[0] if len(x) > 0 else 0. for x in these_scales])
+    lead_err = np.array([x[1] if len(x) > 0 else 0. for x in these_scales])
     lead_scales_up = np.add(lead_scales,lead_err)
     lead_scales_down = np.subtract(lead_scales, lead_err)
-    sub_scales = np.array([x[2] if len(x) > 0 else 0. for x in scales])
-    sub_err = np.array([x[3] if len(x) > 0 else 0. for x in scales])
+    sub_scales = np.array([x[2] if len(x) > 0 else 0. for x in these_scales])
+    sub_err = np.array([x[3] if len(x) > 0 else 0. for x in these_scales])
     sub_scales_up = np.add(sub_scales,sub_err)
     sub_scales_down = np.subtract(sub_scales, sub_err)
 
@@ -93,16 +95,13 @@ def scale(data, scales):
     run_bins = unique_runnums_low[::processors]
     run_bins.append(999999)
 
+    info = "[INFO][scale_data.py]"
     #divide data by run number
-    divided_data = [
-            data[np.logical_and(
-                run_bins[i] <= data[run].values,  
-                data[run].values < run_bins[i+1])
-                ] 
-            for i in range(len(run_bins)-1)
-            ]
+    print(f"{info} dividing data by run")
+    divided_data = [ data[np.logical_and(run_bins[i] <= data[run].values, data[run].values < run_bins[i+1])] for i in range(len(run_bins)-1)]
 
     #divide scales by run and tuple with divided data
+    print(f"{info} dividing scales by run and tuple")
     divided_scales = [(divided_data[i],
         scales_df.loc[
         np.logical_and(scales_df[:][i_run_min] >= run_bins[i],
@@ -111,6 +110,7 @@ def scale(data, scales):
         ) for i in range(len(run_bins)-1)]
 
     #initiate multiprocessing of scales application
+    print(f"{info} distributing application of scales")
     pool = mp.Pool(processes=processors)
     scaled_data=pool.map(apply, divided_scales)
     pool.close()

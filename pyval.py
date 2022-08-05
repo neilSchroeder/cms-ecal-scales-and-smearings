@@ -2,7 +2,6 @@
 
 #built-in
 import argparse as ap
-import logging
 import os
 import sys
 import time
@@ -72,19 +71,6 @@ def main():
             default=False,
             )
     parser.add_argument(
-            "--log",
-            help="set the logging level, defaults to WARNING",
-            dest="log_level",
-            default=logging.INFO,
-            choices=[
-                 "DEBUG",
-                 "INFO",
-                 "WARNING",
-                 "ERROR",
-                 "CRITICAL",
-            ],
-            )
-    parser.add_argument(
             "--no-reweight",
             help="turn off pt,Y reweighting",
             dest="reweight",
@@ -110,12 +96,6 @@ def main():
     print(40*"#")
     print(40*"#")
 
-
-    #initiate logging
-    print("[INFO] initiating log file")
-    log_file = args.output_file + f'_"{args.log_level}".log'
-    logging.basicConfig(level=args.log_level, filename=log_file)
-
     #open input file and prep our variables and such
     KEY_DAT = "DATA"
     KEY_MC = "MC"
@@ -124,8 +104,6 @@ def main():
     KEY_WT = "WEIGHTS"
     KEY_CAT = "CATS"
     dict_config = helper_pyval.extract_files(args.input_file) 
-    #has keys: DATA, MC, SCALES, SMEARINGS, WEIGHTS, CATS
-    logging.debug(f'config dict: "{dict_config}"')
 
     #load and handle data first
     if len(dict_config[KEY_DAT]) > 0:

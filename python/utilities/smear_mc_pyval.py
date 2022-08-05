@@ -63,10 +63,10 @@ def smear(mc,smearings):
         #smear the mc
         smears_lead = np.multiply(mask_lead, np.random.normal(1, row[3], len(mask_lead)),dtype=np.float32)
         smears_lead_up = np.multiply(mask_lead, np.random.normal(1, row[3] + row[4], len(mask_lead)),dtype=np.float32)
-        smears_lead_down = np.multiply(mask_lead, np.random.normal(1, row[3] - row[4], len(mask_lead)),dtype=np.float32)
+        smears_lead_down = np.multiply(mask_lead, np.random.normal(1, np.abs(row[3] - row[4]), len(mask_lead)),dtype=np.float32)
         smears_sub = np.multiply(mask_sub, np.random.normal(1, row[3], len(mask_sub)),dtype=np.float32)
         smears_sub_up = np.multiply(mask_sub, np.random.normal(1, row[3] + row[4], len(mask_sub)),dtype=np.float32)
-        smears_sub_down = np.multiply(mask_sub, np.random.normal(1, row[3] - row[4], len(mask_sub)),dtype=np.float32)
+        smears_sub_down = np.multiply(mask_sub, np.random.normal(1, np.abs(row[3] - row[4]), len(mask_sub)),dtype=np.float32)
         smears_lead[smears_lead==0] = 1.
         smears_lead_up[smears_lead_up==0] = 1.
         smears_lead_down[smears_lead_down==0] = 1.

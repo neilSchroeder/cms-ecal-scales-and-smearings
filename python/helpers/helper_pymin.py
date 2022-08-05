@@ -28,6 +28,8 @@ def get_step(args):
     #gets the step number from the category file
 
     if args.cats is not None and not args._kTimeStability:
+        if "." in args.cats.split("_")[1]:
+            return int(args.cats.split("_")[1].split(".")[0][-1])
         return int(args.cats.split("_")[1][-1])
 
     return -1
