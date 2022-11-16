@@ -25,14 +25,12 @@ def apply(arg):
         sub_gainEt_mask = np.ones(len(sub_eta_mask),dtype=bool)
 
         if any(scales[:,c.i_et_min] != c.MIN_ET): #these scales are Et dependent
-            print("et_scales")
             lead_et = row[c.E_LEAD]/np.cosh(row[c.ETA_LEAD])
             sub_et = row[c.E_SUB]/np.cosh(row[c.ETA_SUB])
             lead_gainEt_mask = np.logical_and((scales[:,c.i_et_min] <= lead_et), (scales[:,c.i_et_max] > lead_et))
             sub_gainEt_mask = np.logical_and((scales[:,c.i_et_min] <= sub_et), (scales[:,c.i_et_max] > sub_et))
 
         if any(scales[:,c.i_gain] != 0): #these scales are gain dependent
-            print("gain_scales")
             lead_gain = 12
             sub_gain = 12
             if row[c.GAIN_LEAD] == 1: lead_gain = 6
