@@ -24,5 +24,4 @@ def test_wf_write_smearings():
         0.00000000e+00, 5.97181153e-03, 6.93517340e-03, 1.56771889e-02])
 
     cats = pd.read_csv('config/cats_step5_stochastic.tsv', sep='\t')
-    print(cats)
-    wf.write_smearings(example_scales_smearings, cats, "test_write_smearings")
+    wf.write_smearings(example_scales_smearings, cats, "test_write_smearings.dat")
