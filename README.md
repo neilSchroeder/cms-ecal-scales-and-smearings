@@ -19,7 +19,7 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 ## To Do
 
 * Time permitting, or for whoever takes over development, multiprocessing the `zcat.update()` calls would likely speed things up.
-* Implement `--systematics-study` feature in `pyval`.
+* Implement `--systematics-study` feature in `pyval`. The idea is to automate estimating the systematic uncertainties.
 
 
 ## Features
@@ -33,7 +33,6 @@ This software has a number of interesting features:
     * Numba histograms to dramatically increase the speed of binning invariant mass distributions and NLL evaluation
     * 1D scanning or random start styles of the scales/smearings for the minimizer
     * SciPi minimizer using the 'L-BFGS-B' method for speed and memory preservation
-    * Smart handling of low stats categories in the NLL evaluation
 * A program for producing plots showing the agreement of data and MC
     * Any variable from the trees can be plotted
     * Cuts on both leading and subleading Eta, Et, and R9 can be made
