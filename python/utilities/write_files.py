@@ -200,29 +200,27 @@ def write_scales(scales, cats, out):
 ##################################################################################################################
 def write_smearings(smears, cats, out):
     #format of smearings files is:
-#category       Emean   err_Emean   rho err_rho     phi err_phi
+    #category       Emean   err_Emean   rho err_rho     phi err_phi
     headers = ['#category', 'Emean', 'err_Emean', 'rho', 'err_rho', 'phi', 'err_phi']
     dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
     for col in headers:
         dictForDf[col] = []
 
-    smear_mask = [cats[:][0] == 'smear']
-    smears = smears[smear_mask]
+    smear_mask = cats['#type'] == 'smear'
     
     for index,row in cats[smear_mask].iterrows():
         if row[0] != 'scale':
             if row[3] == -1: 
                 row[3] = 0
                 row[4] = 10
-            print(row)
             if row[6] != -1:
-                dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])+"-Et_"+str(row[6])+"_"+str(row[7])))
+                dictForDf['#category'].append(f"absEta_{row[1]}_{row[2]}-R9_{round(row[3],4)}_{row[4]}-Et_{row[6]}_{row[7]}")
             else:
-                dictForDf['#category'].append(str("absEta_"+str(row[1])+"_"+str(row[2])+"-R9_"+str(round(row[3],4))+"_"+str(row[4])))
+                dictForDf['#category'].append(f"absEta_{row[1]}_{row[2]}-R9_{round(row[3],4)}_{row[4]}")
             dictForDf['Emean'].append(6.6)
             dictForDf['err_Emean'].append(0.0)
-            dictForDf['rho'].append(smears[index])
-            dictForDf['err_rho'].append(smears[index]*0.005)
+            dictForDf['rho'].append(round(smears[index],5))
+            dictForDf['err_rho'].append(round(smears[index]*0.005,5))
             dictForDf['phi'].append('M_PI_2')
             dictForDf['err_phi'].append('M_PI_2')
     
@@ -231,7 +229,7 @@ def write_smearings(smears, cats, out):
 
 def rewrite_smearings(cats, out):
     #format of smearings files is:
-#category       Emean   err_Emean   rho err_rho     phi err_phi
+    #category       Emean   err_Emean   rho err_rho     phi err_phi
     headers = ['#category', 'Emean', 'err_Emean', 'rho', 'err_rho', 'phi', 'err_phi']
     dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
     for col in headers:

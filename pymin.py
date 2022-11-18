@@ -41,7 +41,7 @@ def main():
     #setup options
     parser = ap.ArgumentParser(description="Derivation of Scales and Smearings")
 
-    parser.add_argument("-i","--inputFile",
+    parser.add_argument("-i","--inputFile", default=None,
                     	help="input file containing paths to data and mc")
 
     parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
@@ -56,7 +56,7 @@ def main():
     parser.add_argument("--min-events", default=10000, dest='min_events',
                     	help="minimum number of events allowed in a given run bin")
 
-    parser.add_argument("-c","--cats",
+    parser.add_argument("-c","--cats", default=None,
                     	help="path to file describing categories to use in minimization")
     parser.add_argument("--time-stability", default=False, dest="_kTimeStability", action='store_true',
                     	help="scale data to PDG Z mass, pass the run divide file as your categories")
@@ -216,26 +216,7 @@ def main():
 
     #derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = minimizer.minimize(data, mc, cats,
-            ignore_cats=args.ignore, #categories to ignore
-            hist_min=round(float(args.hist_min),2), #bottom edge of histogram
-            hist_max=round(float(args.hist_max),2), #top edge of histogram
-            bin_size=round(float(args.bin_size),2), #bin size
-            start_style=args.start_style, #seed method for scales/smearings
-            scan_min=args.scan_min, #min value in scan
-            scan_max=args.scan_max, #max value in scan
-            scan_step=args.scan_step, #step size of scan
-            min_step=args.min_step_size, #step size of minimizer
-            _kClosure=args._kClosure, #closure flag
-            scales=args.scales, #scales file
-            _kPlot=args._kPlot, #plot flag
-            plot_dir=args.plot_dir, #directory to put plots
-            _kTestMethodAccuracy=args._kTestMethodAccuracy, #test method flag
-            _kScanNLL=args._kScanNLL, #scan nll flag
-            scan_scales=args.scan_scales, #scales to seed the scan
-            _kFixScales=args._kFixScales, #don't let scales float in fit flag
-            _kAutoBin=(not args._kNoAutoBin)
-        )
+    scales_smears = minimizer.minimize(data, mc, cats, args)
 
 
     #if we're plotting there's nothing to write, so just print a done message and exit
