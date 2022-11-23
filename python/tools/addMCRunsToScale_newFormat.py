@@ -77,5 +77,7 @@ def main():
     df_out = pd.concat([df_run1,df_run2,df,df_run3])
     
     df_out.to_csv(arg.inFile, sep='\t', header=False, index=False)
-    
-main()
+
+
+if __name__ == '__main__':
+    main()

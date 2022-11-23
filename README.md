@@ -87,10 +87,39 @@ With your run bins in hand you can now run the time_stability step:
 ```
 ./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat --time-stability
 ```
-From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
+From here you can run the scales and smearings chain. This requires a couple additional ingredients.
+The first is a categories file, you can see an example below:
+```
+#type	etaMin	etaMax	r9Min	r9Max	gain	etMin	etMax
+scale	0.	1.	0.	0.96	-1	-1	-1
+scale	1.	1.4442	0.	0.96	-1	-1	-1
+scale	1.566	2.	0.	0.96	-1	-1	-1
+scale	2.	2.5	0.	0.96	-1	-1	-1
+scale	0.	1.	0.96	10.	-1	-1	-1
+scale	1.	1.4442	0.96	10.	-1	-1	-1
+scale	1.566	2.	0.96	10.	-1	-1	-1
+scale	2.	2.5	0.96	10.	-1	-1	-1
+smear	0.	1.	0.	0.96	-1	-1	-1
+smear	1.	1.4442	0.	0.96	-1	-1	-1
+smear	1.566	2.	0.	0.96	-1	-1	-1
+smear	2.	2.5	0.	0.96	-1	-1	-1
+smear	0.	1.	0.96	10.	-1	-1	-1
+smear	1.	1.4442	0.96	10.	-1	-1	-1
+smear	1.566	2.	0.96	10.	-1	-1	-1
+smear	2.	2.5	0.96	10.	-1	-1	-1
+```
+
+The categories are defined for single electrons, and di-electron categories are built during the minimization process.  
+Please be extra careful when building your categories to ensure that you do not skip coverage in a variable.
+
+Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
 
 ```
-./pymin.py -i config/ul2018.dat -c config/cats_step2.py -s datFiles/step1_MY_TAG_scales.dat -o ul18_DATE_v0
+./pymin.py -i config/ul2018.dat -c config/cats_step2.tsv -s datFiles/step1_MY_TAG_scales.dat -o ul18_DATE_v0
+```
+This first step runs a derivation of both the scales and smearings
+
+```
 ./pymin.py -i config/ul2018.dat \
            -c config/cats_step2.py \
            -s datFiles/step2_MY_TAG_scales.dat \
@@ -99,8 +128,7 @@ From here you can run the scales and smearings chain. Step2 is coarseEtaR9, step
            --smearings="datFiles/step2_ul18_DATE_v0_smearings.dat \
            --closure
 ```
-
-The `--closure` option runs the minimization without any smearings. The MC is smeared ahead of the minimization using the smearings provided and no smearings are given to the minimzer. It can be useful to run this several times if your scales look off.
+This second step uses the `--closure` option and runs the minimization without any smearings. The MC is smeared ahead of the minimization using the smearings provided and no smearings are given to the minimizer. It can be useful to run this several times if your scales look off.
 
 ## Validation
 
@@ -194,6 +222,11 @@ To plot the 1D mass scans for each dielectron category provide the `--plot` opti
 To test the accuracy of the method, you can use the `--test-method-accuracy` option which will inject scales and smearings to MC in an attempt to derive the injected values back.
 
 To scan the NLL phase space of a set of categories use the `--scan-nll` options, if you wish you specify the scales around which to scan you must also provide a config file to `--scan-scales`
+
+
+### Additional Tools
+
+This framework comes with some very useful tools that can be run independently from the minimizer or validator. Please see the python/tools/ page for more details
 
 ## Credit
 

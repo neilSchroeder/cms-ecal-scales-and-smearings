@@ -5,8 +5,25 @@ import argparse as ap
 takes in a scales file and checks that all eta, et, r9 are covered
 """
 
+def main():
+
+    parser = ap.ArgumentParser(description="validate scales file")
+
+    parser.add_argument("-s", "--scalesFile", required=True,
+                        help="Scales file to validate")
+
+    args = parser.parse_args()
+
+    scales = pd.read_csv(args.scalesFile, sep='\t', header=None)
+
+    if not validate_scales(scales):
+        print("[failed] consult earlier error and fix scales file")
+    else:
+        print("[success] scales file contains full coverage")
+
+
 def validate_et(et_min, et_max):
-    # validates that all 
+    # validates that all Et is covered
     pass
 
 def validate_r9(r9_min, r9_max):
@@ -112,22 +129,6 @@ def validate_scales(df):
 
     return True
 
-
-def main():
-
-    parser = ap.ArgumentParser(description="validate scales file")
-
-    parser.add_argument("-s", "--scalesFile", required=True,
-                        help="Scales file to validate")
-
-    args = parser.parse_args()
-
-    scales = pd.read_csv(args.scalesFile, sep='\t', header=None)
-
-    if not validate_scales(scales):
-        print("[failed] consult earlier error and fix scales file")
-    else:
-        print("[success] scales file contains full coverage")
 
 if __name__ == "__main__":
     main()
