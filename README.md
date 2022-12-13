@@ -20,6 +20,7 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 
 * Time permitting, or for whoever takes over development, multiprocessing the `zcat.update()` calls would likely speed things up.
 * Implement `--systematics-study` feature in `pyval`. The idea is to automate estimating the systematic uncertainties.
+* Change run divide feature to include/process fill infomation (more granular)
 
 
 ## Features
