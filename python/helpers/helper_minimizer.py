@@ -10,88 +10,93 @@ from scipy.optimize import minimize as minz
 from scipy.special import xlogy
 from scipy import stats as scistat 
 
-import python.classes.const_class as constants
-import python.plotters.plot_cats as plotter
-from python.utilities.smear_mc import smear
+from python.classes.constant_classes import DataConstants as dc
+from python.classes.constant_classes import PyValConstants as pvc
+from python.classes.constant_classes import CategoryConstants as cc
 from python.classes.zcat_class import zcat
-
-c = constants.const()
 
 def add_transverse_energy(data,mc):
     #add a transverse energy column for data and mc 
-    energy_0 = np.array(data[c.E_LEAD].values)
-    energy_1 = np.array(data[c.E_SUB].values)
-    eta_0 = np.array(data[c.ETA_LEAD].values)
-    eta_1 = np.array(data[c.ETA_SUB].values)
-    data['transverse_energy[0]'] = np.divide(energy_0,np.cosh(eta_0))
-    data['transverse_energy[1]'] = np.divide(energy_1,np.cosh(eta_1))
-    energy_0 = np.array(mc[c.E_LEAD].values)
-    energy_1 = np.array(mc[c.E_SUB].values)
-    eta_0 = np.array(mc[c.ETA_LEAD].values)
-    eta_1 = np.array(mc[c.ETA_SUB].values)
-    mc['transverse_energy[0]'] = np.divide(energy_0,np.cosh(eta_0))
-    mc['transverse_energy[1]'] = np.divide(energy_1,np.cosh(eta_1))
-    drop_list = [c.E_LEAD, c.E_SUB, c.GAIN_LEAD, c.GAIN_SUB, c.RUN]
+    energy_0 = np.array(data[dc.E_LEAD].values)
+    energy_1 = np.array(data[dc.E_SUB].values)
+    eta_0 = np.array(data[dc.ETA_LEAD].values)
+    eta_1 = np.array(data[dc.ETA_SUB].values)
+    data[dc.ET_LEAD] = np.divide(energy_0,np.cosh(eta_0))
+    data[dc.ET_SUB] = np.divide(energy_1,np.cosh(eta_1))
+    energy_0 = np.array(mc[dc.E_LEAD].values)
+    energy_1 = np.array(mc[dc.E_SUB].values)
+    eta_0 = np.array(mc[dc.ETA_LEAD].values)
+    eta_1 = np.array(mc[dc.ETA_SUB].values)
+    mc[dc.ET_LEAD] = np.divide(energy_0,np.cosh(eta_0))
+    mc[dc.ET_SUB] = np.divide(energy_1,np.cosh(eta_1))
+
+    drop_list = [dc.E_LEAD, dc.E_SUB, dc.GAIN_LEAD, dc.GAIN_SUB, dc.RUN]
     data.drop(drop_list, axis=1, inplace=True)
     mc.drop(drop_list, axis=1, inplace=True)
-    #impose an et cut of 32 on leading and 20 on subleading
-    mask_lead = data['transverse_energy[0]'].between(32, 99999) & data['transverse_energy[1]'].between(20, 99999)
+
+    # impose an et cut of 32 on leading and 20 on subleading
+    mask_lead = data[dc.ET_LEAD].between(dc.MIN_ET_LEAD, dc.MAX_ET_LEAD) \
+        & data[dc.ET_SUB].between(dc.MAX_ET_SUB, dc.MAX_ET_SUB)
     data = data[mask_lead]
-    mask_lead = mc['transverse_energy[0]'].between(32, 99999) & mc['transverse_energy[1]'].between(20, 99999)
+    mask_lead = mc[dc.ET_LEAD].between(dc.MIN_ET_LEAD, dc.MAX_ET_LEAD) \
+        & mc[dc.ET_SUB].between(dc.MIN_ET_SUB, dc.MAX_ET_SUB)
     mc = mc[mask_lead]
     return data,mc
 
 def get_smearing_index(cats, cat_index):
-    #this function takes in a category index and returns the associated smearing index
-    eta_min = cats.iloc[int(cat_index),1]
-    eta_max = cats.iloc[int(cat_index),2]
-    r9_min = cats.iloc[int(cat_index),3]
-    r9_max = cats.iloc[int(cat_index),4]
-    et_min = cats.iloc[int(cat_index),6]
-    et_max = cats.iloc[int(cat_index),7]
-    truth_type = cats.loc[:,0] == 'smear'
+    """ return the index of the smearing category that corresponds to the given category index""" 
+
+    eta_min = cats.iloc[int(cat_index),cc.i_eta_min]
+    eta_max = cats.iloc[int(cat_index),cc.i_eta_max]
+    r9_min = cats.iloc[int(cat_index),cc.i_r9_min]
+    r9_max = cats.iloc[int(cat_index),cc.i_r9_max]
+    et_min = cats.iloc[int(cat_index),cc.i_et_min]
+    et_max = cats.iloc[int(cat_index),cc.i_et_max]
+
+    truth_type = cats.loc[:,cc.i_type] == 'smear'
     truth_eta_min = np.array([True for x in truth_type])
     truth_eta_max = np.array([True for x in truth_type])
     truth_r9_min = np.array([True for x in truth_type])
     truth_r9_max = np.array([True for x in truth_type])
     truth_et_min = np.array([True for x in truth_type])
     truth_et_max = np.array([True for x in truth_type])
-    if eta_min != -1 and eta_max != -1:
-        truth_eta_min = cats.loc[:,1] <= eta_min
-        truth_eta_max = cats.loc[:,2] >= eta_max
-    if r9_min != -1 and r9_max != - 1:
-        truth_r9_min = cats.loc[:,3] <= r9_min
-        truth_r9_max = cats.loc[:,4] >= r9_max
-    if et_min != -1 and et_max != -1:
-        truth_et_min = cats.loc[:,6] <= et_min
-        truth_et_max = cats.loc[:,7] >= et_max
+    if eta_min != cc.empty and eta_max != cc.empty:
+        truth_eta_min = cats.loc[:,cc.i_eta_min] <= eta_min
+        truth_eta_max = cats.loc[:,cc.i_eta_max] >= eta_max
+    if r9_min != cc.empty and r9_max != - 1:
+        truth_r9_min = cats.loc[:,cc.i_r9_min] <= r9_min
+        truth_r9_max = cats.loc[:,cc.i_r9_max] >= r9_max
+    if et_min != cc.empty and et_max != cc.empty:
+        truth_et_min = cats.loc[:,cc.i_et_min] <= et_min
+        truth_et_max = cats.loc[:,cc.i_et_max] >= et_max
 
     truth = truth_type&truth_eta_min&truth_eta_max&truth_r9_min&truth_r9_max&truth_et_min&truth_et_max
     return cats.loc[truth].index[0]
 
 def clean_up(data, mc, cats):
     #cleans up the dataframes, adds transverse energy if necessary, drops unnecessary columns
-    if (cats.iloc[1, 3] == -1 and cats.iloc[1, 5] == -1) or (cats.iloc[1,3] != -1 and cats.iloc[1,6] != -1):
+    if (cats.iloc[1, cc.i_r9_min] == cc.empty and cats.iloc[1, cc.i_gain] == cc.empty) \
+        or (cats.iloc[1,cc.i_r9_min] != cc.empty and cats.iloc[1, cc.i_et_min] != cc.empty):
         data,mc = add_transverse_energy(data, mc)
         gc.collect()
 
     else:
-        if cats.iloc[0,3] != -1 and cats.iloc[0,5] == -1:
-            drop_list = [c.E_LEAD, 
-                         c.E_SUB, 
-                         c.GAIN_LEAD, 
-                         c.GAIN_SUB, 
-                         c.RUN]
+        if cats.iloc[0,cc.i_r9_min] != cc.empty and cats.iloc[0,cc.i_gain] == cc.empty:
+            drop_list = [dc.E_LEAD, 
+                         dc.E_SUB, 
+                         dc.GAIN_LEAD, 
+                         dc.GAIN_SUB, 
+                         dc.RUN]
 
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
             mc.drop(drop_list, axis=1, inplace=True)
         else:
-            drop_list = [c.E_LEAD, 
-                         c.E_SUB, 
-                         c.R9_LEAD, 
-                         c.R9_SUB, 
-                         c.RUN]
+            drop_list = [dc.E_LEAD, 
+                         dc.E_SUB, 
+                         dc.R9_LEAD, 
+                         dc.R9_SUB, 
+                         dc.RUN]
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
             mc.drop(drop_list, axis=1, inplace=True)
@@ -107,95 +112,113 @@ def extract_cats( data, mc, cats, **options):
             cat1 = cats.iloc[index1]
             cat2 = cats.iloc[index2]
             #thisCat should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
-            entries_eta = data[c.ETA_LEAD].between(cat1[1],cat1[2]) & data[c.ETA_SUB].between(cat2[1],cat2[2])
-            entries_eta = entries_eta | (data[c.ETA_SUB].between(cat1[1],cat1[2])&data[c.ETA_LEAD].between(cat2[1],cat2[2]))
+            entries_eta = data[dc.ETA_LEAD].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max]) & data[dc.ETA_SUB].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max])
+            entries_eta = entries_eta | (data[dc.ETA_SUB].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max])&data[dc.ETA_LEAD].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max]))
             #need to handle the gain and et scales 
             entries_r9OrEt = []
-            if cat1[5] != -1:
+            if cat1[cc.i_gain] != cc.empty:
                 gainlow1 = 0
                 gainhigh1 = 0
                 gainlow2 = 0
                 gainhigh2 = 0
-                if cat1[5] == 6:
+                if cat1[cc.i_gain] == 6:
                     gainlow1 = 1
                     gainhigh1 = 1
-                if cat1[5] == 1:
+                if cat1[cc.i_gain] == 1:
                     gainlow1 = 2
                     gainhigh1 = 99999
-                if cat2[5] == 6:
+                if cat2[cc.i_gain] == 6:
                     gainlow2 = 1
                     gainhigh2 = 1
-                if cat2[5] == 1:
+                if cat2[cc.i_gain] == 1:
                     gainlow2 = 2
                     gainhigh2 = 99999
-                entries_r9OrEt = data[c.GAIN_LEAD].between(gainlow1,gainhigh1)&data[c.GAIN_SUB].between(gainlow2,gainhigh2)
-                entries_r9OrEt = entries_r9OrEt | (data[c.GAIN_SUB].between(gainlow1,gainhigh1)&data[c.GAIN_LEAD].between(gainlow2,gainhigh2))
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] == -1: 
-                #this is for R9 dependent scale derivation
-                entries_r9OrEt = data[c.R9_LEAD].between(cat1[3],cat1[4])&data[c.R9_SUB].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (data[c.R9_SUB].between(cat1[3],cat1[4])&data[c.R9_LEAD].between(cat2[3],cat2[4]))
-            elif cat1[3] == -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is for et dependent scale derivation
-                entries_r9OrEt = data['transverse_energy[0]'].between(cat1[6], cat1[7])&data['transverse_energy[1]'].between(cat2[6], cat2[7])
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is specifically for stochastic smearings
-                entries_r9OrEt = data[c.R9_LEAD].between(cat1[3],cat1[4])&data[c.R9_SUB].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (data[c.R9_SUB].between(cat1[3],cat1[4])&data[c.R9_LEAD].between(cat2[3],cat2[4]))
-                entries_r9OrEt = entries_r9OrEt & (data['transverse_energy[0]'].between(cat1[6], cat1[7])&data['transverse_energy[1]'].between(cat2[6], cat2[7]))
+                entries_r9OrEt = data[dc.GAIN_LEAD].between(gainlow1,gainhigh1)\
+                    &data[dc.GAIN_SUB].between(gainlow2,gainhigh2)
+                entries_r9OrEt = entries_r9OrEt | (data[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
+                                                    &data[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
+            elif cat1[cc.i_r9_min] != cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] == cc.empty: 
+                # this is for R9 dependent scale derivation
+                entries_r9OrEt = data[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                    &data[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (data[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                                                   &data[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+            elif cat1[cc.i_r9_min] == cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] != cc.empty:
+                # this is for et dependent scale derivation
+                entries_r9OrEt = data[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
+                    &data[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max])
+            elif cat1[cc.i_r9_min] != cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] != cc.empty:
+                # this is specifically for stochastic smearings
+                entries_r9OrEt = data[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                    &data[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (data[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                                                   &data[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+                entries_r9OrEt = entries_r9OrEt & (data[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
+                                                   &data[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max]))
             else:
                 print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
-                #please forgive my sin of sloth
+                # please forgive my sin of sloth
                 raise KeyboardInterrupt
 
             df = data[entries_eta&entries_r9OrEt]
-            mass_list_data = np.array(df[c.INVMASS])
+            mass_list_data = np.array(df[dc.INVMASS])
             del df
             del entries_eta
             del entries_r9OrEt
             gc.collect()
 
-            entries_eta = mc[c.ETA_LEAD].between(cat1[1],cat1[2]) & mc[c.ETA_SUB].between(cat2[1],cat2[2])
-            entries_eta = entries_eta | (mc[c.ETA_SUB].between(cat1[1],cat1[2])&mc[c.ETA_LEAD].between(cat2[1],cat2[2]))
+            entries_eta = mc[dc.ETA_LEAD].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max]) \
+                & mc[dc.ETA_SUB].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max])
+            entries_eta = entries_eta | (mc[dc.ETA_SUB].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max])\
+                                         &mc[dc.ETA_LEAD].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max]))
             entries_r9OrEt = []
 
             #now do the same thing for MC
-            if cat1[5] != -1:
+            if cat1[cc.i_gain] != cc.empty:
                 gainlow1 = 0
                 gainhigh1 = 0
                 gainlow2 = 0
                 gainhigh2 = 0
-                if cat1[5] == 6:
+                if cat1[cc.i_gain] == 6:
                     gainlow1 = 1
                     gainhigh1 = 1
-                if cat1[5] == 1:
+                if cat1[cc.i_gain] == 1:
                     gainlow1 = 2
                     gainhigh1 = 99999
-                if cat2[5] == 6:
+                if cat2[cc.i_gain] == 6:
                     gainlow2 = 1
                     gainhigh2 = 1
-                if cat2[5] == 1:
+                if cat2[cc.i_gain] == 1:
                     gainlow2 = 2
                     gainhigh2 = 99999
-                entries_r9OrEt = mc[c.GAIN_LEAD].between(gainlow1,gainhigh1)&mc[c.GAIN_SUB].between(gainlow2,gainhigh2)
-                entries_r9OrEt = entries_r9OrEt | (mc[c.GAIN_SUB].between(gainlow1,gainhigh1)&mc[c.GAIN_LEAD].between(gainlow2,gainhigh2))
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] == -1: 
-                #this is for R9 dependent scale derivation
-                entries_r9OrEt = mc[c.R9_LEAD].between(cat1[3],cat1[4])&mc[c.R9_SUB].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (mc[c.R9_SUB].between(cat1[3],cat1[4])&mc[c.R9_LEAD].between(cat2[3],cat2[4]))
-            elif cat1[3] == -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is for et dependent scale derivation
-                entries_r9OrEt = mc['transverse_energy[0]'].between(cat1[6], cat1[7])&mc['transverse_energy[1]'].between(cat2[6], cat2[7])
-            elif cat1[3] != -1 and cat1[5] == -1 and cat1[6] != -1:
-                #this is specifically for stochastic smearings
-                entries_r9OrEt = mc[c.R9_LEAD].between(cat1[3],cat1[4])&mc[c.R9_SUB].between(cat2[3],cat2[4])
-                entries_r9OrEt = entries_r9OrEt | (mc[c.R9_SUB].between(cat1[3],cat1[4])&mc[c.R9_LEAD].between(cat2[3],cat2[4]))
-                entries_r9OrEt = entries_r9OrEt & (mc['transverse_energy[0]'].between(cat1[6], cat1[7])&mc['transverse_energy[1]'].between(cat2[6], cat2[7]))
+                entries_r9OrEt = mc[dc.GAIN_LEAD].between(gainlow1,gainhigh1)\
+                    &mc[dc.GAIN_SUB].between(gainlow2,gainhigh2)
+                entries_r9OrEt = entries_r9OrEt | (mc[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
+                                                   &mc[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
+            elif cat1[cc.i_r9_min] != cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] == cc.empty: 
+                # this is for R9 dependent scale derivation
+                entries_r9OrEt = mc[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                    &mc[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (mc[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                                                   &mc[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+            elif cat1[cc.i_r9_min] == cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] != cc.empty:
+                # this is for et dependent scale derivation
+                entries_r9OrEt = mc[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
+                    &mc[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max])
+            elif cat1[cc.i_r9_min] != cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] != cc.empty:
+                # this is specifically for stochastic smearings
+                entries_r9OrEt = mc[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                    &mc[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (mc[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                                                   &mc[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+                entries_r9OrEt = entries_r9OrEt & (mc[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
+                                                   &mc[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max]))
             else:
                 print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
                 raise KeyboardInterrupt
 
             df = mc[entries_eta&entries_r9OrEt]
-            mass_list_mc = np.array(df[c.INVMASS].values, dtype=np.float32)
+            mass_list_mc = np.array(df[dc.INVMASS].values, dtype=np.float32)
             weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32) if 'pty_weight' in df.columns else np.ones(len(mass_list_mc))
             #MC needs to be over smeared in order to have good "resolution" on the scales and smearings
             while len(mass_list_mc) < max(50*len(mass_list_data),50000) and len(mass_list_mc) > 100 and len(mass_list_data) > 10 and len(mass_list_mc) < 1000000:
@@ -237,7 +260,7 @@ def set_bounds(cats, **options):
     bounds = []
     if options['_kClosure']:
         bounds = [(0.99,1.01) for i in range(options['num_scales'])]
-        if cats.iloc[1,3] != -1 or cats.iloc[1,5] != -1:
+        if cats.iloc[1,cc.i_r9_min] != cc.empty or cats.iloc[1,cc.i_gain] != cc.empty:
             bounds=[(0.95,1.05) for i in range(options['num_scales'])]
     elif options['_kTestMethodAccuracy']:
         bounds = [(0.96,1.04) for i in range(options['num_scales'])]
@@ -259,7 +282,7 @@ def deactivate_cats(__ZCATS__, ignore_cats):
         df_ignore = pd.read_csv(ignore_cats, sep="\t", header=None)
         for cat in __ZCATS__:
             for row in df_ignore.iterrows():
-                if row[0] == cat.lead_index and row[1] == cat.sublead_index:
+                if row[cc.i_type] == cat.lead_index and row[cc.i_eta_min] == cat.sublead_index:
                     cat.valid=False
 
 def target_function(x, *args, verbose=False, **options):
@@ -317,12 +340,12 @@ def scan_nll(x, **options):
     weights.sort(key=lambda x: x[0])
     if not options['_kFixScales']:
         while weights: 
-            max_index = -1
+            max_index = cc.empty
             tup = weights.pop(0)
-            if tup[1] not in scanned:
-                max_index = tup[1]
-                scanned.append(tup[1])
-            if max_index != -1:
+            if tup[cc.i_eta_min] not in scanned:
+                max_index = tup[cc.i_eta_min]
+                scanned.append(tup[cc.i_eta_min])
+            if max_index != cc.empty:
                 x = np.arange(options['scan_min'],options['scan_max'],options['scan_step'])
                 my_guesses = []
                 #generate a few guesses             
@@ -344,13 +367,13 @@ def scan_nll(x, **options):
     weights.sort(key=lambda x: x[0])
     if options['num_smears'] > 0:
         while weights:
-            max_index = -1
+            max_index = cc.empty
             tup = weights.pop(0)
-            if tup[1] not in scanned:
-                max_index = tup[1]
-                scanned.append(tup[1])
+            if tup[cc.i_eta_min] not in scanned:
+                max_index = tup[cc.i_eta_min]
+                scanned.append(tup[cc.i_eta_min])
             #smearings are different, so use different values for low,high,step 
-            if max_index != -1:
+            if max_index != cc.empty:
                 low = 0.000
                 high = 0.025
                 step = 0.00025

@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import uproot as up
 
-import python.classes.const_class as constants
+from python.classes.constant_classes import DataConstants as dc
 import python.utilities.write_files as write_files
 
 def get_cmd(args):
@@ -57,21 +57,19 @@ def load_dataframes(files, args):
     #import data and mc to dataframes
     print("[INFO] importing data and mc to dataframes (this might take a bit) ...")
 
-    c = constants.const()
-
     data_types = {
-            c.R9_LEAD: np.float32,
-            c.R9_SUB: np.float32,
-            c.ETA_LEAD: np.float32,
-            c.ETA_SUB: np.float32,
-            c.E_LEAD: np.float32,
-            c.E_SUB: np.float32,
-            c.PHI_LEAD: np.float32,
-            c.PHI_SUB: np.float32,
-            c.INVMASS: np.float32,
-            c.RUN: np.int32,
-            c.GAIN_LEAD: np.int16,
-            c.GAIN_SUB: np.int16,
+            dc.R9_LEAD: np.float32,
+            dc.R9_SUB: np.float32,
+            dc.ETA_LEAD: np.float32,
+            dc.ETA_SUB: np.float32,
+            dc.E_LEAD: np.float32,
+            dc.E_SUB: np.float32,
+            dc.PHI_LEAD: np.float32,
+            dc.PHI_SUB: np.float32,
+            dc.INVMASS: np.float32,
+            dc.RUN: np.int32,
+            dc.GAIN_LEAD: np.int16,
+            dc.GAIN_SUB: np.int16,
             }
 
     if root_files[0].find("data") != -1:
@@ -88,25 +86,25 @@ def load_dataframes(files, args):
 
     #clean the data a bit before sending back
 
-    data[c.ETA_LEAD] = np.abs(data[c.ETA_LEAD])
-    data[c.ETA_SUB] = np.abs(data[c.ETA_SUB])
+    data[dc.ETA_LEAD] = np.abs(data[dc.ETA_LEAD])
+    data[dc.ETA_SUB] = np.abs(data[dc.ETA_SUB])
 
-    transition_mask_lead = ~data[c.ETA_LEAD].between(c.MAX_EB,c.MIN_EE)
-    transition_mask_sub = ~data[c.ETA_SUB].between(c.MAX_EB,c.MIN_EE)
-    tracker_mask_lead = ~data[c.ETA_LEAD].between(c.MAX_EE, c.TRACK_MAX)
-    tracker_mask_sub = ~data[c.ETA_SUB].between(c.MAX_EE, c.TRACK_MAX)
-    invmass_mask = data[c.INVMASS].between(c.invmass_min, c.invmass_max)
+    transition_mask_lead = ~data[dc.ETA_LEAD].between(dc.MAX_EB, dc.MIN_EE)
+    transition_mask_sub = ~data[dc.ETA_SUB].between(dc.MAX_EB, dc.MIN_EE)
+    tracker_mask_lead = ~data[dc.ETA_LEAD].between(dc.MAX_EE, dc.TRACK_MAX)
+    tracker_mask_sub = ~data[dc.ETA_SUB].between(dc.MAX_EE, dc.TRACK_MAX)
+    invmass_mask = data[dc.INVMASS].between(dc.invmass_min, dc.invmass_max)
     mask = transition_mask_lead&transition_mask_sub&tracker_mask_lead&tracker_mask_sub&invmass_mask
     data = data.loc[mask]
 
-    mc[c.ETA_LEAD] = np.abs(mc[c.ETA_LEAD])
-    mc[c.ETA_SUB] = np.abs(mc[c.ETA_SUB])
+    mc[dc.ETA_LEAD] = np.abs(mc[dc.ETA_LEAD])
+    mc[dc.ETA_SUB] = np.abs(mc[dc.ETA_SUB])
 
-    transition_mask_lead = ~mc[c.ETA_LEAD].between(c.MAX_EB,c.MIN_EE)
-    transition_mask_sub = ~mc[c.ETA_SUB].between(c.MAX_EB,c.MIN_EE)
-    tracker_mask_lead = ~mc[c.ETA_LEAD].between(c.MAX_EE, c.TRACK_MAX)
-    tracker_mask_sub = ~mc[c.ETA_SUB].between(c.MAX_EE, c.TRACK_MAX)
-    invmass_mask = mc[c.INVMASS].between(c.invmass_min, c.invmass_max)
+    transition_mask_lead = ~mc[dc.ETA_LEAD].between(dc.MAX_EB, dc.MIN_EE)
+    transition_mask_sub = ~mc[dc.ETA_SUB].between(dc.MAX_EB, dc.MIN_EE)
+    tracker_mask_lead = ~mc[dc.ETA_LEAD].between(dc.MAX_EE, dc.TRACK_MAX)
+    tracker_mask_sub = ~mc[dc.ETA_SUB].between(dc.MAX_EE, dc.TRACK_MAX)
+    invmass_mask = mc[dc.INVMASS].between(dc.invmass_min, dc.invmass_max)
     mask = transition_mask_lead&transition_mask_sub&tracker_mask_lead&tracker_mask_sub&invmass_mask
     mc = mc.loc[mask]
 
@@ -127,10 +125,7 @@ def write_results(args, scales_smears):
 
     write_files.write_scales(scales_smears, cats, new_scales)
     if not args._kClosure: write_files.write_smearings(scales_smears, cats, new_smears)
-###############################################################################
 
-###############################################################################
     #make scales file here
     print("[INFO] creating new scales file: {}".format(scales_out))
     write_files.combine( new_scales, args.scales, scales_out )
-###############################################################################

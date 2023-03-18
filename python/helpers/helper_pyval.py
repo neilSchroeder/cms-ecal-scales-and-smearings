@@ -3,7 +3,7 @@ import numpy as np
 import uproot as up
 import os
 
-import python.classes.const_class_pyval as constants
+import python.classes.pyval_constants_class as constants
 
 def extract_files(filename):
     """
