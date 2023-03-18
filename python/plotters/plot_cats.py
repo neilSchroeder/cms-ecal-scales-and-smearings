@@ -1,25 +1,43 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from python.classes.config_class import SSConfig
+from python.classes.constant_classes import DataConstants as dc
+from python.classes.constant_classes import CategoryConstants as cc
 from python.classes.zcat_class import zcat
-"""
-This function will plot histograms of data and mc in the categories provided
-"""
+ss_config = SSConfig()
 
-def plot_cats(plot_dir, zcats, cats):
+
+def plot_cats(zcats, cats, plot_dir=ss_config.DEFAULT_PLOT_PATH):
     """
     Plots the invariant mass distributions
+    ----------
+    Args:
+        zcats: list of zcat objects
+        cats: dataframe of the categories
+        plot_dir: directory to save the plots
+    ----------
+    Returns:
+        None
+    ----------
     """
     
     for cat in zcats:
         if cat.valid:
             bins = np.arange(cat.hist_min, cat.hist_max, cat.bin_size)
-            print("[INFO][python/plotter][plot_cats] Plotting category with indices ({}, {})".format(cat.lead_index,cat.sublead_index))
+            print(f"[INFO][python/plotters][plot_cats] Plotting category with indices ({cat.lead_index}, {cat.sublead_index})")
             fig, axs = plt.subplots(nrows = 1, ncols = 1)
-            axs.set_xlim(80,100)
-            eta_label = "{} $< |\eta| <$ {} $\oplus$ {} $< |\eta| <$ {}".format(round(cats.iloc[cat.lead_index,1],4), round(cats.iloc[cat.lead_index,2],4), round(cats.iloc[cat.sublead_index,1],4), round(cats.iloc[cat.sublead_index,2],4))
-            r9_label = "{} $< R_9 <$ {} $\oplus$ {} $< R_9 <$ {}".format(cats.iloc[cat.lead_index, 3], cats.iloc[cat.lead_index,4], cats.iloc[cat.sublead_index,3], cats.iloc[cat.sublead_index,4]) if cats.iloc[cat.lead_index,3] != -1 else ""
-            et_label = "{} $< E_T <$ {} $\oplus$ {} $< E_T <$ {}".format(cats.iloc[cat.lead_index,6], cats.iloc[cat.lead_index,7], cats.iloc[cat.sublead_index,6], cats.iloc[cat.sublead_index,7]) if cats.iloc[cat.lead_index,6] != -1 else ""
+            axs.set_xlim(dc.MIN_INVMASS, dc.MAX_INVMASS)
+
+            eta_label = f"{round(cats.iloc[cat.lead_index, cc.i_eta_min],4)} $< |\eta| <$ {round(cats.iloc[cat.lead_index,cc.i_eta_max],4)} $\oplus$ {round(cats.iloc[cat.sublead_index,cc.i_eta_min],4)} $< |\eta| <$ {round(cats.iloc[cat.sublead_index,cc.i_eta_max],4)}" \
+                if cats.iloc[cat.lead_index,cc.i_eta_min] != -1 else ""
+            
+            r9_label = f"{cats.iloc[cat.lead_index, cc.i_r9_min]} $< R_9 <$ {cats.iloc[cat.lead_index, cc.i_r9_max]} $\oplus$ {cats.iloc[cat.sublead_index, cc.i_r9_min]} $< R_9 <$ {cats.iloc[cat.sublead_index, cc.i_r9_max]}" \
+                if cats.iloc[cat.lead_index,3] != -1 else ""
+            
+            et_label = f"{cats.iloc[cat.lead_index,cc.i_et_min]} $< E_T <$ {cats.iloc[cat.lead_index,cc.i_et_max]} $\oplus$ {cats.iloc[cat.sublead_index, cc.i_et_min]} $< E_T <$ {cats.iloc[cat.sublead_index, cc.i_et_max]}" \
+                if cats.iloc[cat.lead_index,6] != -1 else ""
+            
             dy, dx, _ = axs.hist(cat.data, bins, alpha=0.5, label="Data")
             my, mx = np.histogram(cat.mc, bins=bins)
             weight = np.sum(dy)*my/np.sum(my)
@@ -32,12 +50,26 @@ def plot_cats(plot_dir, zcats, cats):
             axs.set_ylabel("Events / 0.5 GeV")
             axs.set_xlabel("M$_{ee}$ [GeV]")
             axs.legend(loc='best')
-            fig.savefig(plot_dir+"invMass_{}_{}.png".format(cat.lead_index if cat.lead_index > 9 else str('0'+str(cat.lead_index)), cat.sublead_index if cat.sublead_index > 9 else str('0'+str(cat.sublead_index))))
+            fig_path = f"{plot_dir}/invMass_{cat.lead_index if cat.lead_index > 9 else str('0'+str(cat.lead_index))}_{cat.sublead_index if cat.sublead_index > 9 else str('0'+str(cat.sublead_index))}.png"
+            fig.savefig(fig_path)
+            print(f"[INFO][python/plotters][plot_cats] Saved plot to {fig_path}")
             plt.close(fig)
 
-def plot_1Dscan(plot_dir, scan_file, zcats):
+
+
+# this is probably broken, so use it with caution
+def plot_1Dscan(scan_file, zcats, plot_dir=ss_config.DEFAULT_PLOT_PATH):
     """
     Plots the 1D scans in the diagonal dielectron categories
+    ----------
+    Args:
+        scan_file: file containing the 1D scan results
+        zcats: list of zcat objects
+        plot_dir: directory to save the plots
+    ----------
+    Returns:
+        None
+    ----------
     """
 
     num_scales = 0    
