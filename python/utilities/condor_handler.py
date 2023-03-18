@@ -1,8 +1,22 @@
 import os 
 import sys
 
-#############################################################################################
+from python.classes.config_class import SSConfig
+ss_config = SSConfig()
+
 def make_htcondor(out_dir, queue):
+    """
+    Make the htcondor file for the condor submission
+    -----------------------------------------------
+    Args:
+        out_dir: output directory
+        queue: queue to submit to
+    -----------------------------------------------
+    Returns:
+        htcondor: htcondor file
+        done: file to indicating if job is done
+    -----------------------------------------------
+    """
 
     lines = []
     lines.append( "executable = "+out_dir+"/htcondor.sh\n" )
@@ -20,12 +34,25 @@ def make_htcondor(out_dir, queue):
     f.close()
     return htcondor, out_dir+"/"+os.path.basename(out_dir)+"-done"
 
-#############################################################################################
-def make_script(cwd, cmd, out, script, done):
+
+def make_script(cmd, script, done):
+    """
+    Make the script to be run on the condor node
+    -----------------------------------------------
+    Args:
+        cwd: current working directory
+        cmd: command to be run
+        script: script to be run
+        done: file to indicating if job is done
+    -----------------------------------------------
+    Returns:
+        None
+    -----------------------------------------------
+    """
 
     lines = []
     lines.append("#!/bin/bash\n")
-    lines.append("cd "+cwd+"\n")
+    lines.append("cd "+os.getcwd()+"\n")
     lines.append("eval `scramv1 runtime -sh`  uname -a\n")
     lines.append("echo $CMSSW_VERSION\n")
     lines.append('\n')
@@ -37,17 +64,28 @@ def make_script(cwd, cmd, out, script, done):
     f.writelines(lines)
     f.close()
 
-#############################################################################################
+
 def manage(cmd, out, queue):
+    """
+    Manage the condor submission
+    -----------------------------------------------
+    Args:
+        cmd: command to be run
+        out: output directory
+        queue: queue to submit to
+    -----------------------------------------------
+    Returns:
+        None
+    -----------------------------------------------
+    """
     
-    cwd = os.getcwd()
-    target_dir = cwd+"/condor/"+out
+    target_dir = f"{ss_config.condor_path}/{out}"
 
     #check for proper directory structure
     if not os.path.exists(target_dir):
         os.system("mkdir -p "+target_dir)
     else:
-        print("[ERROR][python/condor_handler][manage] The directory {} already exists".format(target_dir))
+        print(f"[ERROR][python/condor_handler][manage] The directory {target_dir} already exists")
         print("[INFO][python/condor_handler][manage] to continue this directory will be formatted.")
         cont = input("[INFO][python/condor_handler][manage] continue? [Y/n]:\n")
         if cont == 'Y':
@@ -62,10 +100,9 @@ def manage(cmd, out, queue):
             return
 
     htcondor, done = make_htcondor(target_dir, queue) 
-    make_script(cwd, cmd, out, htcondor, done)
+    make_script(cmd, out, htcondor, done)
 
     condor_submit = "condor_submit --batch-name "+out+" "+htcondor
     print("[INFO][python/condor_handler][manage] submitting job to condor")
     print(condor_submit)
     os.system(condor_submit)
-    return

@@ -18,15 +18,30 @@ import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc_pyval as smear_mc
 import python.plotters.make_plots as make_plots
 
-"""
-This code will validate the scales and smearings obtained through the "cms-ecal-scales-and-smearings" 
-
-Usage:
-
-"""
+from python.classes.constant_classes import PyValConstants as pvc
+import python.classes.config_class as config_class
+ss_config = config_class.SSConfig()
 
 
 def main():
+    """
+    Main function for the scales and smearings validation and plotting.
+    --------------------------------
+    Args:
+        -i, --in-file: input file
+        -o, --output-file: string used to create output files
+        --data-title: title used in plots for the data
+        --mc-title: title used in plots for the mc
+        --lumi-label: luminosity label: i.e. 35 fb^{-1} (13 TeV) 2016
+        --binning: Either number of bins, or 'auto' for automatic binning
+        --systematics-study: flag to dump the systematic uncertainty due to variations in R9, Et, and working point ID 
+            [WARNING]: this is currently not implemented, it is a high priority TODO
+        --plotting-style: style of plots to make
+    --------------------------------
+    Returns:
+        None
+    --------------------------------       
+    """
 
     #setup options
     parser = ap.ArgumentParser(description="Validation of Scales and Smearings")
@@ -63,7 +78,7 @@ def main():
             "--binning",
             dest="bins",
             help="Either number of bins, or 'auto' for automatic binning",
-            default=None,
+            default=80,
             )
     parser.add_argument(
             "--systematics-study",
@@ -97,35 +112,29 @@ def main():
     print(40*"#")
 
     #open input file and prep our variables and such
-    KEY_DAT = "DATA"
-    KEY_MC = "MC"
-    KEY_SC = "SCALES"
-    KEY_SM = "SMEARINGS"
-    KEY_WT = "WEIGHTS"
-    KEY_CAT = "CATS"
     dict_config = helper_pyval.extract_files(args.input_file) 
 
     #load and handle data first
-    if len(dict_config[KEY_DAT]) > 0:
+    if len(dict_config[pvc.KEY_DAT]) > 0:
         print("[INFO] loading data")
-        df_data = helper_pyval.get_dataframe(dict_config[KEY_DAT])
-        if len(dict_config[KEY_SC]) > 0:
+        df_data = helper_pyval.get_dataframe(dict_config[pvc.KEY_DAT])
+        if len(dict_config[pvc.KEY_SC]) > 0:
             print("[INFO] scaling data")
-            df_data = scale_data.scale(df_data, dict_config[KEY_SC][0])
+            df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
         df_data = helper_pyval.standard_cuts(df_data)
 
     #load and handle mc next
-    if len(dict_config[KEY_MC]) > 0:
+    if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")
-        df_mc = helper_pyval.get_dataframe(dict_config[KEY_MC])
+        df_mc = helper_pyval.get_dataframe(dict_config[pvc.KEY_MC])
         print(max(df_mc['invMass_ECAL_ele'].values))
-        if len(dict_config[KEY_SM]) > 0:
+        if len(dict_config[pvc.KEY_SM]) > 0:
             print("[INFO] smearing mc")
-            df_mc = smear_mc.smear(df_mc, dict_config[KEY_SM][0])
+            df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
         df_mc = helper_pyval.standard_cuts(df_mc)
-        if len(dict_config[KEY_WT]) != 0:
+        if len(dict_config[pvc.KEY_WT]) != 0:
             print("[INFO] reweighting mc")
-            df_mc = reweight_mc.add_pt_y_weights(df_mc, dict_config[KEY_WT][0])
+            df_mc = reweight_mc.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
         else:
             if args.reweight:
                 pass
@@ -138,11 +147,11 @@ def main():
 
     if args.write_location is not None:
         output_name = "/".join((args.write_location, args.output_file))
-        if len(dict_config[KEY_DAT]) != 0: df_data.to_csv(output_name+"_data.tsv", sep='\t')
-        if len(dict_config[KEY_MC]) != 0: df_mc.to_csv(output_name+"_mc.tsv", sep='\t')
+        if len(dict_config[pvc.KEY_DAT]) != 0: df_data.to_csv(output_name+"_data.tsv", sep='\t')
+        if len(dict_config[pvc.KEY_MC]) != 0: df_mc.to_csv(output_name+"_mc.tsv", sep='\t')
 
     #plot the plots
-    make_plots.plot(df_data, df_mc, dict_config[KEY_CAT][0],
+    make_plots.plot(df_data, df_mc, dict_config[pvc.KEY_CAT][0],
             lumi=args.lumi_label,
             bins=args.bins,
             tag=args.output_file,

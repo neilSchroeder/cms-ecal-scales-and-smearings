@@ -51,6 +51,7 @@ The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 
 ```
 cmsrel CMSSW_10_2_14
+git cms-init
 git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git
 ```
 Now you'll want to checkout your own branch (name it something useful) and push it to the git repo
@@ -64,6 +65,33 @@ git checkout myBranch
 
 This framework has many options. To demonstrate it's uses, consider the following example:
 
+### Ntuples
+
+You will need a set of root files for data and simulation that must have a tree named `selected` with the following branches:
+
+```
+******************************************************************************
+*Tree    :selected  : selected                                               *
+******************************************************************************
+*Br    0 :runNumber : runNumber/i                                            *
+*............................................................................*
+*Br    1 :R9Ele     : R9Ele[3]/F                                             *
+*............................................................................*
+*Br    2 :etaEle    : etaEle[3]/F                                            *
+*............................................................................*
+*Br    3 :phiEle    : phiEle[3]/F                                            *
+*............................................................................*
+*Br    4 :energy_ECAL_ele : energy_ECAL_ele[3]/F                             *
+*............................................................................*
+*Br    5 :invMass_ECAL_ele : invMass_ECAL_ele/F                              *
+*............................................................................*
+*Br    6 :gainSeedSC : gainSeedSC[3]/b                                       *
+*............................................................................*
+```
+
+Note that the file size, compression, basket size, etc. are irrelevant. The requirement is the variable names.
+
+
 ### Basic 2018 Workflow
 
 To start, you will need a file containing a list of data and mc files in the format 
@@ -74,11 +102,11 @@ where *type* is either "data" or "sim", *treeName* is the name of the tree in th
 
 You can now run the pruner:
 ```
-./pymin.py -i config/UltraLegacy2018.dat --prune --pruned_file_dest='/eos/home-<initial>/<username>/pymin/' --pruned_file_name='pruned_ul18'
+./pymin.py -i config/UltraLegacy2018.dat --prune -o 'pruned_ul18'
 ```
 This takes your input files and will write them to tsvs in the folder DEST_PATH using the tage DEST_TAG
 
-Now you will need to put the output files in a file, preferably in the config folder to run the run divider
+Now you will need to put the paths to the pruned files in a file, preferably in the config folder to run the run divider
 ```
 ./pymin.py -i config/ul2018.dat --run-divide -o ul18
 ```
@@ -86,7 +114,7 @@ If you want fewer run bins you can increase the default number of events per run
 
 With your run bins in hand you can now run the time_stability step:
 ```
-./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat --time-stability
+./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
 ```
 From here you can run the scales and smearings chain. This requires a couple additional ingredients.
 The first is a categories file, you can see an example below:

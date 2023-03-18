@@ -6,12 +6,31 @@ import matplotlib as mpl
 import time
 
 import python.helpers.helper_plots as helper_plots
+from python.classes.config_class import SSConfig
+ss_config = SSConfig()
 
 mpl.rc('font',family="Helvetica")
 
-plot_dir = '/afs/cern.ch/work/n/nschroed/SS_PyMin/plots/'
+plot_dir = ss_config.DEFAULT_PLOT_PATH
+
 
 def plot_style_validation_mc(data, mc, plot_title, **options):
+    """
+    Plots the invariant mass distributions with the MC validation style
+    ----------
+    Args:
+        data: data histogram
+        mc: mc histogram
+        plot_title: title of the plot
+        options: dictionary of options
+            - syst: boolean to plot the systematics
+            - bins: number of bins
+            - no_ratio: boolean to not plot the ratio
+    ----------
+    Returns:
+        None
+    ----------
+    """
 
     style = "crossCheckMC_"
     print("plotting {}".format(plot_title))
@@ -112,6 +131,23 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
 
 
 def plot_style_paper(data, mc, plot_title, **options):
+    """
+    Plotting function for paper style plots
+    ---------------------------------------
+    Args:
+        data: data histogram
+        mc: mc histogram
+        plot_title: title of plot
+        options: dictionary of options
+            - syst: bool, whether to plot systematics
+            - bins: int, number of bins
+            - tag: str, tag for plot name
+            - no_ratio: bool, whether to plot ratio
+    ---------------------------------------
+    Returns:
+        None
+    ---------------------------------------
+    """
     style = "paperStyle_"
     print("plotting {}".format(plot_title))
 
@@ -161,7 +197,7 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     # define figure
     rows = 2
-    if 'no_ratio' in options.keys(): rows = 1
+    if 'no_ratio' in options: rows = 1
     fig,axs = plt.subplots(nrows=rows, ncols=1)
     fig.subplots_adjust(left=0.12, right=0.99, top=0.95, bottom=0.1,
             hspace=None if 'no_ratio' in options.keys() else 0.06)

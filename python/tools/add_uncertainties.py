@@ -2,13 +2,22 @@ import pandas as pd
 import argparse as ap
 import numpy as np
 
-"""
-adds systematic uncertainties by category
-input file must have the following format
-min-eta	max-eta	min-r9	max-r9	min-et	max-et	gain	syst[%]
-"""
 
 def main():
+    """
+    adds systematic uncertainties by category
+    input file must have the following format
+    min-eta	max-eta	min-r9	max-r9	min-et	max-et	gain	syst[%]
+    ----------
+    Args:
+        -i, --inputFile: input file
+        -u, --uncFile: uncertainty file
+    ----------
+    Returns:
+        None
+    ----------
+    """
+
     parser = ap.ArgumentParser(description="add systematic uncertainties by category")
 
     parser.add_argument("-i","--inputFile", required=True,
@@ -21,7 +30,7 @@ def main():
     scales = pd.read_csv(args.inputFile, sep='\t', header=None)
     unc = pd.read_csv(args.uncFile, sep='\t', header=None)
     
-    #make necessary masks
+    # make necessary masks
     for i,row in unc.iterrows():
         eta_mask_low = scales.loc[:,2] >= row[0]
         eta_mask_high = scales.loc[:,3] <= row[1]
