@@ -102,11 +102,11 @@ where *type* is either "data" or "sim", *treeName* is the name of the tree in th
 
 You can now run the pruner:
 ```
-./pymin.py -i config/UltraLegacy2018.dat --prune --pruned_file_dest='/eos/home-<initial>/<username>/pymin/' --pruned_file_name='pruned_ul18'
+./pymin.py -i config/UltraLegacy2018.dat --prune -o 'pruned_ul18'
 ```
 This takes your input files and will write them to tsvs in the folder DEST_PATH using the tage DEST_TAG
 
-Now you will need to put the output files in a file, preferably in the config folder to run the run divider
+Now you will need to put the paths to the pruned files in a file, preferably in the config folder to run the run divider
 ```
 ./pymin.py -i config/ul2018.dat --run-divide -o ul18
 ```
@@ -114,7 +114,7 @@ If you want fewer run bins you can increase the default number of events per run
 
 With your run bins in hand you can now run the time_stability step:
 ```
-./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat --time-stability
+./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
 ```
 From here you can run the scales and smearings chain. This requires a couple additional ingredients.
 The first is a categories file, you can see an example below:

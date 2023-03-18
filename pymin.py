@@ -37,6 +37,9 @@ import python.utilities.write_files as write_files
 import python.utilities.condor_handler as condor_handler
 import python.utilities.reweight_pt_y as reweight_pt_y
 
+from python.classes.config_class import SSConfig
+ss_config = SSConfig() # initialize the config class
+
 def main():
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
     # setup options
@@ -47,8 +50,8 @@ def main():
 
     parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
                     	help="prune down the data and mc to keep memory usage low")
-    parser.add_argument("--pruned-file-dest", default=None, dest='pruned_file_dest',
-                    	help="destination for the pruned files, a directory in /eos/home-<initial>/<username>/ is recommended")
+    parser.add_argument("--pruned-file-dest", default=ss_config.DEFAULT_DATA_PATH, dest='pruned_file_dest',
+                    	help="destination for the pruned files")
 
     parser.add_argument("--run-divide", default=False, dest='_kRunDivide', action='store_true',
                     	help="option to make the run division file for time_stability")
@@ -132,13 +135,9 @@ def main():
     print(cmd)
 
     if args._kClosure and args.smearings is None:
-        if args._kTestMethodAccuracy:
-            pass
-        elif args._kRewrite:
-            pass
-        else:
+        if not args._kTestMethodAccuracy and not args._kRewrite:
             print("[ERROR] you have submitted a closure test without a smearings file.")
-            print("[ERROR] please resubmit this job with a smearings file.")
+            print("[ERROR] please resubmit this job with a valid --smearings file.")
             return
 
     # submit this job to condor
