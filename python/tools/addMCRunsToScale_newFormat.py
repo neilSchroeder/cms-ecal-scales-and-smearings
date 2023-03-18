@@ -19,6 +19,17 @@ import argparse as ap
 """
 
 def apply_systs(df, systs):
+    """
+    Applies the systematics to the dataframe
+    ----------
+    Args:
+        df: dataframe of the scale and smearings
+        systs: dataframe of the systematics
+    ----------
+    Returns:
+        None
+    ----------
+    """
 
     for i,row in systs.iterrows():
         eta_mask_low = df.loc[:,2] >= row[0]
@@ -38,6 +49,18 @@ def apply_systs(df, systs):
 
 
 def main():
+    """
+    Adds MC run entries to new format scales files
+    ----------
+    Args:
+        -i, --inFile: input file to add MC run entries to
+        -s, --syst: systematics file to use
+    ----------
+    Returns:
+        None
+    ----------
+    """
+
 
     parser = ap.ArgumentParser(description="Adds MC run entries to new format scales files")
     parser.add_argument("-i","--inFile", required=True,
@@ -45,6 +68,10 @@ def main():
     parser.add_argument("-s","--syst", required=True,
         help="systematics file to use")
     arg = parser.parse_args()
+
+    user_input = input("This script will overwrite the input file. Continue? (y/n): ")
+    if user_input != "y":
+        return
 
     df = pd.read_csv(arg.inFile, sep='\t', header=None)
     df_syst = pd.read_csv(arg.syst, sep='\t', header=None)

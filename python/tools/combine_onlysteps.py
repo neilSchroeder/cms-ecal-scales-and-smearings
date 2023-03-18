@@ -2,6 +2,18 @@ import pandas as pd
 import argparse as ap
 
 def main():
+    """
+    Combine two only step files
+    ----------
+    Args:
+        --new: new file, this will be mixed into the old file
+        --old: old file, this will be the base, the new file will be mixed in
+        --out: output file
+    ----------
+    Returns:
+        None
+    ----------
+    """
     parser = ap.ArgumentParser(description="combine two only step files")
 
     parser.add_argument("--new", default='',

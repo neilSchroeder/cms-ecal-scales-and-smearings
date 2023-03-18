@@ -2,10 +2,21 @@ import pandas as pd
 import numpy as np
 import argparse as ap
 
-import write_files
+import python.utilities.write_files as write_files
 
 def congruent(cat, origin, target):
-    """determines if the two categories are congruent"""
+    """
+    determines if the two categories are congruent\
+    ----------
+    Args:
+        cat: category to check
+        origin: original category
+        target: target category
+    ----------
+    Returns:
+        True if congruent, False otherwise
+    ----------
+    """
     i_run_min = 0
     i_run_max = 1
     i_eta_min = 2
@@ -41,6 +52,19 @@ def congruent(cat, origin, target):
     return ret_target_eta and ret_target_r9 and ret_origin_eta and ret_origin_r9
 
 def main():
+    """
+    Extracts the scales from a previous scales file to a new scales file
+    ----------
+    Args:
+        --target: Target scales file from which we will do the extracting
+        --previous: previous scales file from which target scales were derived
+        --cats: Categories for extraction
+        --output: output string
+    ----------
+    Returns:
+        None
+    ----------
+    """
     parser = ap.ArgumentParser()
 
     parser.add_argument("--target", help="Target scales file from which we will do the extracting")
