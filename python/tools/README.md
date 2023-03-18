@@ -14,6 +14,15 @@ For scales and smearings files provided to EGamma there are MC runs that need to
 
 This takes as input the scales file you want to add the runs to and an uncertainty file like the ones used in the script above to use the correct uncertainties for the mc bins.
 
+## Combine Only Steps:
+
+If you have two only-step files that need to be combined, this is the script that does it.
+
+## Extract Scales:
+
+If you've lost your only-step file, but you have the current and previous scales, you can re-create that only-step file with this script.
+This is also useful for extracting the total correction after a certain step, i.e. the total Et scales or the total Fine Eta R9 scales etc.
+
 ## Scales Validator:
 
 This is a useful script for checking that you haven't made a mistake in defining your categories. It will check that a scales file you give it has complete coverage in eta, R9, and Et (right now it only does eta and R9, Et is in the works).
