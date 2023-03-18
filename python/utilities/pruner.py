@@ -2,19 +2,30 @@ import numpy as np
 import pandas as pd
 import uproot as up
 
-import python.classes.const_class as constants
-
-c = constants.const()
+from python.classes.constant_classes import DataConstants as dc
 
 def prune(files, out, out_dir):
-    #files is a text file with a list of data and mc root files
-    print("[INFO][python/pruner][prune] You've chose to prune the files listed in {}".format(files))
-    print("[INFO][python/pruner][prune] The resulting csv files will be given a name based on {}".format(out))
-    print("[INFO][python/pruner][prune] The resulting csv files will be written to the directory {}".format(out_dir))
+    """ 
+    prunes the files listed in files and writes the resulting csv files to out_dir using out as a tag 
+    --------------------------
+    Input:
+    files: a text file containing the files to be pruned
+    out: a string to be used as a tag for the resulting csv files
+    out_dir: the directory to write the resulting csv files to
+    --------------------------
+    Returns:
+    None
+    --------------------------
+    """
+    INFO = "[INFO][python/pruner][prune]"
+
+    print(f"{INFO} You've chose to prune the files listed in {files}")
+    print(f"{INFO} The resulting csv files will be given a name based on {out}")
+    print(f"{INFO} The resulting csv files will be written to the directory {out_dir}")
     files = open(files, 'r').readlines()
     files = [x.strip() for x in files]
 
-    keep_cols = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber']
+    keep_cols = ddc.KEEP_COLS
     mc_files = []
     data_files = []
 
@@ -28,25 +39,26 @@ def prune(files, out, out_dir):
         df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
         
         #drop events in the transition region or outside the tracker
-        df[c.ETA_LEAD] = np.abs(df[c.ETA_LEAD].values)
-        df[c.ETA_SUB] = np.abs(df[c.ETA_SUB].values)
+        df[dc.ETA_LEAD] = np.abs(df[dc.ETA_LEAD].values)
+        df[dc.ETA_SUB] = np.abs(df[dc.ETA_SUB].values)
 
-        mask_lead = np.logical_or(df[c.ETA_LEAD].values < c.MAX_EB, c.MIN_EE < df[c.ETA_LEAD].values)
-        mask_lead = np.logical_and(mask_lead, df[c.ETA_LEAD].values <= 2.5)
-        mask_sub = np.logical_or(df[c.ETA_SUB].values < c.MAX_EB, c.MIN_EE < df[c.ETA_SUB].values)
-        mask_sub = np.logical_and(mask_sub, df[c.ETA_SUB].values <= 2.5)
+        mask_lead = np.logical_or(df[dc.ETA_LEAD].values < dc.MAX_EB, dc.MIN_EE < df[dc.ETA_LEAD].values)
+        mask_lead = np.logical_and(mask_lead, df[dc.ETA_LEAD].values <= dc.MAX_EE)
+        mask_sub = np.logical_or(df[dc.ETA_SUB].values < dc.MAX_EB, dc.MIN_EE < df[dc.ETA_SUB].values)
+        mask_sub = np.logical_and(mask_sub, df[dc.ETA_SUB].values <= dc.MAX_EE)
 
         df = df[np.logical_and(mask_lead,mask_sub)]
 
         #drop events which are non-sensical
-        energy_mask = np.logical_and( df[c.E_LEAD].values > 0, df[c.E_LEAD].values < 14000)
-        energy_mask = np.logical_and( energy_mask, np.logical_and( df[c.E_SUB].values > 0, df[c.E_SUB].values < 14000))
+        energy_mask = np.logical_and( df[dc.E_LEAD].values > dc.MIN_E, df[dc.E_LEAD].values < dc.MAX_E)
+        energy_mask = np.logical_and( energy_mask, 
+                                     np.logical_and( df[dc.E_SUB].values > dc.MIN_E, df[dc.E_SUB].values < dc.MAX_E))
         df = df[energy_mask]
 
         #drop events with invmass less than 60 or greater than 120
-        invmass_mask = np.logical_and(c.invmass_min < df[c.INVMASS].values, df[c.INVMASS].values < c.invmass_max)
+        invmass_mask = np.logical_and(dc.invmass_min < df[dc.INVMASS].values, df[dc.INVMASS].values < dc.invmass_max)
         df = df[invmass_mask]
-        drop_list = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]']
+        drop_list = dc.DROP_LIST
         df.drop(drop_list,axis=1,inplace=True)
 
         if line_list[0] == 'data': data_files.append(df)
@@ -59,4 +71,4 @@ def prune(files, out, out_dir):
     #write the files into csv files
     print("[INFO][python/pruner][prune] Writing files")
     data.to_csv(str(out_dir+out+"_data.csv"), sep='\t', header=True, index=False)
-    mc.to_csv(str(out_dir+out+"_mc.csv"), sep='\t', header=True, index=False)
+    mc.to_csv(str(out_dir+out+"_mdc.csv"), sep='\t', header=True, index=False)

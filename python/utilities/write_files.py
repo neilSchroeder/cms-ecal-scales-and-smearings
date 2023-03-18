@@ -4,8 +4,21 @@ import pandas as pd
 from optparse import OptionParser
 from collections import OrderedDict
 
-##################################################################################################################
+
 def congruentCategories(last, this, nameLast, nameThis):
+    """
+    Determine if this category is congruent with the last category
+    ----------
+    Args:
+        last: last category
+        this: this category
+        nameLast: name of last category
+        nameThis: name of this category
+    ----------
+    Returns:
+        ret: true if congruent, false otherwise
+    ----------
+    """
     ret = False
     """
     0: runMin
@@ -20,6 +33,7 @@ def congruentCategories(last, this, nameLast, nameThis):
     9: Scale
     10: Err
     """
+
     #this is finer than last categories:
     ret_eta = False
     if float(round(last[2],4)) <= float(round(this[2],4)) and float(round(last[3],4)) >= float(round(this[3],4)):
@@ -65,8 +79,23 @@ def congruentCategories(last, this, nameLast, nameThis):
         
     return False
 
-##################################################################################################################
+
 def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
+    """
+    Add a new category to the dictionary
+    ----------
+    Args:  
+        rowLast: last row
+        rowThis: this row
+        thisDict: dictionary to add to
+        lastStep: last step
+        thisStep: this step
+    ----------
+    Returns:
+        thisDict: dictionary with new category added
+    ----------
+    """
+
     thisDict['runMin'].append(int(rowLast[0]))
     thisDict['runMax'].append(int(rowLast[1]))
 
@@ -135,8 +164,19 @@ def writeJsonFromDF(thisDF,outFile):
 
     return
 
-##################################################################################################################
 def combine(thisStep, lastStep, outFile):
+    """
+    Combines the scales from the last step with the current step
+    --------------------------------
+    Args:
+        thisStep: the current step
+        lastStep: the last step
+        outFile: the output file
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
     
     print("[INFO][python/write_files][combine] producing combined scales file from {} and {}".format(thisStep, lastStep))
     print("[INFO][python/write_files][combine] this output will be written to {}".format(outFile))
@@ -149,7 +189,6 @@ def combine(thisStep, lastStep, outFile):
 
     #format is: runMin runMax etaMin etaMax r9Min r9Max etMin etMax gain val err
     for iLast,rowLast in dfLastStep.iterrows():
-        num_corrs = 0
         for iThis,rowThis in dfThisStep.iterrows():
             #only build an entry if the two categories are congruent
             kCongruent = congruentCategories(rowLast, rowThis, lastStep, thisStep)
@@ -169,8 +208,19 @@ def combine(thisStep, lastStep, outFile):
     return
 
 
-##################################################################################################################
 def write_scales(scales, cats, out):
+    """
+    Writes the scales to a file
+    --------------------------------
+    Args:
+        scales: the scales (list)
+        cats: the categories (pandas dataframe)
+        out: the output file (string)
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
 #format of onlystepX files is 
 #000000 999999 etaMin etaMax r9Min r9Max etMin etMax gain val err
     headers = ['runMin', 'runMax', 'etaMin', 'etaMax', 'r9Min', 'r9Max', 'etMin', 'etMax', 'gain', 'scale', 'err']
@@ -197,8 +247,20 @@ def write_scales(scales, cats, out):
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='\t',header=False,index=False)
     
-##################################################################################################################
+
 def write_smearings(smears, cats, out):
+    """
+    Writes the smearings to a file
+    --------------------------------
+    Args:
+        smears: the smearings (list)
+        cats: the categories (pandas dataframe)
+        out: the output file (string)
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
     #format of smearings files is:
     #category       Emean   err_Emean   rho err_rho     phi err_phi
     headers = ['#category', 'Emean', 'err_Emean', 'rho', 'err_rho', 'phi', 'err_phi']
@@ -227,7 +289,19 @@ def write_smearings(smears, cats, out):
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='\t',header=True,index=False)
 
+
 def rewrite_smearings(cats, out):
+    """
+    Rewrites the smearings to a file
+    --------------------------------
+    Args:
+        cats: the categories (pandas dataframe)
+        out: the output file (string)
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
     #format of smearings files is:
     #category       Emean   err_Emean   rho err_rho     phi err_phi
     headers = ['#category', 'Emean', 'err_Emean', 'rho', 'err_rho', 'phi', 'err_phi']
@@ -260,10 +334,21 @@ def rewrite_smearings(cats, out):
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='\t',header=True,index=False)
 
-##################################################################################################################
+
 def write_runs(runs, out):
+    """
+    Writes the runs to a file
+    --------------------------------
+    Args:
+        runs: the runs (list)
+        out: the output file (string)
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
     headers = ['runMin', 'runMax']
-    dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
+    dictForDf = OrderedDict.fromkeys(headers) # python hates you and your dictionaries
     for col in headers:
         dictForDf[col] = []
     
@@ -274,8 +359,20 @@ def write_runs(runs, out):
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='\t',header=False,index=False)
 
-##################################################################################################################
+
 def write_time_stability(scales, runs, outFile):
+    """
+    Writes the time stability scales to a file
+    --------------------------------
+    Args:
+        scales: the scales (list)
+        runs: the runs (list)
+        outFile: the output file (string)
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
     if outFile.find('scales') == -1:
         outFile.replace(".dat","_scales.dat")
     print("[INFO][python/write_files][write_time_stability] Writing time stability scales to {}".format(outFile))
