@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 """
 This function will derive the residual scales and additional smearings.
 
@@ -21,6 +21,7 @@ Usage/Order of Operations:
 """
 
 import argparse as ap
+import os
 import pandas as pd
 import sys
 
@@ -37,8 +38,8 @@ import python.utilities.condor_handler as condor_handler
 import python.utilities.reweight_pt_y as reweight_pt_y
 
 def main():
-###############################################################################
-    #setup options
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+    # setup options
     parser = ap.ArgumentParser(description="Derivation of Scales and Smearings")
 
     parser.add_argument("-i","--inputFile", default=None,
@@ -46,8 +47,6 @@ def main():
 
     parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
                     	help="prune down the data and mc to keep memory usage low")
-    parser.add_argument("--pruned-file-name", default=None, dest='pruned_file_name',
-                    	help="basic string for naming the pruned files")
     parser.add_argument("--pruned-file-dest", default=None, dest='pruned_file_dest',
                     	help="destination for the pruned files, a directory in /eos/home-<initial>/<username>/ is recommended")
 
@@ -61,7 +60,7 @@ def main():
     parser.add_argument("--time-stability", default=False, dest="_kTimeStability", action='store_true',
                     	help="scale data to PDG Z mass, pass the run divide file as your categories")
 
-    #options provided to the minimizer
+    # options provided to the minimizer
     parser.add_argument("-s","--scales", default=None,
                     	help="path to scales file to apply to data")
     parser.add_argument("--smearings", default=None,
@@ -103,7 +102,7 @@ def main():
     parser.add_argument("--from-condor", default=False, action='store_true', dest='_kFromCondor',
                         help="[NOT FOR USER] flag added by condor_handler to indicate this has been submitted from condor")
 
-    #additional use options
+    # additional use options
     parser.add_argument("--rewrite", default=False, action='store_true', dest='_kRewrite',
                     	help="only writes the scales file associated with this step")
     parser.add_argument("--combine-files", default=False, action='store_true', dest='_kCombine',
@@ -111,13 +110,13 @@ def main():
     parser.add_argument("--only-step", default='', type=str, dest='only_step',
                     	help="[ADVANCED] only step file, to be used with the --combine_files and --step options")
 
-    #plotting options
+    # plotting options
     parser.add_argument("--plot", default=False, action='store_true', dest='_kPlot',
                     	help="Plot the invariant mass distributions for data and mc in the provided categories")
     parser.add_argument("--plot-dir", default='./', dest='plot_dir',
                     	help="directory to write the plots")
 
-    #advanced diagnostic options
+    # advanced diagnostic options
     parser.add_argument("--test-method-accuracy", default=False, action='store_true', dest='_kTestMethodAccuracy',
                     	help="Treat MC as data, inject known scales into mc cats, see how well method recovers known scale injection")
     parser.add_argument("--scan-nll", default=False, action='store_true', dest='_kScanNLL',
@@ -142,19 +141,17 @@ def main():
             print("[ERROR] please resubmit this job with a smearings file.")
             return
 
-    step = helper_pymin.get_step(args)
-
-    #submit this job to condor
+    # submit this job to condor
     if args._kCondor and not args._kFromCondor:
-        #remove the condor/queue information
+        # remove the condor/queue information
         if cmd.find('--condor') != -1:
             cmd = cmd.replace("--condor ","")
 
         condor_handler.manage(cmd, args.output, args.queue)
         return
 
-    #if you need to rewrite a scales file after making changes by hand
-    # you can use these options to do so.
+    # if you need to rewrite a scales file after making changes by hand
+    #  you can use these options to do so.
     if args._kRewrite:
         helper_pymin.rewrite(args)
         return
@@ -163,75 +160,123 @@ def main():
         helper_pymin.combine_files(args)
         return
 
-    #prune files to manage running memory usage
+    # prune files to manage running memory usage
     if args._kPrune:
-        pruner.prune(args.inputFile, args.pruned_file_name, args.pruned_file_dest)
+        if args.pruned_file_dest is None:
+            print("[ERROR] you have requested a pruned file, but have not specified a destination")
+            print("[ERROR] please resubmit with a --pruned_file_dest argument")
+            return
+        if args.output is None:
+            print("[ERROR] you have requested a pruned file, but have not specified an output name")
+            print("[ERROR] please resubmit with a --output argument")
+            return
+        if args.pruned_file_dest is None:
+            print("[ERROR] you have requested a pruned file, but have not specified a destination")
+            print("[ERROR] please resubmit with a --pruned_file_dest argument")
+            return
+        pruner.prune(args.inputFile, args.output, args.pruned_file_dest)
         return
 
-    #load data/mc
+    # load data/mc
     data, mc = helper_pymin.load_dataframes(args.inputFile, args)
 
-    if data is None or mc is None:
-        print("[ERROR] data or MC is empty")
+    if data is None:
+        print("[ERROR] data is None")
+        return
+    if mc is None:
+        print("[ERROR] mc is None")
         return
 
-    #derive time bins (by run) in which to stabilize data
+    # derive time bins (by run) in which to stabilize data
     if args._kRunDivide:
+        if args.output is None:
+            print("[ERROR] you have requested a run divide, but have not specified an output name")
+            print("[ERROR] please resubmit with a --output argument")
+            return
+        try:
+            int(args.min_events)
+        except:
+            print("[ERROR] you have requested a run divide, but have not provided a valid minimum number of events")
+            print("[ERROR] please resubmit with a valid --min_events argument")
+            return
         outFile = "datFiles/run_divide_"+args.output+".dat"
         write_files.write_runs(divide_by_run.divide(data, args.min_events), outFile)
         return
 
-    #derive the scales for the time stability
+    # derive the scales for the time stability
     if args._kTimeStability:
+        if args.output is None:
+            print("[ERROR] you have requested a time stability, but have not specified an output name")
+            print("[ERROR] please resubmit with a --output argument")
+            return
+        if args.cats is None:
+            print("[ERROR] you have requested a time stability, but have not specified a category")
+            print("[ERROR] please resubmit with a --cats argument")
+            return
         outFile = "datFiles/step1_"+args.output+"_scales.dat"
         write_files.write_time_stability(time_stability.derive(data, args.cats), args.cats, outFile)
         return
 
-    #scale the data
-    if args.scales is not None:
-        print("[INFO] applying {} to the data".format(args.scales))
+    # scale the data
+    if os.path.isfile(args.scales):
+        print(f"[INFO] applying {args.scales} to the data")
         data = scale_data.scale(data, args.scales)
-
-    #reweight MC or deriving the weights
-    if args._kNoReweight:
-        pass #don't reweight
     else:
+        print(f"[INFO] no scales file provided, skipping data scaling")
+
+    # reweight MC or deriving the weights
+    if not args._kNoReweight:
         weight_file = args.weights
         if args.weights is None:
+            if args.output is None:
+                print("[ERROR] you have requested a weight derivation, but have not specified an output name")
+                print("[ERROR] please resubmit with a --output argument")
+                return
             print("[INFO] deriving Y(Z), Pt(Z) weights")
             weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
         mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
 
 
-    #load categories for the derivation
-    print("[INFO] importing categories from {}".format(args.cats))
-    cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
-    num_scales = sum([val.find('scale') != -1 for val in cats[0]])
+    # load categories for the derivation
+    if args.cats is None:
+        print("[ERROR] you have not provided a category file")
+        print("[ERROR] please resubmit with a --cats argument")
+        return
+    if not os.path.isfile(args.cats):
+        print("[ERROR] you have provided a category file that does not exist")
+        print("[ERROR] please resubmit with a valid --cats argument")
+        return
+    print(f"[INFO] importing categories from {args.cats}")
+    cats = pd.read_csv(args.cats, sep="\t", comment="# ", header=None)
 
     if args._kClosure:
-        if args._kTestMethodAccuracy:
-            pass
-        else:
+        if not args._kTestMethodAccuracy:
+            if args.smearings is None:
+                print("[ERROR] you have requested a closure test, but have not provided a smearings file")
+                print("[ERROR] please resubmit with a --smearings argument")
+                return
             mc = smear_mc.smear(mc, args.smearings)
 
-    #derive scales and smearings
+    # derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
     scales_smears = minimizer.minimize(data, mc, cats, args)
 
 
-    #if we're plotting there's nothing to write, so just print a done message and exit
+    # if we're plotting there's nothing to write, so just print a done message and exit
     if args._kPlot:
         print("[INFO] plotting is done, please review")
         return
 
-    #minimization may not succeed, in this case the program will just end
+    # minimization may not succeed, in this case the program will just end
     if scales_smears == []:
-        print("[ERROR] Review code, minimization did not succeed")
+        print("[ERROR] Review logs, minimization did not succeed")
         return
 
-    #write the results
-    print(scales_smears)
-    helper_pymin.write_results(args, scales_smears)
+    # write the results
+    file_written = helper_pymin.write_results(args, scales_smears)
+    if not file_written:
+        print("[ERROR] file not written, something went wrong")
+        return
 
     return
 

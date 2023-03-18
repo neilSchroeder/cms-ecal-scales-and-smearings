@@ -51,6 +51,7 @@ The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 
 ```
 cmsrel CMSSW_10_2_14
+git cms-init
 git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git
 ```
 Now you'll want to checkout your own branch (name it something useful) and push it to the git repo
@@ -63,6 +64,33 @@ git checkout myBranch
 ## Running the Framework
 
 This framework has many options. To demonstrate it's uses, consider the following example:
+
+### Ntuples
+
+You will need a set of root files for data and simulation that must have a tree named `selected` with the following branches:
+
+```
+******************************************************************************
+*Tree    :selected  : selected                                               *
+******************************************************************************
+*Br    0 :runNumber : runNumber/i                                            *
+*............................................................................*
+*Br    1 :R9Ele     : R9Ele[3]/F                                             *
+*............................................................................*
+*Br    2 :etaEle    : etaEle[3]/F                                            *
+*............................................................................*
+*Br    3 :phiEle    : phiEle[3]/F                                            *
+*............................................................................*
+*Br    4 :energy_ECAL_ele : energy_ECAL_ele[3]/F                             *
+*............................................................................*
+*Br    5 :invMass_ECAL_ele : invMass_ECAL_ele/F                              *
+*............................................................................*
+*Br    6 :gainSeedSC : gainSeedSC[3]/b                                       *
+*............................................................................*
+```
+
+Note that the file size, compression, basket size, etc. are irrelevant. The requirement is the variable names.
+
 
 ### Basic 2018 Workflow
 
