@@ -1,24 +1,4 @@
 # !/usr/bin/env python3
-"""
-This function will derive the residual scales and additional smearings.
-
-Data and MC should be taken from the ECALELF step-0 outputs.
-
-Usage/Order of Operations:
-    prune: start by supplying a list of data and mc files you'll be using for your derivation.
-        the prune step will read in these files, join them, remove unnecessary columns,
-        and write them to a csv in a directory you specify (/eos/home-<initial>/<username> is recommended)
-    run_divide: this step will produce the "time bins" or bins of runs containing a minimum number of events.
-        this step is vital as it will be used in the next step, and all future steps, to stabilize the data
-        over time.
-    time_stability: this step will produce the scales required per run bin to align the data with the pdg Z mass.
-        this stabilizes the data as a function of time and eta.
-    standard use: once the previous steps have been completed you can now provide the data and mc on which you will
-        derive the scales and smearings, the scales which will be applied to the data prior to derivation, and the
-        categories in which you wish to derive the scales and smearings. The result will automatically be written to
-        a table in the datFiles/ directory with the appropriate name.
-
-"""
 
 import argparse as ap
 import os
@@ -38,16 +18,43 @@ import python.utilities.condor_handler as condor_handler
 import python.utilities.reweight_pt_y as reweight_pt_y
 
 from python.classes.config_class import SSConfig
-ss_config = SSConfig() # initialize the config class
 
 def main():
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+    """
+    Main function for the pymin.py script. This function will parse the command line arguments and call the appropriate
+    functions to derive the scales and smearings. 
+    --------------------------------
+    Args:
+        -i, --inputFile: path to file containing the data and mc paths
+        --prune: option to prune down the data and mc to keep memory usage low
+        --pruned-file-dest: destination for the pruned files
+        --run-divide: option to make the run division file for time_stability
+        --min-events: minimum number of events allowed in a given run bin
+        -c, --cats: path to file describing categories to use in minimization
+        --time-stability: scale data to PDG Z mass, pass the run divide file as your categories
+        -s, --scales: path to scales file to apply to data
+        --smearings: path to smearings file to apply to MC
+        -w, --weights: tsv containing rapidity x ptz weights, if empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.
+        -o, --output: output tag to add to file names
+        --closure: derive the closure of the scales for a given step
+        --ignore: list of categories to ignore for the current derivation
+        --hist-min: Min of histogram for binned NLL evaluation
+        --hist-max: Max of histogram for binned NLL evaluation
+        --no-auto-bin: Turns off the auto binning feature (using Freedman-Diaconis method)
+        --bin-size: Size of bins for binned NLL evaluation
+        --start-style: Style of starting values for minimization
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
+
+    ss_config = SSConfig() # initialize the config class
     # setup options
     parser = ap.ArgumentParser(description="Derivation of Scales and Smearings")
 
     parser.add_argument("-i","--inputFile", default=None,
                     	help="input file containing paths to data and mc")
-
     parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
                     	help="prune down the data and mc to keep memory usage low")
     parser.add_argument("--pruned-file-dest", default=ss_config.DEFAULT_DATA_PATH, dest='pruned_file_dest',

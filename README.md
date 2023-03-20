@@ -54,7 +54,8 @@ export SCRAM_ARCH=slc7_amd64_gcc700
 cmsrel CMSSW_10_2_14
 cd CMSSW_10_2_14/src/
 git cms-init
-git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git
+git clone ssh://git@gitlab.cern.ch:7999/nschroed/cms-ecal-scales-and-smearings.git
+cd cms-ecal-scales-and-smearings/
 ```
 Now you'll want to checkout your own branch (name it something useful) and push it to the git repo
 ```
@@ -100,6 +101,11 @@ To start, you will need a file containing a list of data and mc files in the for
 ```
 type	treeName	filePath
 ```
+for example, from `config/UltraLegacy2018.dat`:
+```
+data    selected    /eos/cms/store/group/dpg_ecal/alca_ecalcalib/ecalelf/ntuples/13TeV/MINIAODNTUPLE/106X_dataRun2_UL18/EGamma-106X-2018UL-T1-A/315257-316995/2018_314472-325175_SS/2018UL_SS/EGamma-106X-2018UL-T1-A-315257-316995.root
+```
+
 where *type* is either "data" or "sim", *treeName* is the name of the tree in the root file containing the events you wish to analyze, and *filePath* is the full file path to the root file. An example of this can be seen in config/UltraLegacy2018.dat
 
 You can now run the pruner:
