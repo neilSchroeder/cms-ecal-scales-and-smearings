@@ -52,6 +52,7 @@ The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 ```
 export SCRAM_ARCH=slc7_amd64_gcc700
 cmsrel CMSSW_10_2_14
+cd CMSSW_10_2_14/src/
 git cms-init
 git clone https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings.git
 ```
