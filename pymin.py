@@ -138,6 +138,10 @@ def main():
 
     cmd = helper_pymin.get_cmd(sys.argv)
     print(cmd)
+    if "-" not in cmd:
+        print("[ERROR] you have not provided any arguments to this script.")
+        print("[ERROR] please resubmit this job with the correct arguments.")
+        return
 
     if args._kClosure and args.smearings is None:
         if not args._kTestMethodAccuracy and not args._kRewrite:
