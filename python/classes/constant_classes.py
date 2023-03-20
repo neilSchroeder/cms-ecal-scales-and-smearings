@@ -1,4 +1,3 @@
-import python.plotters.plots as plots
 
 class PyValConstants():
     """a useful list of contants instead of defining them in every function"""
@@ -21,10 +20,7 @@ class PyValConstants():
     KEY_INVMASS_DOWN = "invmass_down"
     KEY_PTY = "pty_weight"
     
-    plotting_functions = {
-            'paper': plots.plot_style_paper,
-            'crossCheckMC': plots.plot_style_validation_mc
-        }
+    plotting_functions = {}
 
     def get_plotting_function(self, style):
         if style in self.plotting_functions.keys():

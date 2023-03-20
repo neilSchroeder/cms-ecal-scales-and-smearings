@@ -4,6 +4,10 @@ import numpy as np
 from python.classes.constant_classes import PyValConstants as pvc
 from python.classes.constant_classes import DataConstants as dc
 import python.plotters.plots as plots
+pvc.plotting_functions = {
+        'paper': plots.plot_style_paper,
+        'crossCheckMC': plots.plot_style_validation_mc
+    }
 
 def get_tuple(this_string):
     """

@@ -13,7 +13,7 @@ Additionally, this software serves as a portion of the thesis of Neil Schroeder 
 Here is an example of the kind of agreement that can be obtained between data and MC.
 These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smearings.
 
-<img src="./examples/money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png" height="500" width="500">
+<img src="python3 examples/money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png" height="500" width="500">
 
 
 ## To Do
@@ -110,19 +110,19 @@ where *type* is either "data" or "sim", *treeName* is the name of the tree in th
 
 You can now run the pruner:
 ```
-./pymin.py -i config/UltraLegacy2018.dat --prune -o 'pruned_ul18'
+python3 pymin.py -i config/UltraLegacy2018.dat --prune -o 'pruned_ul18'
 ```
 This takes your input files and will write them to tsvs in the folder DEST_PATH using the tage DEST_TAG
 
 Now you will need to put the paths to the pruned files in a file, preferably in the config folder to run the run divider
 ```
-./pymin.py -i config/ul2018.dat --run-divide -o ul18
+python3 pymin.py -i config/ul2018.dat --run-divide -o ul18
 ```
 If you want fewer run bins you can increase the default number of events per run using the `--minEvents` argument
 
 With your run bins in hand you can now run the time_stability step:
 ```
-./pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
+python3 pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
 ```
 From here you can run the scales and smearings chain. This requires a couple additional ingredients.
 The first is a categories file, you can see an example below:
@@ -152,12 +152,12 @@ Please be extra careful when building your categories to ensure that you do not 
 Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
 
 ```
-./pymin.py -i config/ul2018.dat -c config/cats_step2.tsv -s datFiles/step1_MY_TAG_scales.dat -o ul18_DATE_v0
+python3 pymin.py -i config/ul2018.dat -c config/cats_step2.tsv -s datFiles/step1_MY_TAG_scales.dat -o ul18_DATE_v0
 ```
 This first step runs a derivation of both the scales and smearings
 
 ```
-./pymin.py -i config/ul2018.dat \
+python3 pymin.py -i config/ul2018.dat \
            -c config/cats_step2.py \
            -s datFiles/step2_MY_TAG_scales.dat \
            -w datFiles/ptz_x_rapidity_weights_ul18_DATE_v0.tsv \
@@ -203,7 +203,7 @@ An example of the category definition file can be found in `config/pyval/plot_ca
 The basic usage looks like this:
 
 ```
-./pyval.py \
+python3 pyval.py \
     -i config/pyval/my_config.cfg \
     -o 'my_output_tag' \
     --data-title="Title Of Data" \
