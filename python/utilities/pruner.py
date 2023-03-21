@@ -25,7 +25,7 @@ def prune(files, out, out_dir):
     files = open(files, 'r').readlines()
     files = [x.strip() for x in files]
 
-    keep_cols = ddc.KEEP_COLS
+    keep_cols = dc.KEEP_COLS
     mc_files = []
     data_files = []
 

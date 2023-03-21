@@ -74,8 +74,6 @@ class DataConstants():
     ET_LEAD = 'transverse_energy[0]'
     ET_SUB = 'transverse_energy[1]'
 
-    KEEP_COLS = []
-
     # indices of row in scales
     i_run_min = 0
     i_run_max = 1
