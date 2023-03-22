@@ -1,52 +1,5 @@
 import os
 
-def configure_default_eos_path():
-    """ Get the default EOS path for the scales and smearings framework """
-    user = os.environ['USER']
-    return f'/eos/home-{user[0]}/{user}/pymin/'
-
-
-def configure_default_data_path():
-    """ Get the default data path for the scales and smearings framework """
-    user = os.environ['USER']
-    return f'/eos/home-{user[0]}/{user}/pymin/data/'
-
-
-def configure_default_plot_path():
-    """ Get the default plot path for the scales and smearings framework """
-    user = os.environ['USER']
-    return f'/eos/home-{user[0]}/{user}/pymin/plots/'
-
-
-def configure_default_condor_path():
-    """ Get the default condor path for the scales and smearings framework """
-    user = os.environ['USER']
-    return f'/eos/home-{user[0]}/{user}/pymin/condor/'
-
-
-def set_up_directories():
-    """
-    Set up the directories for the scales and smearings framework
-    """
-    # make the directory for the dat files
-    if not os.path.exists(SSConfig.DEFAULT_WRITE_FILES_PATH):
-        os.makedirs(SSConfig.DEFAULT_WRITE_FILES_PATH, exist_ok=True)
-
-    # make the directory for the plots
-    if not os.path.exists(SSConfig.DEFAULT_PLOT_PATH):
-        os.makedirs(SSConfig.DEFAULT_PLOT_PATH, exist_ok=True)
-
-    # make the directory for the condor files
-    if not os.path.exists(SSConfig.DEFAULT_CONDOR_PATH):
-        os.makedirs(SSConfig.DEFAULT_CONDOR_PATH, exist_ok=True)
-
-    # make the directory for the data files
-    if not os.path.exists(SSConfig.DEFAULT_DATA_PATH):
-        os.makedirs(SSConfig.DEFAULT_DATA_PATH, exist_ok=True)
-
-    # make the directory for the eos files
-    if not os.path.exists(SSConfig.DEFAULT_EOS_PATH):
-        os.makedirs(SSConfig.DEFAULT_EOS_PATH, exist_ok=True)
 
 
 class SSConfig(object):
@@ -58,11 +11,74 @@ class SSConfig(object):
             cls.instance = super(SSConfig, cls).__new__(cls)
         return cls.instance
 
-    DEFAULT_EOS_PATH = configure_default_eos_path()
-    DEFAULT_DATA_PATH = configure_default_data_path()
-    DEFAULT_PLOT_PATH = configure_default_plot_path()
-    DEFAULT_WRITE_FILES_PATH = "datFiles/"
-    DEFAULT_CONDOR_PATH = configure_default_condor_path()
+    def __init__(self) -> None:
+        """ 
+        Initialize the configuration class for the scales and smearings framework
+        ----------
+        Params:
+            DEFAULT_EOS_PATH: str
+                The default EOS path for the scales and smearings framework
+            DEFAULT_DATA_PATH: str
+                The default data path for the scales and smearings framework
+            DEFAULT_PLOT_PATH: str
+                The default plot path for the scales and smearings framework
+            DEFAULT_WRITE_FILES_PATH: str
+                The default path for writing files for the scales and smearings framework
+            DEFAULT_CONDOR_PATH: str
+                The default condor path for the scales and smearings framework
+        ----------
+        Returns:
+            None
+        """
+    
+        self.set_up_directories()
 
-    set_up_directories()
+
+    def configure_default_eos_path(self):
+        """ Get the default EOS path for the scales and smearings framework """
+        user = os.environ['USER']
+        return f'/eos/home-{user[0]}/{user}/pymin/'
+
+
+    def configure_default_data_path(self):
+        """ Get the default data path for the scales and smearings framework """
+        user = os.environ['USER']
+        return f'/eos/home-{user[0]}/{user}/pymin/data/'
+
+
+    def configure_default_plot_path(self):
+        """ Get the default condor path for the scales and smearings framework """
+        user = os.environ['USER']
+        return f'/eos/home-{user[0]}/{user}/pymin/condor/'
+
+
+    def set_up_directories(self):
+        """
+        Set up the directories for the scales and smearings framework
+        """
+        # make the directory for the dat files
+        self.DEFAULT_WRITE_FILES_PATH = 'datFiles/'
+        if not os.path.exists(self.DEFAULT_WRITE_FILES_PATH):
+            os.makedirs(self.DEFAULT_WRITE_FILES_PATH, exist_ok=True)
+            
+        # make the directory for the eos files
+        self.DEFAULT_EOS_PATH = self.configure_default_eos_path()
+        if not os.path.exists(self.DEFAULT_EOS_PATH):
+            os.makedirs(self.DEFAULT_EOS_PATH, exist_ok=True)
+
+        # make the directory for the plots
+        self.DEFAULT_PLOT_PATH = self.configure_default_plot_path()
+        if not os.path.exists(self.DEFAULT_PLOT_PATH):
+            os.makedirs(self.DEFAULT_PLOT_PATH, exist_ok=True)
+
+        # make the directory for the condor files
+        self.DEFAULT_CONDOR_PATH = self.configure_default_condor_path()
+        if not os.path.exists(self.DEFAULT_CONDOR_PATH):
+            os.makedirs(self.DEFAULT_CONDOR_PATH, exist_ok=True)
+
+        # make the directory for the data files
+        self.DEFAULT_DATA_PATH = self.configure_default_data_path()
+        if not os.path.exists(self.DEFAULT_DATA_PATH):
+            os.makedirs(self.DEFAULT_DATA_PATH, exist_ok=True)
+
     
