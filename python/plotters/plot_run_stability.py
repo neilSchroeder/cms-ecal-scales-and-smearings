@@ -1,7 +1,3 @@
-"""
-Plots the run stability for the dielectron mass
-"""
-
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,20 +6,9 @@ from matplotlib import rc
 from python.classes.config_class import SSConfig
 ss_config = SSConfig()
 
-def main():
-    parser = argparse.ArgumentParser(description='Plot the RunFineEtaR9 scales')
-    parser.add_argument('-i', '--inputFile',
-                        help='input dat file')
-    parser.add_argument('-o', '--outputFile',
-                        help='output pdf file')
-    parser.add_argument('--lumi-label', default='59.7 fb^{-1} (13 TeV) 2018', dest='lumi_label',
-                        help='Luminosity label: format is "XX.X fb^{-1} (13 TeV) YEAR"')
-    parser.add_argument('--corrected', action='store_true', default=False,
-                        help='Use corrected values')
+def plot_run_stability(inputFile, outputFile, lumi_label, corrected=False):
 
-    args = parser.parse_args()
-
-    data = np.genfromtxt(args.inputFile, dtype=float, delimiter='\t', comments='#')
+    data = np.genfromtxt(inputFile, dtype=float, delimiter='\t', comments='#')
 
     eta_lowEdges = np.unique(np.array([data[i][2] for i in range(data.shape[0])]))
     eta_highEdges = np.unique(np.array([data[i][3] for i in range(data.shape[0])]))
@@ -39,7 +24,7 @@ def main():
         temp_r9 = []
         for row in data:
             if row[2] == eta_bins[i]:
-                if args.corrected:
+                if corrected:
                     temp_scales.append(row[8])
                     temp_unc.append(row[10]/np.sqrt(row[-1]))
                 else:
@@ -71,17 +56,16 @@ def main():
     plt.subplots_adjust(left=0.1, right=0.99, top=0.95, bottom=0.09)
     plt.ylim(80, 100)
     plt.text(plt.xlim()[0], plt.ylim()[1]+0.1, "$\\bf{CMS} \ \\it{Preliminary}$", va='bottom')
-    plt.text(plt.xlim()[1], plt.ylim()[1]+0.1, args.lumi_label , ha='right', va='bottom')
+    plt.text(plt.xlim()[1], plt.ylim()[1]+0.1, lumi_label , ha='right', va='bottom')
     plt.xlabel('Run Number', horizontalalignment='right',x=1.0)
     plt.ylabel('Median Dielectron Mass [GeV]', horizontalalignment='right',y=1.0)
     plt.legend(loc='best')
-    corrected_tag = "corrected" if args.corrected else "uncorrected"
-    file_name = f"{ss_config.DEFAULT_PLOT_PATH}/run_stability_{args.outputFile}_{corrected_tag}.pdf"
+    corrected_tag = "corrected" if corrected else "uncorrected"
+    file_name = f"{ss_config.DEFAULT_PLOT_PATH}/run_stability_{outputFile}_{corrected_tag}.pdf"
     plt.savefig(file_name)
     print(f"Saved plot to {file_name}")
-    file_name = f"{ss_config.DEFAULT_PLOT_PATH}/run_stability_{args.outputFile}.png"
+    file_name = f"{ss_config.DEFAULT_PLOT_PATH}/run_stability_{outputFile}.png"
     plt.savefig(file_name)
     print(f"Saved plot to {file_name}")
 
-main()
 

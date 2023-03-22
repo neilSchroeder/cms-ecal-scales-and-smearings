@@ -14,6 +14,7 @@ import python.utilities.time_stability as time_stability
 import python.utilities.write_files as write_files
 import python.utilities.condor_handler as condor_handler
 import python.utilities.reweight_pt_y as reweight_pt_y
+from python.plotters.plot_run_stability import plot_run_stability
 
 from python.classes.config_class import SSConfig
 
@@ -123,6 +124,8 @@ def main():
                     	help="Plot the invariant mass distributions for data and mc in the provided categories")
     parser.add_argument("--plot-dir", default='./', dest='plot_dir',
                     	help="directory to write the plots")
+    parser.add_argument("--lumi-label", default=None, dest='lumi_label',
+                        help="lumi label to add to plots, example: '35.9 fb^{-1} (13 TeV) 2016'")
 
     # advanced diagnostic options
     parser.add_argument("--test-method-accuracy", default=False, action='store_true', dest='_kTestMethodAccuracy',
@@ -222,7 +225,12 @@ def main():
             print("[ERROR] please resubmit with a --cats argument")
             return
         outFile = "datFiles/step1_"+args.output+"_scales.dat"
-        write_files.write_time_stability(time_stability.derive(data, args.cats, args.output), args.cats, outFile)
+        ts_data, data_path = time_stability.derive(data, args.cats, args.output)
+        write_files.write_time_stability(ts_data, args.cats, outFile)
+        if args._kPlot:
+            plot_run_stability(data_path, args.output, args.lumi_label, corrected=False)
+            plot_run_stability(data_path, args.output, args.lumi_label, corrected=True)
+
         return
 
     # scale the data

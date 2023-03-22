@@ -76,5 +76,5 @@ def derive(data, runs, output, _kWriteData=True):
         dfOut.to_csv(f"{ss_config.DEFAULT_WRITE_FILES_PATH}time_stability_outputData_{output}.dat",
                 sep='\t', header=True,index=False)
 
-    return ret
+    return ret, f"{ss_config.DEFAULT_WRITE_FILES_PATH}time_stability_outputData_{output}.dat"
     
