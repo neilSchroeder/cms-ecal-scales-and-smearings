@@ -46,10 +46,15 @@ class SSConfig(object):
         return f'/eos/home-{user[0]}/{user}/pymin/data/'
 
 
-    def configure_default_plot_path(self):
+    def configure_default_condor_path(self):
         """ Get the default condor path for the scales and smearings framework """
         user = os.environ['USER']
         return f'/eos/home-{user[0]}/{user}/pymin/condor/'
+    
+    def configure_default_plot_path(self):
+        """ Get the default plot path for the scales and smearings framework """
+        user = os.environ['USER']
+        return f'/eos/home-{user[0]}/{user}/pymin/plots/'
 
 
     def set_up_directories(self):
@@ -60,7 +65,7 @@ class SSConfig(object):
         self.DEFAULT_WRITE_FILES_PATH = 'datFiles/'
         if not os.path.exists(self.DEFAULT_WRITE_FILES_PATH):
             os.makedirs(self.DEFAULT_WRITE_FILES_PATH, exist_ok=True)
-            
+
         # make the directory for the eos files
         self.DEFAULT_EOS_PATH = self.configure_default_eos_path()
         if not os.path.exists(self.DEFAULT_EOS_PATH):
