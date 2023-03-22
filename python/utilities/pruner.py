@@ -102,7 +102,7 @@ def prune(files, out, out_dir):
 
     print(f"[INFO][python/utilities/pruner][prune] writing config files to config/{out}.cfg")
     with open(f"config/{out}.cfg", 'w') as outfile:
-        outfile.write(f"{out_dir}{out}_data.csv")
+        outfile.write(f"{out_dir}{out}_data.csv\n")
         outfile.write(f"{out_dir}{out}_mc.csv")
 
     print("[INFO][python/utilities/pruner][prune] done")
