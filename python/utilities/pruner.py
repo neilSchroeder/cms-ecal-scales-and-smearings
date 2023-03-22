@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import pandas as pd
 import uproot as up
 
@@ -8,16 +9,19 @@ def prune(files, out, out_dir):
     """ 
     prunes the files listed in files and writes the resulting csv files to out_dir using out as a tag 
     --------------------------
-    Input:
-    files: a text file containing the files to be pruned
-    out: a string to be used as a tag for the resulting csv files
-    out_dir: the directory to write the resulting csv files to
+    Args:
+        files: a text file containing the files to be pruned
+        out: a string to be used as a tag for the resulting csv files
+        out_dir: the directory to write the resulting csv files to
     --------------------------
     Returns:
-    None
+        None
     --------------------------
     """
     INFO = "[INFO][python/pruner][prune]"
+
+    print(f"[WARNING] This script requires a lot of memory")
+    print(f"[WARNING] if you get a KILLED message, try switching to a machine with more available memory")
 
     print(f"{INFO} You've chose to prune the files listed in {files}")
     print(f"{INFO} The resulting csv files will be given a name based on {out}")
@@ -26,8 +30,8 @@ def prune(files, out, out_dir):
     files = [x.strip() for x in files]
 
     keep_cols = dc.KEEP_COLS
-    mc_files = []
-    data_files = []
+    data_index = 0
+    mc_index = 0
 
     for line in files:
         #The file format is 
@@ -36,39 +40,69 @@ def prune(files, out, out_dir):
         #each entry is separated by a \t
         line_list = line.split('\t')
         print("[INFO][python/pruner][prune] Opening {} as a pandas dataframe".format(line_list[2]))
-        df = up.open(line_list[2])[line_list[1]].pandas.df(keep_cols)
-        
-        #drop events in the transition region or outside the tracker
-        df[dc.ETA_LEAD] = np.abs(df[dc.ETA_LEAD].values)
-        df[dc.ETA_SUB] = np.abs(df[dc.ETA_SUB].values)
+        with up.open(line_list[2]) as f:
+            df = f[line_list[1]].pandas.df(keep_cols)
+            
+            # absolute value of eta for convenience
+            df[dc.ETA_LEAD] = np.abs(df[dc.ETA_LEAD].values)
+            df[dc.ETA_SUB] = np.abs(df[dc.ETA_SUB].values)
 
-        mask_lead = np.logical_or(df[dc.ETA_LEAD].values < dc.MAX_EB, dc.MIN_EE < df[dc.ETA_LEAD].values)
-        mask_lead = np.logical_and(mask_lead, df[dc.ETA_LEAD].values <= dc.MAX_EE)
-        mask_sub = np.logical_or(df[dc.ETA_SUB].values < dc.MAX_EB, dc.MIN_EE < df[dc.ETA_SUB].values)
-        mask_sub = np.logical_and(mask_sub, df[dc.ETA_SUB].values <= dc.MAX_EE)
+            #drop events in the transition region or outside the tracker
+            mask_lead = np.logical_or(df[dc.ETA_LEAD].values < dc.MAX_EB, dc.MIN_EE < df[dc.ETA_LEAD].values)
+            mask_lead = np.logical_and(mask_lead, df[dc.ETA_LEAD].values <= dc.MAX_EE)
+            mask_sub = np.logical_or(df[dc.ETA_SUB].values < dc.MAX_EB, dc.MIN_EE < df[dc.ETA_SUB].values)
+            mask_sub = np.logical_and(mask_sub, df[dc.ETA_SUB].values <= dc.MAX_EE)
 
-        df = df[np.logical_and(mask_lead,mask_sub)]
+            df = df[np.logical_and(mask_lead,mask_sub)]
 
-        #drop events which are non-sensical
-        energy_mask = np.logical_and( df[dc.E_LEAD].values > dc.MIN_E, df[dc.E_LEAD].values < dc.MAX_E)
-        energy_mask = np.logical_and( energy_mask, 
-                                     np.logical_and( df[dc.E_SUB].values > dc.MIN_E, df[dc.E_SUB].values < dc.MAX_E))
-        df = df[energy_mask]
+            #drop events which are not in the energy range
+            energy_mask = np.logical_and( df[dc.E_LEAD].values > dc.MIN_E, df[dc.E_LEAD].values < dc.MAX_E)
+            energy_mask = np.logical_and( energy_mask, 
+                                        np.logical_and( df[dc.E_SUB].values > dc.MIN_E, df[dc.E_SUB].values < dc.MAX_E))
+            df = df[energy_mask]
 
-        #drop events with invmass less than 60 or greater than 120
-        invmass_mask = np.logical_and(dc.invmass_min < df[dc.INVMASS].values, df[dc.INVMASS].values < dc.invmass_max)
-        df = df[invmass_mask]
-        drop_list = dc.DROP_LIST
-        df.drop(drop_list,axis=1,inplace=True)
+            #drop events with invmass less than 60 or greater than 120
+            invmass_mask = np.logical_and(dc.invmass_min < df[dc.INVMASS].values, df[dc.INVMASS].values < dc.invmass_max)
+            df = df[invmass_mask]
+            drop_list = dc.DROP_LIST
+            df.drop(drop_list,axis=1,inplace=True)
 
-        if line_list[0] == 'data': data_files.append(df)
-        else: mc_files.append(df)
+            data_mc = "data" if line_list[0] == 'data' else 'mc'
+            index = data_index if line_list[0] == 'data' else mc_index
 
+            print(f"[INFO][python/utilities/pruner][prune] writing to {out_dir}{out}_{data_mc}_{index}.csv")
+            df.to_csv(f"{out_dir}{out}_{data_mc}_{index}.csv", sep='\t', header=True, index=False)
 
-    data = pd.concat(data_files)
-    mc = pd.concat(mc_files)
+            del df
 
-    #write the files into csv files
-    print("[INFO][python/pruner][prune] Writing files")
-    data.to_csv(str(out_dir+out+"_data.csv"), sep='\t', header=True, index=False)
-    mc.to_csv(str(out_dir+out+"_mdc.csv"), sep='\t', header=True, index=False)
+            if line_list[0] == 'data':
+                data_index += 1
+            else:
+                mc_index += 1
+
+    # merge the csv files
+    print("[INFO][python/utilities/pruner][prune] merging csv files")
+    with open(f"{out_dir}{out}_data.csv", 'w') as outfile:
+        for index in range(data_index):
+            with open(f"{out_dir}{out}_data_{index}.csv") as infile:
+                for line in infile:
+                    if index != 0 and line.startswith("R9"):
+                        continue # skip the header
+                    outfile.write(line)
+            os.remove(f"{out_dir}{out}_data_{index}.csv")
+    
+    with open(f"{out_dir}{out}_mc.csv", 'w') as outfile:
+        for index in range(mc_index):
+            with open(f"{out_dir}{out}_mc_{index}.csv") as infile:
+                for line in infile:
+                    if index != 0 and line.startswith("R9"):
+                        continue # skip the header
+                    outfile.write(line)
+            os.remove(f"{out_dir}{out}_mc_{index}.csv")
+
+    print(f"[INFO][python/utilities/pruner][prune] writing config files to config/{out}.cfg")
+    with open(f"config/{out}.cfg", 'w') as outfile:
+        outfile.write(f"{out_dir}{out}_data.csv")
+        outfile.write(f"{out_dir}{out}_mc.csv")
+
+    print("[INFO][python/utilities/pruner][prune] done")

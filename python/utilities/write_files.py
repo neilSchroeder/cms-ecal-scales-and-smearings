@@ -1,7 +1,7 @@
 import json
 import numpy as np
+import os
 import pandas as pd
-from optparse import OptionParser
 from collections import OrderedDict
 
 
@@ -347,6 +347,10 @@ def write_runs(runs, out):
         None
     --------------------------------
     """
+    if not os.path.exists(os.path.dirname(out)):
+        os.makedirs(out) # catch if the datFiles/ directory doesn't exist 
+
+
     headers = ['runMin', 'runMax']
     dictForDf = OrderedDict.fromkeys(headers) # python hates you and your dictionaries
     for col in headers:

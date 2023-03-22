@@ -222,7 +222,7 @@ def main():
             print("[ERROR] please resubmit with a --cats argument")
             return
         outFile = "datFiles/step1_"+args.output+"_scales.dat"
-        write_files.write_time_stability(time_stability.derive(data, args.cats), args.cats, outFile)
+        write_files.write_time_stability(time_stability.derive(data, args.cats, args.output), args.cats, outFile)
         return
 
     # scale the data
