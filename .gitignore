@@ -9,4 +9,5 @@ python/utilities/__pycache__/*
 python/utilities/__pycache__/
 python/*/__pycache__/*
 condor/*
+workspace/*
 *.cc
