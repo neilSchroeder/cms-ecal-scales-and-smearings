@@ -35,10 +35,10 @@ def get_cmd(args):
 def get_step(args):
     #gets the step number from the category file
 
-    if args.cats is not None and not args._kTimeStability:
-        if "." in args.cats.split("_")[1]:
-            return int(args.cats.split("_")[1].split(".")[0][-1])
-        return int(args.cats.split("_")[1][-1])
+    if args.catsFile is not None and not args._kTimeStability:
+        if "." in args.catsFile.split("_")[1]:
+            return int(args.catsFile.split("_")[1].split(".")[0][-1])
+        return int(args.catsFile.split("_")[1][-1])
 
     return -1
 
@@ -50,7 +50,7 @@ def rewrite(args):
 
     file_name_scales = f"{only_step_path}/step{step}closure_{args.output}_scales.dat" if args._kClosure else f"{only_step_path}/step{step}_{args.output}_scales.dat"
 
-    #if not args._kClosure: write_files.rewrite_smearings(args.cats, new_smears)
+    #if not args._kClosure: write_files.rewrite_smearings(args.catsFile, new_smears)
     write_files.combine( file_name_only_step, args.scales, file_name_scales)
 
 
@@ -120,7 +120,7 @@ def load_dataframes(files, args):
 
 def write_results(args, scales_smears):
     step = get_step(args)
-    cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
+    cats = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
 
     tag = args.output                                   
     this_dir = f"{os.getcwd()}/condor/{tag}/" if args._kFromCondor else os.getcwd()     
