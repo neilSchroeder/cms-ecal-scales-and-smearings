@@ -319,7 +319,6 @@ def target_function(x, *args, verbose=False, **options):
 
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
-    for cat in __ZCATS__: cat.reset()
 
     if verbose:
         print("------------- total info -------------")
