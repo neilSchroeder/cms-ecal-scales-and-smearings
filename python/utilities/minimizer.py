@@ -27,7 +27,7 @@ Author:
 """
 
 
-def minimize(data, mc, cats_df, **args):
+def minimize(data, mc, cats_df, args):
     """
     Main function for the minimization of the scales and smearings 
     using the zcat class defined in python/zcat_class.py 
