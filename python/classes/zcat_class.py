@@ -109,7 +109,6 @@ class zcat:
             #prune and check data and mc for validity
             temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, self.hist_max <= self.hist_max)]
             mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
-            temp_weights = temp_weights[mask_mc]
             temp_mc = temp_mc[mask_mc]
             if (len(temp_data) < 10 or len(temp_mc) < 1000) or (len(temp_mc) < 2000 and self.lead_index != self.sublead_index): 
                 print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
@@ -120,7 +119,6 @@ class zcat:
                 del self.weights
                 del temp_data
                 del temp_mc
-                del temp_weights
                 return
 
             #since the data and mc are now pruned go ahead and find the bin size
@@ -133,9 +131,9 @@ class zcat:
         temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, temp_data <= self.hist_max)]
         temp_data = np.append(temp_data,np.array([self.hist_min,self.hist_max], dtype=np.float32))
         mask_mc = np.logical_and(self.hist_min <= temp_mc, temp_mc <= self.hist_max)
-        temp_weights = temp_weights[mask_mc]
+        temp_weights = self.weights[mask_mc]
         temp_mc = temp_mc[mask_mc]
-        temp_weights = np.append(temp_weights,np.array([0,0], dtype=np.float32))
+        temp_weights = np.append(temp_weights, np.array([0,0], dtype=np.float32))
         temp_mc = np.append(temp_mc,np.array([self.hist_min,self.hist_max]))
 
         num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
