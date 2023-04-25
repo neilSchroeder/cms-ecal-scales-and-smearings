@@ -263,7 +263,7 @@ def main():
         print("[ERROR] please resubmit with a valid --cats argument")
         return
     print(f"[INFO] importing categories from {args.cats}")
-    cats = pd.read_csv(args.cats, sep="\t", comment="# ", header=None)
+    cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
 
     if args._kClosure:
         if not args._kTestMethodAccuracy:
