@@ -27,7 +27,7 @@ Author:
 """
 
 
-def minimize(data, mc, cats, **args):
+def minimize(data, mc, cats_df, **args):
     """
     Main function for the minimization of the scales and smearings 
     using the zcat class defined in python/zcat_class.py 
@@ -39,8 +39,8 @@ def minimize(data, mc, cats, **args):
     Args:
         data: dataset to be treated as data
         mc: dataset to be treated as simulation
-        cats: a dataframe containing the single electron categories from
-                which to derive the scales
+        cats_df: a dataframe containing the single electron categories from
+            which to derive the scales
         **args: optional arguments
             ignore_cats: path to a tsv containing pairs of single electron
                 categories to ignore
@@ -103,19 +103,19 @@ def minimize(data, mc, cats, **args):
         return []
 
     #count the number of categories which are a scale or a smearing
-    __num_scales__ = np.sum( cats.iloc[:,0].values == 'scale')
-    __num_smears__ = np.sum( cats.iloc[:,0].values == 'smear')
+    __num_scales__ = np.sum( cats_df.iloc[:,0].values == 'scale')
+    __num_smears__ = np.sum( cats_df.iloc[:,0].values == 'smear')
 
     if _kClosure:
         __num_smears__ = 0
 
     #check to see if transverse energy columns need to be added
-    data, mc = helper_minimizer.clean_up(data,mc, cats)
+    data, mc = helper_minimizer.clean_up(data,mc, cats_df)
     
     print("[INFO][python/nll] extracting lists from category definitions")
 
     #extract the categories
-    __ZCATS__ = helper_minimizer.extract_cats(data, mc, cats, 
+    __ZCATS__ = helper_minimizer.extract_cats(data, mc, cats_df, 
                                               num_scales=__num_scales__, num_smears=__num_smears__, 
                                               **args
                                               )
@@ -125,7 +125,7 @@ def minimize(data, mc, cats, **args):
     del mc
 
     #set up boundaries on starting location of scales
-    bounds = helper_minimizer.set_bounds(cats, num_scales=__num_scales__, num_smears=__num_smears__, **args)
+    bounds = helper_minimizer.set_bounds(cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **args)
 
     #it is important to test the accuracy with which a known scale can be recovered,
     #here we assign the known scales and inject them.
@@ -165,7 +165,7 @@ def minimize(data, mc, cats, **args):
     #if we're plotting, just plot and return, don't run a minimization
     if _kPlot:
         helper_minimizer.target_function(guess, __GUESS__, __ZCATS__, __num_scales__, __num_smears__)
-        plotter.plot_cats(plot_dir, __ZCATS__, cats)
+        plotter.plot_cats(plot_dir, __ZCATS__, cats_df)
         return [], []
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
@@ -206,7 +206,7 @@ def minimize(data, mc, cats, **args):
         guess = helper_minimizer.scan_nll(guess,
                                           zcats=__ZCATS__,
                                           __GUESS__=__GUESS__,
-                                          cats=cats,
+                                          cats=cats_df,
                                           num_smears=__num_smears__,
                                           num_scales=__num_scales__,
                                           **args

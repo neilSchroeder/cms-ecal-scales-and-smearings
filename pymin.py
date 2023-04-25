@@ -263,7 +263,7 @@ def main():
         print("[ERROR] please resubmit with a valid --cats argument")
         return
     print(f"[INFO] importing categories from {args.cats}")
-    cats = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
+    cats_df = pd.read_csv(args.cats, sep="\t", comment="#", header=None)
 
     if args._kClosure:
         if not args._kTestMethodAccuracy:
@@ -275,7 +275,7 @@ def main():
 
     # derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = minimizer.minimize(data, mc, cats, **vars(args))
+    scales_smears = minimizer.minimize(data, mc, cats_df, **vars(args))
 
 
     # if we're plotting there's nothing to write, so just print a done message and exit
