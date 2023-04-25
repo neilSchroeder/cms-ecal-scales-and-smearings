@@ -15,7 +15,6 @@ import python.utilities.write_files as write_files
 def get_options(args):
     """ deletes the options that are not needed for the current step """
     ret = vars(args)
-    del ret['cats']
     del ret['weights']
     return ret
 
