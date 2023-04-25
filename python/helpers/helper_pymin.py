@@ -12,6 +12,14 @@ import uproot as up
 from python.classes.constant_classes import DataConstants as dc
 import python.utilities.write_files as write_files
 
+def get_options(args):
+    """ deletes the options that are not needed for the current step """
+    ret = vars(args)
+    del ret['cats']
+    del ret['weights']
+    return ret
+
+
 def get_cmd(args):
     #reconstructs and returns the command line string used to run the program
 

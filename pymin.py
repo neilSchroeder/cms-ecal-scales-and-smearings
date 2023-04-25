@@ -51,23 +51,22 @@ def main():
     ss_config = SSConfig() # initialize the config class
     # setup options
     parser = ap.ArgumentParser(description="Derivation of Scales and Smearings")
-    options = ap.ArgumentParser(description="Options")
 
     parser.add_argument("-i","--inputFile", default=None,
                     	help="input file containing paths to data and mc")
-    options.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
+    parser.add_argument("--prune", default=False, dest='_kPrune', action='store_true',
                     	help="prune down the data and mc to keep memory usage low")
     parser.add_argument("--pruned-file-dest", default=ss_config.DEFAULT_DATA_PATH, dest='pruned_file_dest',
                     	help="destination for the pruned files")
 
-    options.add_argument("--run-divide", default=False, dest='_kRunDivide', action='store_true',
+    parser.add_argument("--run-divide", default=False, dest='_kRunDivide', action='store_true',
                     	help="option to make the run division file for time_stability")
-    options.add_argument("--min-events", default=10000, dest='min_events',
+    parser.add_argument("--min-events", default=10000, dest='min_events',
                     	help="minimum number of events allowed in a given run bin")
 
     parser.add_argument("-c","--cats", default=None,
                     	help="path to file describing categories to use in minimization")
-    options.add_argument("--time-stability", default=False, dest="_kTimeStability", action='store_true',
+    parser.add_argument("--time-stability", default=False, dest="_kTimeStability", action='store_true',
                     	help="scale data to PDG Z mass, pass the run divide file as your categories")
 
     # options provided to the minimizer
@@ -79,65 +78,64 @@ def main():
                         help="tsv containing rapidity x ptz weights, if empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.")
     parser.add_argument("-o","--output", default=None,
                     	help="output tag to add to file names")
-    options.add_argument("--closure", default=False, action='store_true', dest='_kClosure',
+    parser.add_argument("--closure", default=False, action='store_true', dest='_kClosure',
                     	help="derive the closure of the scales for a given step")
-    options.add_argument("--ignore", default=None,
+    parser.add_argument("--ignore", default=None,
                     	help="list of categories to ignore for the current derivation")
-    options.add_argument("--hist-min", default=80, type=float, dest='hist_min',
+    parser.add_argument("--hist-min", default=80, type=float, dest='hist_min',
                     	help="Min of histogram for binned NLL evaluation")
-    options.add_argument("--hist-max", default=100, type=float, dest='hist_max',
+    parser.add_argument("--hist-max", default=100, type=float, dest='hist_max',
                     	help="Max of histogram for binned NLL evaluation")
-    options.add_argument("--no-auto-bin", default=False, action='store_true', dest='_kNoAutoBin',
+    parser.add_argument("--no-auto-bin", default=False, action='store_true', dest='_kNoAutoBin',
                     	help="Turns off the auto binning feature (using Freedman-Diaconis method)")
-    options.add_argument("--bin-size", default=0.25, type=float, dest='bin_size',
+    parser.add_argument("--bin-size", default=0.25, type=float, dest='bin_size',
                     	help="Size of bins for binned NLL evaluation")
-    options.add_argument("--start-style", default='scan', type=str, dest='start_style',
+    parser.add_argument("--start-style", default='scan', type=str, dest='start_style',
                     	help="Determines how the minimizer chooses its starting location. Allowed options are 'scan', 'random', 'specify'. If using specify, used the scan_scales argument to provide the starting location")
-    options.add_argument("--scan-min", default=0.98, type=float, dest='scan_min',
+    parser.add_argument("--scan-min", default=0.98, type=float, dest='scan_min',
                     	help="Min value for scan start")
-    options.add_argument("--scan-max", default=1.02, type=float, dest='scan_max',
+    parser.add_argument("--scan-max", default=1.02, type=float, dest='scan_max',
                     	help="Max value for scan start")
-    options.add_argument("--scan-step", default=0.001, type=float, dest='scan_step',
+    parser.add_argument("--scan-step", default=0.001, type=float, dest='scan_step',
                     	help="Step size for scan start")
-    options.add_argument("--min-step-size", default=None, dest='min_step_size',
+    parser.add_argument("--min-step-size", default=None, dest='min_step_size',
                         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.")
-    options.add_argument("--fix-scales", default=False, action='store_true', dest='_kFixScales',
+    parser.add_argument("--fix-scales", default=False, action='store_true', dest='_kFixScales',
                         help="[ADVANCED] flag to keep scales fixed at 1. and only derive smearings")
-    options.add_argument("--no-reweight", default=False, action='store_true', dest='_kNoReweight',
+    parser.add_argument("--no-reweight", default=False, action='store_true', dest='_kNoReweight',
                         help="[ADVANCED] flag to turn off deriving pt(Z),y(Z) weights")
-    options.add_argument("--condor", default=False, action='store_true', dest='_kCondor',
+    parser.add_argument("--condor", default=False, action='store_true', dest='_kCondor',
                         help="Submit this job to condor")
-    options.add_argument("--queue", default='tomorrow',
+    parser.add_argument("--queue", default='tomorrow',
                         help="flavour of submitted job")
-    options.add_argument("--from-condor", default=False, action='store_true', dest='_kFromCondor',
+    parser.add_argument("--from-condor", default=False, action='store_true', dest='_kFromCondor',
                         help="[NOT FOR USER] flag added by condor_handler to indicate this has been submitted from condor")
 
     # additional use options
-    options.add_argument("--rewrite", default=False, action='store_true', dest='_kRewrite',
+    parser.add_argument("--rewrite", default=False, action='store_true', dest='_kRewrite',
                     	help="only writes the scales file associated with this step")
-    options.add_argument("--combine-files", default=False, action='store_true', dest='_kCombine',
+    parser.add_argument("--combine-files", default=False, action='store_true', dest='_kCombine',
                     	help="[ADVANCED] combines two specified files, using the --only_step and --step options")
-    options.add_argument("--only-step", default='', type=str, dest='only_step',
+    parser.add_argument("--only-step", default='', type=str, dest='only_step',
                     	help="[ADVANCED] only step file, to be used with the --combine_files and --step options")
 
     # plotting options
-    options.add_argument("--plot", default=False, action='store_true', dest='_kPlot',
+    parser.add_argument("--plot", default=False, action='store_true', dest='_kPlot',
                     	help="Plot the invariant mass distributions for data and mc in the provided categories")
-    options.add_argument("--plot-dir", default='./', dest='plot_dir',
+    parser.add_argument("--plot-dir", default='./', dest='plot_dir',
                     	help="directory to write the plots")
-    options.add_argument("--lumi-label", default=None, dest='lumi_label',
+    parser.add_argument("--lumi-label", default=None, dest='lumi_label',
                         help="lumi label to add to plots, example: '35.9 fb^{-1} (13 TeV) 2016'")
 
     # advanced diagnostic options
-    options.add_argument("--test-method-accuracy", default=False, action='store_true', dest='_kTestMethodAccuracy',
+    parser.add_argument("--test-method-accuracy", default=False, action='store_true', dest='_kTestMethodAccuracy',
                     	help="Treat MC as data, inject known scales into mc cats, see how well method recovers known scale injection")
-    options.add_argument("--scan-nll", default=False, action='store_true', dest='_kScanNLL',
+    parser.add_argument("--scan-nll", default=False, action='store_true', dest='_kScanNLL',
                     	help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
-    options.add_argument("--scan-scales", default=None, dest='scan_scales',
+    parser.add_argument("--scan-scales", default=None, dest='scan_scales',
                     	help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
 
     args = parser.parse_args()
-    opts = options.parse_args()
     print("[INFO] welcome to SS_PyMin")
     print("[INFO] you have run the following command:")
 
@@ -277,7 +275,8 @@ def main():
 
     # derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = minimizer.minimize(data, mc, cats_df, vars(opts))
+    options = helper_pymin.get_options(args)
+    scales_smears = minimizer.minimize(data, mc, cats_df, **options)
 
 
     # if we're plotting there's nothing to write, so just print a done message and exit
