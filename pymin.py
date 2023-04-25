@@ -234,7 +234,7 @@ def main():
         return
 
     # scale the data
-    if os.path.isfile(args.scales):
+    if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
         data = scale_data.scale(data, args.scales)
     else:
@@ -275,7 +275,7 @@ def main():
 
     # derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = minimizer.minimize(data, mc, cats, args)
+    scales_smears = minimizer.minimize(data, mc, cats, **args)
 
 
     # if we're plotting there's nothing to write, so just print a done message and exit
