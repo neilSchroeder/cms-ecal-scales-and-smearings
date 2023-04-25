@@ -4,7 +4,11 @@ pd.options.mode.chained_assignment = None
 import multiprocessing as mp
 import gc
 
-from python.classes.constant_classes import DataConstants as dc
+from python.classes.constant_classes import (
+    DataConstants as dc,
+    PyValConstants as pvc
+)
+
 
 def apply(arg):
     #make a returnable df with all runs in this set of scales:
@@ -77,9 +81,9 @@ def apply(arg):
 
     data[dc.E_LEAD] = np.multiply(data[dc.E_LEAD].values,lead_scales, dtype=np.float32)
     data[dc.E_SUB] = np.multiply(data[dc.E_SUB].values,sub_scales, dtype=np.float32)
-    data[dc.INVMASS_UP] = np.multiply(data[dc.INVMASS].values, 
+    data[pvc.KEY_INVMASS_UP] = np.multiply(data[dc.INVMASS].values, 
                                      np.sqrt(np.multiply(lead_scales_up,sub_scales_up)), dtype=np.float32)
-    data[dc.INVMASS_DOWN] = np.multiply(data[dc.INVMASS].values, 
+    data[pvc.KEY_INVMASS_DOWN] = np.multiply(data[dc.INVMASS].values, 
                                        np.sqrt(np.multiply(lead_scales_down,sub_scales_down)), dtype=np.float32)
     data[dc.INVMASS] = np.multiply(data[dc.INVMASS].values, np.sqrt(np.multiply(lead_scales,sub_scales)), dtype=np.float32)
 
@@ -104,7 +108,6 @@ def scale(data, scales):
 
     #grab unique run values low and high from df
     unique_runnums_low = scales_df[:][i_run_min].unique().tolist()
-    unique_runnums_high = scales_df[:][i_run_max].unique().tolist()
 
     run_bins = unique_runnums_low[::processors]
     run_bins.append(999999)

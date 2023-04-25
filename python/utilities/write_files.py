@@ -268,7 +268,7 @@ def write_smearings(smears, cats, out):
     for col in headers:
         dictForDf[col] = []
 
-    smear_mask = cats['#type'] == 'smear'
+    smear_mask = cats.loc[:,0] == 'smear'
     
     for index,row in cats[smear_mask].iterrows():
         if row[0] != 'scale':

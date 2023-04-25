@@ -104,13 +104,13 @@ def clean_up(data, mc, cats):
     return data, mc
     
 
-def extract_cats( data, mc, cats, **options):
+def extract_cats( data, mc, cats_df, **options):
     #builds zcat classes with data and mc for each category
     __ZCATS__ = []
     for index1 in range(options['num_scales']):
         for index2 in range(index1+1):
-            cat1 = cats.iloc[index1]
-            cat2 = cats.iloc[index2]
+            cat1 = cats_df.iloc[index1]
+            cat2 = cats_df.iloc[index2]
             #thisCat should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
             entries_eta = data[dc.ETA_LEAD].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max]) & data[dc.ETA_SUB].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max])
             entries_eta = entries_eta | (data[dc.ETA_SUB].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max])&data[dc.ETA_LEAD].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max]))
@@ -234,7 +234,7 @@ def extract_cats( data, mc, cats, **options):
                 __ZCATS__.append(
                         zcat(
                             index1, index2, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), 
-                            smear_i=get_smearing_index(cats,index1), smear_j=get_smearing_index(cats,index2), 
+                            smear_i=get_smearing_index(cats_df,index1), smear_j=get_smearing_index(cats_df,index2), 
                             **options
                             )
                         )
@@ -319,7 +319,6 @@ def target_function(x, *args, verbose=False, **options):
 
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
-    for cat in __ZCATS__: cat.reset()
 
     if verbose:
         print("------------- total info -------------")

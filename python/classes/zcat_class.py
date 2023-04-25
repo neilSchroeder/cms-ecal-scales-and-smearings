@@ -99,9 +99,11 @@ class zcat:
         temp_data = self.data * np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
         
         temp_mc = self.mc
+        temp_weights = self.weights
         #apply the smearings second
         if lead_smear!=0 or sublead_smear!=0:
             temp_mc = self.get_smeared_mc(temp_mc, lead_smear, sublead_smear, self.seed) 
+            
 
         #determinite binning using the Freedman-Diaconis rule
         #data_width, mc_width = get_binning()
@@ -135,7 +137,7 @@ class zcat:
         mask_mc = np.logical_and(self.hist_min <= temp_mc, temp_mc <= self.hist_max)
         temp_weights = temp_weights[mask_mc]
         temp_mc = temp_mc[mask_mc]
-        temp_weights = np.append(temp_weights,np.array([0,0], dtype=np.float32))
+        temp_weights = np.append(temp_weights, np.array([0,0], dtype=np.float32))
         temp_mc = np.append(temp_mc,np.array([self.hist_min,self.hist_max]))
 
         num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
