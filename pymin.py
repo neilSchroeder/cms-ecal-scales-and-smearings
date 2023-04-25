@@ -275,7 +275,7 @@ def main():
 
     # derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = minimizer.minimize(data, mc, cats, **args)
+    scales_smears = minimizer.minimize(data, mc, cats, **vars(args))
 
 
     # if we're plotting there's nothing to write, so just print a done message and exit
