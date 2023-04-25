@@ -17,6 +17,7 @@ def get_options(args):
     ret = vars(args)
     del ret['cats']
     del ret['weights']
+    del ret['inputFile']
     return ret
 
 
