@@ -10,6 +10,7 @@ import numpy as np
 import uproot as up
 
 from python.classes.constant_classes import DataConstants as dc
+from python.classes.config_class import SSConfig
 import python.utilities.write_files as write_files
 
 def get_options(args):
@@ -118,21 +119,25 @@ def load_dataframes(files, args):
     return data, mc
 
 def write_results(args, scales_smears):
-    step = get_step(args)
-    cats = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
+    try:
+        step = get_step(args)
+        cats = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
 
-    tag = args.output                                   
-    this_dir = f"{os.getcwd()}/condor/{tag}/" if args._kFromCondor else os.getcwd()     
-    file_name =  f"{this_dir}/step{step}_{tag}" if not args._kClosure else f"{this_dir}/step{step}closure_{tag}"
-    only_step_file_name =  f"{this_dir}/onlystep{step}_{tag}" if not args._kClosure else f"{this_dir}/onlystep{step}closure_{tag}"
+        tag = args.output                                   
+        this_dir = f"{os.getcwd()}/condor/{tag}/" if args._kFromCondor else SSConfig.DEFAULT_WRITE_FILES_PATH
+        file_name =  f"{this_dir}/step{step}_{tag}" if not args._kClosure else f"{this_dir}/step{step}closure_{tag}"
+        only_step_file_name =  f"{this_dir}/onlystep{step}_{tag}" if not args._kClosure else f"{this_dir}/onlystep{step}closure_{tag}"
 
-    new_scales = f"{only_step_file_name}_scales.dat"
-    new_smears = f"{file_name}_smearings.dat"
-    scales_out = f"{file_name}_scales.dat"
+        new_scales = f"{only_step_file_name}_scales.dat"
+        new_smears = f"{file_name}_smearings.dat"
+        scales_out = f"{file_name}_scales.dat"
 
-    write_files.write_scales(scales_smears, cats, new_scales)
-    if not args._kClosure: write_files.write_smearings(scales_smears, cats, new_smears)
+        write_files.write_scales(scales_smears, cats, new_scales)
+        if not args._kClosure: write_files.write_smearings(scales_smears, cats, new_smears)
 
-    #make scales file here
-    print("[INFO] creating new scales file: {}".format(scales_out))
-    write_files.combine( new_scales, args.scales, scales_out )
+        #make scales file here
+        print("[INFO] creating new scales file: {}".format(scales_out))
+        write_files.combine( new_scales, args.scales, scales_out )
+        return True
+    except:
+        return False
