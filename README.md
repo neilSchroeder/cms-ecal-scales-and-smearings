@@ -13,7 +13,7 @@ Additionally, this software serves as a portion of the thesis of Neil Schroeder 
 Here is an example of the kind of agreement that can be obtained between data and MC.
 These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smearings.
 
-<img src="python3 examples/money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png" height="500" width="500">
+<img src="./examples/money_2017_ul_RunFineEtaR9Et_v3-01_EbEb_inclusive_wRatioPad.png" height="500" width="500">
 
 
 ## To Do
