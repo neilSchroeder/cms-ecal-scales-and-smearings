@@ -201,7 +201,7 @@ def minimize(data, mc, cats_df, args):
             guess = np.append(guess,[0.005 for x in range(__num_smears__)])
 
     else: #this is the default initialization
-        print("[INFO][python/nll.py][minimize] You've selected scan start. Beginning scan:")
+        print("[INFO][python/utilities/minimizer][minimize] You've selected scan start. Beginning scan:")
         
         guess = helper_minimizer.scan_nll(guess,
                                           zcats=__ZCATS__,

@@ -301,21 +301,20 @@ def target_function(x, *args, verbose=False, **options):
     for cat in __ZCATS__:
         if cat.valid:
             if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
-                if not cat.updated: 
-                    if __num_smears__ == 0:
-                        cat.update(x[cat.lead_index],
-                                   x[cat.sublead_index])
-                    else:
-                        cat.update(x[cat.lead_index],
-                                   x[cat.sublead_index],
-                                   x[cat.lead_smear_index],
-                                   x[cat.sublead_smear_index])
+                if __num_smears__ == 0:
+                    cat.update(x[cat.lead_index],
+                               x[cat.sublead_index])
+                else:
+                    cat.update(x[cat.lead_index],
+                               x[cat.sublead_index],
+                               x[cat.lead_smear_index],
+                               x[cat.sublead_smear_index])
 
-                    if verbose:
-                        print("------------- zcat info -------------")
-                        cat.print()
-                        print("-------------------------------------")
-                        print()
+                if verbose:
+                   print("------------- zcat info -------------")
+                   cat.print()
+                   print("-------------------------------------")
+                   print()
 
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
@@ -335,6 +334,7 @@ def scan_nll(x, **options):
     guess = x
     scanned = []
     #find most sensitive category and scan that first
+    print("[INFO][python/helper_minimizer/scan_ll] scanning scales")
     weights = [(cat.weight, cat.lead_index) for cat in __ZCATS__ if cat.valid and cat.lead_index == cat.sublead_index]
     weights.sort(key=lambda x: x[0])
     if not options['_kFixScales']:
@@ -360,7 +360,7 @@ def scan_nll(x, **options):
                     guess[max_index] = x[nll_vals.argmin()]
                     print("[INFO][python/nll] best guess for scale {} is {}".format(max_index, guess[max_index]))
 
-    print("[INFO][python/nll] scanning smearings:")
+    print("[INFO][python/helper_minimizer/scan_nll] scanning smearings:")
     scanned = []
     weights = [(cat.weight, cat.lead_smear_index) for cat in __ZCATS__ if cat.valid and cat.lead_smear_index == cat.sublead_smear_index]
     weights.sort(key=lambda x: x[0])

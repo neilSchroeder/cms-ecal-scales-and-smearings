@@ -72,6 +72,7 @@ class zcat:
 
     def update_nllChiSqr(self, binned_data, norm_binned_mc):
         #eval chi squared
+
         scaled_mc = norm_binned_mc*np.sum(binned_data)
         err_mc = np.sqrt(scaled_mc, dtype=np.float32)
         err_data = np.sqrt(binned_data, dtype=np.float32)
@@ -88,7 +89,6 @@ class zcat:
         penalty[penalty==-np.inf] = 0
         penalty = np.sum(penalty)/len(penalty)
         self.NLL = -2*(nll + penalty)*chi_sqr
-        return
 
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
@@ -97,7 +97,7 @@ class zcat:
 
         #apply the scales first 
         temp_data = self.data * np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
-        
+
         temp_mc = self.mc
         temp_weights = self.weights
         #apply the smearings second
@@ -170,5 +170,4 @@ class zcat:
             del self.mc
             del self.weights
 
-        return
 
