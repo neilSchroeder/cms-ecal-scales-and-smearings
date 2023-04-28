@@ -12,6 +12,7 @@ import uproot as up
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
 import python.utilities.write_files as write_files
+config = SSConfig()
 
 def get_options(args):
     """ deletes the options that are not needed for the current step """
@@ -124,7 +125,7 @@ def write_results(args, scales_smears):
         cats = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
 
         tag = args.output                                   
-        this_dir = f"{os.getcwd()}/condor/{tag}/" if args._kFromCondor else SSConfig.DEFAULT_WRITE_FILES_PATH
+        this_dir = f"{os.getcwd()}/condor/{tag}/" if args._kFromCondor else config.DEFAULT_WRITE_FILES_PATH
         file_name =  f"{this_dir}/step{step}_{tag}" if not args._kClosure else f"{this_dir}/step{step}closure_{tag}"
         only_step_file_name =  f"{this_dir}/onlystep{step}_{tag}" if not args._kClosure else f"{this_dir}/onlystep{step}closure_{tag}"
 
