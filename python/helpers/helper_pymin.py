@@ -138,6 +138,9 @@ def write_results(args, scales_smears):
         #make scales file here
         print("[INFO] creating new scales file: {}".format(scales_out))
         write_files.combine( new_scales, args.scales, scales_out )
-        return True
-    except:
+    except Exception as e:
+        print("[ERROR][python/helpers/helper_pymin.py][write_results] the following exception occured when trying to write results to file:")
+        print(e)
         return False
+
+    return True

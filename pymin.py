@@ -285,7 +285,7 @@ def main():
         return
 
     # minimization may not succeed, in this case the program will just end
-    if scales_smears == []:
+    if len(scales_smears) == 0:
         print("[ERROR] Review logs, minimization did not succeed")
         return
 
@@ -293,7 +293,6 @@ def main():
     file_written = helper_pymin.write_results(args, scales_smears)
     if not file_written:
         print("[ERROR] file not written, something went wrong")
-        return
 
     return
 
