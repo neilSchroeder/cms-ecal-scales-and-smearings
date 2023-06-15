@@ -60,7 +60,7 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
 
     rows = 2
     if 'no_ratio' in options.keys(): rows = 1
-    fig,axs = plt.subplots(nrows=rows, ncols=1, gridspec_kw={'height_ratios': [3, 1]}, figsize=(6,8)
+    fig,axs = plt.subplots(nrows=rows, ncols=1, gridspec_kw={'height_ratios': [3, 1]}, figsize=(6,8))
     fig.subplots_adjust(left=0.12, right=0.99, top=0.95, bottom=0.1,
             hspace=None if 'no_ratio' in options.keys() else 0.06)
 
