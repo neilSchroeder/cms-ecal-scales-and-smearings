@@ -1,6 +1,20 @@
+import numpy as np
 
 class PyValConstants():
     """a useful list of contants instead of defining them in every function"""
+
+    KEEP_COLS = [
+            'R9Ele',
+            'energy_ECAL_ele',
+            'etaEle',
+            'phiEle',
+            'gainSeedSC',
+            'invMass_ECAL_ele',
+            'runNumber',
+            'mcGenWeight',
+            'eleID',
+            ]
+    TREE_NAME = "selected"
 
     ETA_LEAD = "eta0"
     ETA_SUB = "eta1"
@@ -73,6 +87,21 @@ class DataConstants():
     INVMASS = 'invMass_ECAL_ele'
     ET_LEAD = 'transverse_energy[0]'
     ET_SUB = 'transverse_energy[1]'
+
+    DATA_TYPES = {
+        R9_LEAD: np.float32,
+        R9_SUB: np.float32,
+        ETA_LEAD: np.float32,
+        ETA_SUB: np.float32,
+        E_LEAD: np.float32,
+        E_SUB: np.float32,
+        PHI_LEAD: np.float32,
+        PHI_SUB: np.float32,
+        INVMASS: np.float32,
+        RUN: np.int32,
+        GAIN_LEAD: np.int16,
+        GAIN_SUB: np.int16,
+    }
 
     # indices of row in scales
     i_run_min = 0
