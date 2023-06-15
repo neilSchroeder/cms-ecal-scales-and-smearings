@@ -127,7 +127,7 @@ def plot(data, mc, cats, **options):
     """
 
     # get constants
-    df_cats = pd.read_csv(cats, sep='\t', comment=' # ')
+    df_cats = pd.read_csv(cats, sep='\t', comment='#')
 
     # loop over cats
     for i,row in df_cats.iterrows():

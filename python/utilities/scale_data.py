@@ -3,6 +3,7 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 import multiprocessing as mp
 import gc
+import time
 
 from python.classes.constant_classes import (
     DataConstants as dc,
@@ -12,36 +13,50 @@ from python.classes.constant_classes import (
 
 def apply(arg):
     #make a returnable df with all runs in this set of scales:
-    data,scales = arg
+    data,scales = arg    
 
     def find_scales(row):
         """finds the scales"""
-        # lead scale
-        lead_eta_mask = np.logical_and(
-            (scales[:,dc.i_eta_min] <= row[dc.ETA_LEAD]),(row[dc.ETA_LEAD] < scales[:,dc.i_eta_max])
+        # find the run bin
+        print(f"[INFO][scale_data.py] finding scales for run {row[dc.RUN]}")
+        lead_mask = np.logical_and(
+            (scales[:,dc.i_run_min] <= row[dc.RUN]),(row[dc.RUN] <= scales[:,dc.i_run_max])
             )
-        lead_r9_mask = np.logical_and(
-            (scales[:,dc.i_r9_min] <= row[dc.R9_LEAD]),(row[dc.R9_LEAD] < scales[:,dc.i_r9_max])
+        sublead_mask = np.logical_and(
+            (scales[:,dc.i_run_min] <= row[dc.RUN]),(row[dc.RUN] <= scales[:,dc.i_run_max])
             )
-        lead_gainEt_mask = np.ones(len(lead_eta_mask),dtype=bool)
+        
 
-        sub_eta_mask = np.logical_and(
+        # find the eta and r9 bins
+        lead_mask = np.logical_and( lead_mask, np.logical_and(
+            (scales[:,dc.i_eta_min] <= row[dc.ETA_LEAD]),(row[dc.ETA_LEAD] < scales[:,dc.i_eta_max])
+            ))
+        lead_mask = np.logical_and(lead_mask,
+            np.logical_and(
+                (scales[:,dc.i_r9_min] <= row[dc.R9_LEAD]),(row[dc.R9_LEAD] < scales[:,dc.i_r9_max])
+                )
+            )
+
+        sublead_mask = np.logical_and( sublead_mask, np.logical_and(
             (scales[:,dc.i_eta_min] <= row[dc.ETA_SUB]),(row[dc.ETA_SUB] < scales[:,dc.i_eta_max])
+            ))
+        sublead_mask = np.logical_and(sublead_mask,
+            np.logical_and(
+                (scales[:,dc.i_r9_min] <= row[dc.R9_SUB]),(row[dc.R9_SUB] < scales[:,dc.i_r9_max])
+                )
             )
-        sub_r9_mask = np.logical_and(
-            (scales[:,dc.i_r9_min] <= row[dc.R9_SUB]),(row[dc.R9_SUB] < scales[:,dc.i_r9_max])
-            )
-        sub_gainEt_mask = np.ones(len(sub_eta_mask),dtype=bool)
 
         if any(scales[:,dc.i_et_min] != dc.MIN_ET): #these scales are Et dependent
             lead_et = row[dc.E_LEAD]/np.cosh(row[dc.ETA_LEAD])
             sub_et = row[dc.E_SUB]/np.cosh(row[dc.ETA_SUB])
-            lead_gainEt_mask = np.logical_and(
+            lead_mask = np.logical_and( lead_mask, np.logical_and( 
                 (scales[:,dc.i_et_min] <= lead_et), (scales[:,dc.i_et_max] > lead_et)
-                )
-            sub_gainEt_mask = np.logical_and(
+                ))
+            sublead_mask = np.logical_and(sublead_mask, np.logical_and( 
                 (scales[:,dc.i_et_min] <= sub_et), (scales[:,dc.i_et_max] > sub_et)\
-                )
+                ))
+            
+
 
         if any(scales[:,dc.i_gain] != 0): #these scales are gain dependent
             lead_gain = 12
@@ -51,11 +66,29 @@ def apply(arg):
             if row[dc.GAIN_SUB] == 1: sub_gain = 6
             if row[dc.GAIN_SUB] > 2: sub_gain = 1
 
-            lead_gainEt_mask = scales[:,dc.i_gain] == lead_gain
-            sub_gainEt_mask = scales[:,dc.i_gain] == sub_gain
-        
-        lead_mask = np.logical_and(lead_eta_mask,np.logical_and(lead_r9_mask,lead_gainEt_mask))
-        sublead_mask = np.logical_and(sub_eta_mask,np.logical_and(sub_r9_mask,sub_gainEt_mask))
+            lead_mask = np.logical_and(lead_mask, scales[:,dc.i_gain] == lead_gain)
+            sublead_mask = np.logical_and(sublead_mask, scales[:,dc.i_gain] == sub_gain)
+
+        # one category should be found for each electron
+        if len(np.ravel(scales[lead_mask])) > 1:
+            print(f"[WARNING][scale_data.py] more than one lead scale found")
+            print(f"[WARNING][scale_data.py] lead eta: {row[dc.ETA_LEAD]}")
+            print(f"[WARNING][scale_data.py] lead r9: {row[dc.R9_LEAD]}")
+            print(f"[WARNING][scale_data.py] lead et: {row[dc.E_LEAD]/np.cosh(row[dc.ETA_LEAD])}")
+            print(f"[WARNING][scale_data.py] lead gain: {row[dc.GAIN_LEAD]}")
+            print(f"[WARNING][scale_data.py] lead scales: {scales[lead_mask]}")
+        if len(np.ravel(scales[sublead_mask])) > 1:
+            print(f"[WARNING][scale_data.py] more than one sublead scale found")
+            print(f"[WARNING][scale_data.py] sublead eta: {row[dc.ETA_SUB]}")
+            print(f"[WARNING][scale_data.py] sublead r9: {row[dc.R9_SUB]}")
+            print(f"[WARNING][scale_data.py] sublead et: {row[dc.E_SUB]/np.cosh(row[dc.ETA_SUB])}")
+            print(f"[WARNING][scale_data.py] sublead gain: {row[dc.GAIN_SUB]}")
+            print(f"[WARNING][scale_data.py] sublead scales: {scales[sublead_mask]}")
+
+        assert(len(np.ravel(scales[lead_mask])) <= 1)
+        assert(len(np.ravel(scales[sublead_mask])) <= 1)
+
+
 
         lead_scale = np.ravel(scales[lead_mask])[dc.i_scale] \
             if len(np.ravel(scales[lead_mask])) > 0 else 0.
@@ -68,12 +101,22 @@ def apply(arg):
          
         return (lead_scale, lead_err, sublead_scale, sublead_err)
 
-
+    # time this function
+    start = time.time()
     these_scales = data.apply(find_scales, axis=1)
+    end = time.time()
+    print(f"[INFO][scale_data.py] time to find scales for {len(data)} rows: {end-start}")
+
+    # start = time.time()
+    # lead_mask, sublead_mask = scales.apply(find_rows_in_data, axis=1)
+    # end = time.time()
+    # print(f"[INFO][scale_data.py] time to find rows in data: {end-start}")
+
     lead_scales = np.array([x[0] if len(x) > 0 else 0. for x in these_scales])
     lead_err = np.array([x[1] if len(x) > 0 else 0. for x in these_scales])
     lead_scales_up = np.add(lead_scales,lead_err)
     lead_scales_down = np.subtract(lead_scales, lead_err)
+
     sub_scales = np.array([x[2] if len(x) > 0 else 0. for x in these_scales])
     sub_err = np.array([x[3] if len(x) > 0 else 0. for x in these_scales])
     sub_scales_up = np.add(sub_scales,sub_err)
@@ -115,6 +158,7 @@ def scale(data, scales):
     #divide data by run number
     print(f"{info} dividing data by run")
     divided_data = [ data[np.logical_and(run_bins[i] <= data[run].values, data[run].values < run_bins[i+1])] for i in range(len(run_bins)-1)]
+    assert(len(data) == sum([len(x) for x in divided_data]))
 
     #divide scales by run and tuple with divided data
     print(f"{info} dividing scales by run and tuple")
@@ -124,6 +168,7 @@ def scale(data, scales):
             scales_df[:][i_run_min] < run_bins[i+1])
         ].values
         ) for i in range(len(run_bins)-1)]
+    assert(len(scales_df) == sum([len(x[1]) for x in divided_scales]))
 
     #initiate multiprocessing of scales application
     print(f"{info} distributing application of scales")

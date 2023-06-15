@@ -168,6 +168,7 @@ def main():
         return
 
     if args._kCombine:
+        #TODO deprecated, fix this
         helper_pymin.combine_files(args)
         return
 

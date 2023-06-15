@@ -34,50 +34,84 @@ def congruentCategories(last, this, nameLast, nameThis):
     10: Err
     """
 
-    #this is finer than last categories:
-    ret_eta = False
-    if float(round(last[2],4)) <= float(round(this[2],4)) and float(round(last[3],4)) >= float(round(this[3],4)):
-        ret_eta=True
-        if nameLast.find('step1') != -1:
-            return True
-    elif float(round(last[2],4)) >= float(round(this[2],4)) and float(round(last[3],4)) <= float(round(this[3],4)):
-        ret_eta=True
-    else: pass
+    congruent = False
+    run = False
+    eta = False
+    r9  = False
+    et  = False
+    gain = False
+
+    # check if the run ranges are the same
+    if last[0] == this[0] and last[1] == this[1]:
+        run = True
+    elif last[0] <= this[0] and last[1] >= this[1]:
+        # this is the case where the last category is a superset of this category
+        run = True
+    elif last[0] >= this[0] and last[1] <= this[1]:
+        # this is the case where this category is a superset of the last category
+        run = True
+    else:
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] run ranges are not the same: {last[0]} != {this[0]}")
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] run ranges are not the same: {last[1]} != {this[1]}")
+        return False
+
+    # check if the eta ranges are the same
+    if round(last[2],4) == round(this[2],4) and round(last[3],4) == round(this[3],4):
+        eta = True
+    elif round(last[2],4) <= round(this[2],4) and round(last[3],4) >= round(this[3],4):
+        # this is the case where the last category is a superset of this category
+        eta = True
+    elif round(last[2],4) >= round(this[2],4) and round(last[3],4) <= round(this[3],4):
+        # this is the case where this category is a superset of the last category
+        eta = True
+    else:   
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] eta ranges are not the same: {last[2]} != {this[2]}")
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] eta ranges are not the same: {last[3]} != {this[3]}")
+        return False
     
-    ret_r9 = False
-    if float(round(last[4],4)) <= float(round(this[4],4)) and float(round(last[5],5)) >= float(round(this[5],4)):
-        ret_r9 = True
-    elif float(round(last[4],4)) >= float(round(this[4],4)) and float(round(last[5],5)) <= float(round(this[5],4)):
-        ret_r9 = True
-    else: pass
+    # check if the r9 ranges are the same
+    if round(last[4],4) == round(this[4],4) and round(last[5],4) == round(this[5],4):
+        r9 = True
+    elif round(last[4],4) <= round(this[4],4) and round(last[5],4) >= round(this[5],4):
+        # this is the case where the last category is a superset of this category
+        r9 = True
+    elif round(last[4],4) >= round(this[4],4) and round(last[5],4) <= round(this[5],4):
+        # this is the case where this category is a superset of the last category
+        r9 = True
+    else:
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] r9 ranges are not the same: {last[4]} != {this[4]}")
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] r9 ranges are not the same: {last[5]} != {this[5]}")
+        return False
+    
+    # check if the et ranges are the same
+    if round(last[6],4) == round(this[6],4) and round(last[7],4) == round(this[7],4):
+        et = True
+    elif round(last[6],4) <= round(this[6],4) and round(last[7],4) >= round(this[7],4):
+        # this is the case where the last category is a superset of this category
+        et = True
+    elif round(last[6],4) >= round(this[6],4) and round(last[7],4) <= round(this[7],4):
+        # this is the case where this category is a superset of the last category
+        et = True
+    else:
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] et ranges are not the same: {last[6]} != {this[6]}")
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] et ranges are not the same: {last[7]} != {this[7]}")
+        return False
+    
+    # check if the gain ranges are the same
+    if last[8] == this[8]:
+        gain = True
+    elif last[8] == 0 and this[8] != 0:
+        # going from no gain scales to gain scales
+        gain = True
+    elif last[8] != 0 and this[8] == 0:
+        # non gain scales applied on top of gain scales
+        gain = True
+    else:   
+        # print(f"[FATAL ERROR][python/write_files][congruentCategories] gain scales are not the same: {last[8]} != {this[8]}")
+        return False
 
-    ret_gain = True
-    if float(round(last[8],4)) != 0:
-        ret_gain = False
-        if float(round(last[8],4)) == float(round(this[8],4)):
-            ret_gain = True
-
-    ret_et = False
-    if float(round(last[6],4)) <= float(round(this[6],4)):
-        if float(round(last[7],4)) >= float(round(this[7],4)):
-                ret_et=True
-    if float(round(last[6],4)) >= float(round(this[6],4)):
-        if float(round(last[7],4)) <= float(round(this[7],4)):
-                ret_et=True
-
-    if 'step2' in nameLast or 'step3' in nameLast or 'RunEtaR9_' in nameLast:
-        return ret_r9 and ret_eta
-
-    if 'stochastic' in nameThis or 'step4' in nameLast or 'EtaR9Et_' in nameLast:
-        return ret_eta and ret_r9 and ret_et
-
-    if nameThis.find('gain') != -1 or nameThis.find('Gain') != -1:
-        if nameLast.find('gain') != -1 or nameLast.find('Gain') != -1:
-            return ret_eta and ret_gain
-        else:
-            return ret_eta
-        
-    return False
+    # if all of the ranges are the same, then the categories are congruent
+    return True
 
 
 def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
@@ -127,7 +161,7 @@ def addNewCategory(rowLast, rowThis, thisDict, lastStep, thisStep):
     thisDict['scale'].append(round(float(rowThis[9])*float(rowLast[9]),6))
     thisDict['err'].append(rowThis[10])
 
-##################################################################################################################
+
 def writeJsonFromDF(thisDF,outFile):
 
     #Takes the dictionary built in [combine] and writes a json file
@@ -221,8 +255,8 @@ def write_scales(scales, cats, out):
         None
     --------------------------------
     """
-#format of onlystepX files is 
-#000000 999999 etaMin etaMax r9Min r9Max etMin etMax gain val err
+    #format of onlystepX files is 
+    #000000 999999 etaMin etaMax r9Min r9Max etMin etMax gain val err
     headers = ['runMin', 'runMax', 'etaMin', 'etaMax', 'r9Min', 'r9Max', 'etMin', 'etMax', 'gain', 'scale', 'err']
     dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
     for col in headers:
