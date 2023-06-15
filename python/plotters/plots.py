@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 import matplotlib as mpl
-mpl.use('TkAgg')
+# mpl.use('TkAgg')
 import time
 
 import python.helpers.helper_plots as helper_plots
