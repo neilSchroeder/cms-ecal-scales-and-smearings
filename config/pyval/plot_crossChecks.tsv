@@ -8,4 +8,9 @@ crossCheckMC	invMass_Pt-40-55	invMass_ECAL_ele	(-1,-1)	(-1,-1)	(40,55)	(-1,-1)	(
 crossCheckMC	invMass_Pt-55-65	invMass_ECAL_ele	(-1,-1)	(-1,-1)	(55,65)	(-1,-1)	(-1,-1)	(-1,-1)
 crossCheckMC	invMass_Pt-65-90	invMass_ECAL_ele	(-1,-1)	(-1,-1)	(65,90)	(-1,-1)	(-1,-1)	(-1,-1)
 crossCheckMC	invMass_Pt-90-Inf	invMass_ECAL_ele	(-1,-1)	(-1,-1)	(90,14000)	(-1,-1)	(-1,-1)	(-1,-1)
-
+crossCheckMC	lead_eta	etaEle[0]	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)
+crossCheckMC	sublead_eta	etaEle[1]	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)
+crossCheckMC	lead_energy	energy_ECAL_ele[0]	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)
+crossCheckMC	sublead_energy	energy_ECAL_ele[0]	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)
+crossCheckMC    lead_r9    R9Ele[0]	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)
+crossCheckMC    sublead_r9    R9Ele[1]	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)	(-1,-1)

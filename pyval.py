@@ -15,7 +15,7 @@ import pandas as pd
 import python.helpers.helper_pyval as helper_pyval
 import python.utilities.reweight_mc as reweight_mc
 import python.utilities.scale_data as scale_data
-import python.utilities.smear_mc_pyval as smear_mc
+import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
 
 from python.classes.constant_classes import PyValConstants as pvc
@@ -88,7 +88,7 @@ def main():
     parser.add_argument(
             "--no-reweight",
             help="turn off pt,Y reweighting",
-            dest="reweight",
+            dest="no_reweight",
             default=False,
             action="store_true",
             )
@@ -136,9 +136,7 @@ def main():
             print("[INFO] reweighting mc")
             df_mc = reweight_mc.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
         else:
-            if args.reweight:
-                pass
-            else:
+            if not args.no_reweight:
                 #avoid this if you can, just to save time
                 print("[INFO] deriving  pt,Y reweighting for mc")
                 weight_file = reweight_mc.derive_pt_y_weights(df_data, df_mc, args.output_file)
