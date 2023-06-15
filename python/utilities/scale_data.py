@@ -18,7 +18,6 @@ def apply(arg):
     def find_scales(row):
         """finds the scales"""
         # find the run bin
-        print(f"[INFO][scale_data.py] finding scales for run {row[dc.RUN]}")
         lead_mask = np.logical_and(
             (scales[:,dc.i_run_min] <= row[dc.RUN]),(row[dc.RUN] <= scales[:,dc.i_run_max])
             )
@@ -70,14 +69,14 @@ def apply(arg):
             sublead_mask = np.logical_and(sublead_mask, scales[:,dc.i_gain] == sub_gain)
 
         # one category should be found for each electron
-        if len(np.ravel(scales[lead_mask])) > 1:
+        if len(scales[lead_mask]) > 1:
             print(f"[WARNING][scale_data.py] more than one lead scale found")
             print(f"[WARNING][scale_data.py] lead eta: {row[dc.ETA_LEAD]}")
             print(f"[WARNING][scale_data.py] lead r9: {row[dc.R9_LEAD]}")
             print(f"[WARNING][scale_data.py] lead et: {row[dc.E_LEAD]/np.cosh(row[dc.ETA_LEAD])}")
             print(f"[WARNING][scale_data.py] lead gain: {row[dc.GAIN_LEAD]}")
             print(f"[WARNING][scale_data.py] lead scales: {scales[lead_mask]}")
-        if len(np.ravel(scales[sublead_mask])) > 1:
+        if len(scales[sublead_mask]) > 1:
             print(f"[WARNING][scale_data.py] more than one sublead scale found")
             print(f"[WARNING][scale_data.py] sublead eta: {row[dc.ETA_SUB]}")
             print(f"[WARNING][scale_data.py] sublead r9: {row[dc.R9_SUB]}")
@@ -85,8 +84,8 @@ def apply(arg):
             print(f"[WARNING][scale_data.py] sublead gain: {row[dc.GAIN_SUB]}")
             print(f"[WARNING][scale_data.py] sublead scales: {scales[sublead_mask]}")
 
-        assert(len(np.ravel(scales[lead_mask])) <= 1)
-        assert(len(np.ravel(scales[sublead_mask])) <= 1)
+        assert(len(scales[lead_mask]) <= 1)
+        assert(len(scales[sublead_mask]) <= 1)
 
 
 
@@ -172,6 +171,8 @@ def scale(data, scales):
 
     #initiate multiprocessing of scales application
     print(f"{info} distributing application of scales")
+    print(f"{info} please be patient, there are {len(data)} rows to apply scales to")
+    print(f"{info} it takes ~ 0.0003 seconds per row, and you've requested {processors} processors")
     pool = mp.Pool(processes=processors)
     scaled_data=pool.map(apply, divided_scales)
     pool.close()
