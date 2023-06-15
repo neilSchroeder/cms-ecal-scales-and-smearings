@@ -64,7 +64,7 @@ def main():
     parser.add_argument("--min-events", default=10000, dest='min_events',
                     	help="minimum number of events allowed in a given run bin")
 
-    parser.add_argument("-c","--cats", default=None,
+    parser.add_argument("-c","--catsFile", default=None,
                     	help="path to file describing categories to use in minimization")
     parser.add_argument("--time-stability", default=False, dest="_kTimeStability", action='store_true',
                     	help="scale data to PDG Z mass, pass the run divide file as your categories")
@@ -220,13 +220,13 @@ def main():
             print("[ERROR] you have requested a time stability, but have not specified an output name")
             print("[ERROR] please resubmit with a --output argument")
             return
-        if args.cats is None:
+        if args.catsFile is None:
             print("[ERROR] you have requested a time stability, but have not specified a category")
             print("[ERROR] please resubmit with a --cats argument")
             return
         outFile = "datFiles/step1_"+args.output+"_scales.dat"
-        ts_data, data_path = time_stability.derive(data, args.cats, args.output)
-        write_files.write_time_stability(ts_data, args.cats, outFile)
+        ts_data, data_path = time_stability.derive(data, args.catsFile, args.output)
+        write_files.write_time_stability(ts_data, args.catsFile, outFile)
         if args._kPlot:
             plot_run_stability(data_path, args.output, args.lumi_label, corrected=False)
             plot_run_stability(data_path, args.output, args.lumi_label, corrected=True)
@@ -234,7 +234,7 @@ def main():
         return
 
     # scale the data
-    if os.path.isfile(args.scales):
+    if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
         data = scale_data.scale(data, args.scales)
     else:
@@ -254,16 +254,16 @@ def main():
 
 
     # load categories for the derivation
-    if args.cats is None:
+    if args.catsFile is None:
         print("[ERROR] you have not provided a category file")
         print("[ERROR] please resubmit with a --cats argument")
         return
-    if not os.path.isfile(args.cats):
+    if not os.path.isfile(args.catsFile):
         print("[ERROR] you have provided a category file that does not exist")
         print("[ERROR] please resubmit with a valid --cats argument")
         return
-    print(f"[INFO] importing categories from {args.cats}")
-    cats = pd.read_csv(args.cats, sep="\t", comment="# ", header=None)
+    print(f"[INFO] importing categories from {args.catsFile}")
+    cats_df = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
 
     if args._kClosure:
         if not args._kTestMethodAccuracy:
@@ -275,7 +275,8 @@ def main():
 
     # derive scales and smearings
     print("[INFO] initiating minimization using scipy.optimize.minimize")
-    scales_smears = minimizer.minimize(data, mc, cats, args)
+    options = helper_pymin.get_options(args)
+    scales_smears = minimizer.minimize(data, mc, cats_df, options)
 
 
     # if we're plotting there's nothing to write, so just print a done message and exit
@@ -284,7 +285,7 @@ def main():
         return
 
     # minimization may not succeed, in this case the program will just end
-    if scales_smears == []:
+    if len(scales_smears) == 0:
         print("[ERROR] Review logs, minimization did not succeed")
         return
 
@@ -292,7 +293,6 @@ def main():
     file_written = helper_pymin.write_results(args, scales_smears)
     if not file_written:
         print("[ERROR] file not written, something went wrong")
-        return
 
     return
 

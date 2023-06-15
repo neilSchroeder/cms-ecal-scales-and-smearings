@@ -40,7 +40,6 @@ def make_script(cmd, script, done):
     Make the script to be run on the condor node
     -----------------------------------------------
     Args:
-        cwd: current working directory
         cmd: command to be run
         script: script to be run
         done: file to indicating if job is done
@@ -56,7 +55,7 @@ def make_script(cmd, script, done):
     lines.append("eval `scramv1 runtime -sh`  uname -a\n")
     lines.append("echo $CMSSW_VERSION\n")
     lines.append('\n')
-    lines.append(cmd+f" --from-condor\n")
+    lines.append(f'python3 {cmd} --from-condor\n')
     lines.append('\n')
     lines.append("touch "+done)
 
@@ -79,7 +78,7 @@ def manage(cmd, out, queue):
     -----------------------------------------------
     """
     
-    target_dir = f"{ss_config.condor_path}/{out}"
+    target_dir = f"{os.getcwd()}/condor/{out}"
 
     #check for proper directory structure
     if not os.path.exists(target_dir):
@@ -100,7 +99,7 @@ def manage(cmd, out, queue):
             return
 
     htcondor, done = make_htcondor(target_dir, queue) 
-    make_script(cmd, out, htcondor, done)
+    make_script(cmd, htcondor, done)
 
     condor_submit = "condor_submit --batch-name "+out+" "+htcondor
     print("[INFO][python/condor_handler][manage] submitting job to condor")
