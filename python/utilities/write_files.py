@@ -4,6 +4,9 @@ import os
 import pandas as pd
 from collections import OrderedDict
 
+from python.classes.constant_classes import DataConstants as dc
+from python.classes.config_class import SSConfig
+ss_config = SSConfig()
 
 def congruentCategories(last, this, nameLast, nameThis):
     """
@@ -425,12 +428,8 @@ def write_time_stability(scales, runs, outFile):
             for i in range(len(scales)):
                 dictForDf['runMin'].append(row[0])
                 dictForDf['runMax'].append(row[1])
-                eta_min, eta_max = 0,1
-                if i == 1: eta_min, eta_max = 1, 1.4442
-                if i == 2: eta_min, eta_max = 1.566, 2
-                if i == 3: eta_min, eta_max = 2, 2.5
-                dictForDf['etaMin'].append(eta_min)
-                dictForDf['etaMax'].append(eta_max)
+                dictForDf['etaMin'].append(dc.time_stability_eta_bins_low[i])
+                dictForDf['etaMax'].append(dc.time_stability_eta_bins_high[i])
                 dictForDf['r9Min'].append(0)
                 dictForDf['r9Max'].append(10)
                 dictForDf['etMin'].append(0)

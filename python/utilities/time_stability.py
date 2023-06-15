@@ -6,7 +6,6 @@ import statistics as stat
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
-import python.utilities.write_files as write_files
 ss_config = SSConfig()
 
 
@@ -36,8 +35,8 @@ def derive(data, runs, output, _kWriteData=True):
     """
     print(f"[INFO][python/time_stability][derive] Deriving scale for runs in {runs}")
 
-    eta_min = [0, 1., 1.2, 1.566, 2.]
-    eta_max = [1., 1.2, 1.4442, 2., 2.5]
+    eta_min = dc.time_stability_eta_bins_low
+    eta_max = dc.time_stability_eta_bins_high
     ret = [[] for i in range(len(eta_min))]
 
     run_bins = pd.read_csv(runs, delimiter='\t', header=None)

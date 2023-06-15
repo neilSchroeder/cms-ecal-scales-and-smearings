@@ -142,6 +142,8 @@ class DataConstants():
     PTZ_BINS = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,29,30,31,32,33,34,35,36,37,38,39,40,45,50,55,60,80,100,14000]
     YZ_BINS = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5]
 
+    time_stability_eta_bins_low = [0, 1., 1.2, 1.566, 2.]
+    time_stability_eta_bins_high = [1., 1.2, 1.4442, 2., 2.5]
 
 class CategoryConstants():
     """ constants for the categories files """
