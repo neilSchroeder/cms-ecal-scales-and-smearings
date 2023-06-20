@@ -29,7 +29,7 @@ def extract_files(filename):
             ret_dict[row[0]].append(row[1])
         else:
             print(f'[ERROR] file does not exist {row[1]}')
-            raise KeyboardInterrupt
+            raise RuntimeError
 
     return ret_dict
 
@@ -50,7 +50,8 @@ def get_dataframe(files):
     elif ".csv" in files[0] or ".tsv" in files[0]:
         df = pd.concat([pd.read_csv(f, sep='\t',dtype=dc.DATA_TYPES) for f in files])
     else:
-        print("[python][helpers][helper_main] get goofed")
+        print("[python][helpers][helper_main] ERROR: file type not recognized")
+        raise ValueError("file type not recognized: must be .root, .csv, or .tsv")
 
 
     #clean the data a bit before sending back
@@ -93,6 +94,7 @@ def standard_cuts(df):
     mask = np.logical_and(mask, mask_invmass)
 
     return df[mask]
+
 
 def custom_cuts(df, custom_cuts):
 
