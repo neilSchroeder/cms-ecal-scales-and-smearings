@@ -40,7 +40,6 @@ def get_var(df, info, _isData=True):
     """
 
      # unpack the info
-    var = info["variable"]
     bounds_eta_lead = get_tuple(info[pvc.ETA_LEAD])
     bounds_r9_lead = get_tuple(info[pvc.R9_LEAD])
     bounds_et_lead = get_tuple(info[pvc.ET_LEAD])
@@ -50,11 +49,11 @@ def get_var(df, info, _isData=True):
 
      # determine what variable we're plotting
     var_key = None
-    if var not in df.columns:
+    if info["variable"] not in df.columns:
          # gonna have to do something fancier here
-        pass
+        raise ValueError("variable not in dataframe")
     else:
-        var_key = var
+        var_key = info["variable"]
 
     mask_lead = np.ones(len(df), dtype=bool)
     mask_sub = np.ones(len(df), dtype=bool)
@@ -98,21 +97,20 @@ def get_var(df, info, _isData=True):
                )
 
     mask = np.logical_and(mask_lead,mask_sub)
-    df_new = df[mask]
 
     if var_key == dc.INVMASS:
         # check if systematics available
         if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
-            print("check, keys in df")
+            # there's no systematics, so just return the data
             return np.array(df[mask][var_key].values)
         
         if _isData:
-            print("check, returning 3 vals")
+            # return the data
             return [np.array(df[mask][var_key].values),
                     np.array(df[mask][pvc.KEY_INVMASS_UP].values),
                     np.array(df[mask][pvc.KEY_INVMASS_DOWN].values)]
 
-        print("check, mc return")
+        # otherwise return mc
         return [np.array(df[mask][var_key].values),
                 np.array(df[mask][pvc.KEY_INVMASS_UP].values),
                 np.array(df[mask][pvc.KEY_INVMASS_DOWN].values),
