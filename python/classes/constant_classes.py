@@ -33,6 +33,17 @@ class PyValConstants():
     KEY_INVMASS_UP = "invmass_up"
     KEY_INVMASS_DOWN = "invmass_down"
     KEY_PTY = "pty_weight"
+
+    # indices of row in plot cats
+    i_plot_style = 0
+    i_plot_name = 1
+    i_plot_var = 2
+    i_plot_bounds_eta_lead = 3
+    i_plot_bounds_eta_sub = 4
+    i_plot_bounds_r9_lead = 5
+    i_plot_bounds_r9_sub = 6
+    i_plot_bounds_et_lead = 7
+    i_plot_bounds_et_sub = 8
     
     plotting_functions = {}
 
@@ -115,17 +126,6 @@ class DataConstants():
     i_gain = 8
     i_scale = 9
     i_err = 10
-
-    # indices of row in plot cats
-    i_plot_style = 0
-    i_plot_name = 1
-    i_plot_var = 2
-    i_plot_bounds_eta_lead = 3
-    i_plot_bounds_eta_sub = 4
-    i_plot_bounds_r9_lead = 5
-    i_plot_bounds_r9_sub = 6
-    i_plot_bounds_et_lead = 7
-    i_plot_bounds_et_sub = 8
 
     SEED = 3543136929
 

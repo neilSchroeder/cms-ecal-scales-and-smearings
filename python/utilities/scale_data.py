@@ -101,15 +101,7 @@ def apply(arg):
         return (lead_scale, lead_err, sublead_scale, sublead_err)
 
     # time this function
-    start = time.time()
     these_scales = data.apply(find_scales, axis=1)
-    end = time.time()
-    print(f"[INFO][scale_data.py] time to find scales for {len(data)} rows: {end-start}")
-
-    # start = time.time()
-    # lead_mask, sublead_mask = scales.apply(find_rows_in_data, axis=1)
-    # end = time.time()
-    # print(f"[INFO][scale_data.py] time to find rows in data: {end-start}")
 
     lead_scales = np.array([x[0] if len(x) > 0 else 0. for x in these_scales])
     lead_err = np.array([x[1] if len(x) > 0 else 0. for x in these_scales])

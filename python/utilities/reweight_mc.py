@@ -110,9 +110,6 @@ def add(arg):
 def add_pt_y_weights(df, weight_file):
     #adds the pt x rapidity weights to the df
 
-    print(min(df[dc.INVMASS].values))
-    print(max(df[dc.INVMASS].values))
-    #adds the pt x y weight as a column to the df
     print("[INFO][python/reweight_pt_y][add_pt_y_weights] applying weights from {}".format(weight_file))
     ptz = np.array(get_zpt(df))
     rapidity = np.array(get_rapidity(df))

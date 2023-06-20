@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 import matplotlib as mpl
-# mpl.use('TkAgg')
+mpl.use('Agg')
 import time
 
 import python.helpers.helper_plots as helper_plots
@@ -44,7 +44,7 @@ def plot_style_validation_mc(data, mc, plot_title, **options):
     binning = 'auto'
     hist_min = 80.
     hist_max = 100.
-    if options['bins'] is not None or options['bins'] is not 'auto':
+    if options['bins'] != None or options['bins'] != 'auto':
         binning = [hist_min + float(i)*(hist_max-hist_min)/float(options['bins']) for i in range(int(options['bins'])+1)]
 
     #histogram data and mc
@@ -166,7 +166,11 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     # histogram data and mc
     h_data, h_bins = np.histogram(data, bins=binning, range=[hist_min,hist_max])
-    h_mc, h_bins = np.histogram(mc, bins=h_bins, weights=mc_weights)
+    try:
+        h_mc, h_bins = np.histogram(mc, bins=h_bins, weights=mc_weights)
+    except Exception as e:
+        # probably failed because no weights (unusual)
+        h_mc, h_bins = np.histogram(mc, bins=h_bins) 
     bin_width = round(h_bins[1] - h_bins[0], 4)
     marker_size = 20*bin_width
 
@@ -182,7 +186,11 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     # calculate errors
     y_err_data = np.sqrt(h_data)
-    y_err_mc = helper_plots.get_bin_uncertainties(h_bins, mc, mc_weights)
+    try:
+        y_err_mc = helper_plots.get_bin_uncertainties(h_bins, mc, mc_weights)
+    except Exception as e:
+        # probably failed because no weights (unusual)
+        y_err_mc = np.sqrt(h_mc)
     y_err_ratio = np.array([])
 
     mc_err_max = np.add(h_mc,y_err_mc)
@@ -200,6 +208,8 @@ def plot_style_paper(data, mc, plot_title, **options):
     rows = 2
     if 'no_ratio' in options: rows = 1
     fig,axs = plt.subplots(nrows=rows, ncols=1)
+    if 'no_ratio' in options:
+        axs = [axs]
     fig.subplots_adjust(left=0.12, right=0.99, top=0.95, bottom=0.1,
             hspace=None if 'no_ratio' in options.keys() else 0.06)
 
@@ -247,7 +257,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         axs[1].plot(mids, [1. for x in mids], linestyle='dashed', color='black', alpha=0.5)
 
         # add syst+unc band to unity line
-        if 'syst' in options.keys():
+        if 'syst' in options and options['syst']:
             err = np.sqrt(np.add(np.power(y_err_mc,2),np.power(syst_unc,2)))
             syst_err = np.divide(err,h_mc)
             axs[1].fill_between(mids_full, syst_err+1, 1-syst_err, step='mid', alpha=0.3, color='red', label='mc stat. $\oplus$ syst. unc.')

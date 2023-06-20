@@ -127,7 +127,6 @@ def main():
     if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")
         df_mc = helper_pyval.get_dataframe(dict_config[pvc.KEY_MC])
-        print(max(df_mc['invMass_ECAL_ele'].values))
         if len(dict_config[pvc.KEY_SM]) > 0:
             print("[INFO] smearing mc")
             df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
