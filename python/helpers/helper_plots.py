@@ -24,7 +24,7 @@ def get_bin_uncertainties(bins, values, weights):
 
     return np.array(ret)
 
-def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_up, mc_down, mc_weights):
+def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_weights):
     """
     Calculates the systematic uncertainties for data and MC
     ----------
@@ -49,15 +49,10 @@ def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_up, mc_dow
     d_down, _ = np.histogram(data_down, bins=d_bins)
     d_down = d_down*sum(d)/sum(d_down)
     m, m_bins = np.histogram(mc, bins=bins, range=[dc.MIN_INVMASS,dc.MAX_INVMASS], weights=mc_weights)
-    m_up, _ = np.histogram(mc_up, bins=m_bins, weights=mc_weights)
-    m_down, _ = np.histogram(mc_down, bins=m_bins, weights=mc_weights)
 
     diff_up_data = np.abs(np.subtract(d, d_up))
     diff_down_data = np.abs(np.subtract(d, d_down))
-    diff_up_mc = np.abs(np.subtract(m, m_up))
-    diff_down_mc = np.abs(np.subtract(m, m_down))
 
     max_data = np.maximum(diff_up_data, diff_down_data)
-    max_mc = np.maximum(diff_up_mc, diff_down_mc)
 
-    return np.sqrt(np.add(np.power(max_data,2),np.power(max_mc,2)))
+    return max_data

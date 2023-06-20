@@ -155,7 +155,7 @@ def plot_style_paper(data, mc, plot_title, **options):
     # systematics
     if options['syst']:
         data, data_up, data_down = data
-        mc, mc_up, mc_down, mc_weights = mc
+        mc, mc_weights = mc
 
     # binning scheme
     binning = 'auto'
@@ -199,7 +199,7 @@ def plot_style_paper(data, mc, plot_title, **options):
     # include syst uncertainties if they exist
     syst_unc = []
     if options['syst']:
-        syst_unc = helper_plots.get_systematic_uncertainty(h_bins, data, data_up, data_down, mc, mc_up, mc_down, mc_weights)
+        syst_unc = helper_plots.get_systematic_uncertainty(h_bins, data, data_up, data_down, mc, mc_weights)
         err = np.sqrt(np.add(np.power(y_err_mc, 2), np.power(syst_unc, 2)))
         mc_err_max, mc_err_min = np.add(h_mc, err), np.subtract(h_mc, err)
         y_err_ratio = np.divide(y_err_data, h_data)

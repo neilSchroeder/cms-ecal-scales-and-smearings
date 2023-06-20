@@ -2,8 +2,11 @@ import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None
 import multiprocessing as mp
+# import concurrent futures
+import concurrent.futures as cf
 import gc
 import time
+import tqdm
 
 from python.classes.constant_classes import (
     DataConstants as dc,
@@ -17,33 +20,29 @@ def apply(arg):
 
     def find_scales(row):
         """finds the scales"""
-        # find the run bin
-        lead_mask = np.logical_and(
+        # find the run bin (only needs to be computed once)
+        run_mask = np.logical_and(
             (scales[:,dc.i_run_min] <= row[dc.RUN]),(row[dc.RUN] <= scales[:,dc.i_run_max])
             )
-        sublead_mask = np.logical_and(
-            (scales[:,dc.i_run_min] <= row[dc.RUN]),(row[dc.RUN] <= scales[:,dc.i_run_max])
-            )
-        
 
         # find the eta and r9 bins
-        lead_mask = np.logical_and( lead_mask, np.logical_and(
-            (scales[:,dc.i_eta_min] <= row[dc.ETA_LEAD]),(row[dc.ETA_LEAD] < scales[:,dc.i_eta_max])
-            ))
-        lead_mask = np.logical_and(lead_mask,
-            np.logical_and(
-                (scales[:,dc.i_r9_min] <= row[dc.R9_LEAD]),(row[dc.R9_LEAD] < scales[:,dc.i_r9_max])
-                )
-            )
+        lead_mask = np.logical_and.reduce((
+                run_mask, 
+                np.logical_and(
+                    (scales[:,dc.i_eta_min] <= row[dc.ETA_LEAD]),(row[dc.ETA_LEAD] < scales[:,dc.i_eta_max])
+                    ),
+                np.logical_and(
+                    (scales[:,dc.i_r9_min] <= row[dc.R9_LEAD]),(row[dc.R9_LEAD] < scales[:,dc.i_r9_max])
+                )))
+        sublead_mask = np.logical_and.reduce((
+                run_mask, 
+                np.logical_and(
+                    (scales[:,dc.i_eta_min] <= row[dc.ETA_SUB]),(row[dc.ETA_SUB] < scales[:,dc.i_eta_max])
+                    ),
+                np.logical_and(
+                    (scales[:,dc.i_r9_min] <= row[dc.R9_SUB]),(row[dc.R9_SUB] < scales[:,dc.i_r9_max])
+                )))
 
-        sublead_mask = np.logical_and( sublead_mask, np.logical_and(
-            (scales[:,dc.i_eta_min] <= row[dc.ETA_SUB]),(row[dc.ETA_SUB] < scales[:,dc.i_eta_max])
-            ))
-        sublead_mask = np.logical_and(sublead_mask,
-            np.logical_and(
-                (scales[:,dc.i_r9_min] <= row[dc.R9_SUB]),(row[dc.R9_SUB] < scales[:,dc.i_r9_max])
-                )
-            )
 
         if any(scales[:,dc.i_et_min] != dc.MIN_ET): #these scales are Et dependent
             lead_et = row[dc.E_LEAD]/np.cosh(row[dc.ETA_LEAD])
@@ -55,8 +54,6 @@ def apply(arg):
                 (scales[:,dc.i_et_min] <= sub_et), (scales[:,dc.i_et_max] > sub_et)\
                 ))
             
-
-
         if any(scales[:,dc.i_gain] != 0): #these scales are gain dependent
             lead_gain = 12
             sub_gain = 12
@@ -87,8 +84,6 @@ def apply(arg):
         assert(len(scales[lead_mask]) <= 1)
         assert(len(scales[sublead_mask]) <= 1)
 
-
-
         lead_scale = np.ravel(scales[lead_mask])[dc.i_scale] \
             if len(np.ravel(scales[lead_mask])) > 0 else 0.
         lead_err = np.ravel(scales[lead_mask])[dc.i_err] \
@@ -101,7 +96,10 @@ def apply(arg):
         return (lead_scale, lead_err, sublead_scale, sublead_err)
 
     # time this function
+    start = time.time()
     these_scales = data.apply(find_scales, axis=1)
+    end = time.time()
+    print(f"[INFO][scale_data.py] time to apply scales: {(end-start)/len(data)} seconds per row")
 
     lead_scales = np.array([x[0] if len(x) > 0 else 0. for x in these_scales])
     lead_err = np.array([x[1] if len(x) > 0 else 0. for x in these_scales])
@@ -165,9 +163,20 @@ def scale(data, scales):
     print(f"{info} distributing application of scales")
     print(f"{info} please be patient, there are {len(data)} rows to apply scales to")
     print(f"{info} it takes ~ 0.0003 seconds per row, and you've requested {processors} processors")
-    pool = mp.Pool(processes=processors)
-    scaled_data=pool.map(apply, divided_scales)
-    pool.close()
-    pool.join()
-    return pd.concat(scaled_data)
+    proc_futures = []
+    executor = cf.ProcessPoolExecutor(max_workers=processors)
+    for x in divided_scales:
+        proc_futures.append(executor.submit(apply, x))
+    
+    # if any of the processes fail, raise an error
+    if any([x.exception() for x in proc_futures]):
+        print(f"[ERROR][scale_data.py] some processes failed")
+        for x in proc_futures:
+            if x.exception():
+                print(x.result())
+        raise RuntimeError
+    
+    ret = pd.concat([x.result() for x in proc_futures])
+    executor.shutdown()
 
+    return ret

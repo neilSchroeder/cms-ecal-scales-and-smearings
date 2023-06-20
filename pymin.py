@@ -238,6 +238,7 @@ def main():
     if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
         data = scale_data.scale(data, args.scales)
+        data = scale_data.scale_data_by_query(data, args.scales)
     else:
         print(f"[INFO] no scales file provided, skipping data scaling")
 
