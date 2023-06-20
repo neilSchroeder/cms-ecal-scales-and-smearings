@@ -103,17 +103,21 @@ def get_var(df, info, _isData=True):
     if var_key == dc.INVMASS:
         # check if systematics available
         if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
+            print("check, keys in df")
             return np.array(df[mask][var_key].values)
         
-        if not _isData:
+        if _isData:
+            print("check, returning 3 vals")
             return [np.array(df[mask][var_key].values),
                     np.array(df[mask][pvc.KEY_INVMASS_UP].values),
-                    np.array(df[mask][pvc.KEY_INVMASS_DOWN].values),
-                    np.array(df[mask][pvc.KEY_PTY].values)]
-        
+                    np.array(df[mask][pvc.KEY_INVMASS_DOWN].values)]
+
+        print("check, mc return")
         return [np.array(df[mask][var_key].values),
-            np.array(df[mask][pvc.KEY_INVMASS_UP].values),
-            np.array(df[mask][pvc.KEY_INVMASS_DOWN].values)]
+                np.array(df[mask][pvc.KEY_INVMASS_UP].values),
+                np.array(df[mask][pvc.KEY_INVMASS_DOWN].values),
+                np.array(df[mask][pvc.KEY_PTY].values)]
+        
     
     return np.array(df[mask][var_key].values)
 
@@ -141,11 +145,11 @@ def plot(data, mc, cats, **options):
         print(row[pvc.i_plot_name])
         plotting_class.get_plotting_function(row[pvc.i_plot_style])(  # gets the plotting function
             get_var(data, row[pvc.i_plot_var::]),  # gets events from data to plot
-            get_var(mc, row[pvc.i_plot_var::], False),  # gets events from mc to plot
+            get_var(mc, row[pvc.i_plot_var::], _isData=False),  # gets events from mc to plot
             row[pvc.i_plot_name],  # plot title
             **options,
             syst= (row[pvc.i_plot_var] == dc.INVMASS and 'invmass_up' in data.columns and 'invmass_down' in data.columns),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
-            no_ratio=True
+            #no_ratio=True
             )
 
     return
