@@ -99,7 +99,7 @@ def apply(arg):
     start = time.time()
     these_scales = data.apply(find_scales, axis=1)
     end = time.time()
-    print(f"[INFO][scale_data.py] time to apply scales: {(end-start)/len(data)} seconds per row")
+    # print(f"[INFO][scale_data.py] time to apply scales: {(end-start)/len(data)} seconds per row")
 
     lead_scales = np.array([x[0] if len(x) > 0 else 0. for x in these_scales])
     lead_err = np.array([x[1] if len(x) > 0 else 0. for x in these_scales])

@@ -98,6 +98,13 @@ def main():
             dest="write_location",
             default=None,
             )
+    parser.add_argument(
+            "--debug",
+            default=False,
+            action="store_true",
+            dest="_kDebug",
+            help="turn on debug mode",
+        )
 
     args = parser.parse_args()
 
@@ -117,7 +124,7 @@ def main():
     #load and handle data first
     if len(dict_config[pvc.KEY_DAT]) > 0:
         print("[INFO] loading data")
-        df_data = helper_pyval.get_dataframe(dict_config[pvc.KEY_DAT])
+        df_data = helper_pyval.get_dataframe(dict_config[pvc.KEY_DAT], args._kDebug)
         if len(dict_config[pvc.KEY_SC]) > 0:
             print("[INFO] scaling data")
             df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
@@ -126,7 +133,7 @@ def main():
     #load and handle mc next
     if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")
-        df_mc = helper_pyval.get_dataframe(dict_config[pvc.KEY_MC])
+        df_mc = helper_pyval.get_dataframe(dict_config[pvc.KEY_MC], args._kDebug)
         if len(dict_config[pvc.KEY_SM]) > 0:
             print("[INFO] smearing mc")
             df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])

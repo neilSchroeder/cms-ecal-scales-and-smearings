@@ -134,6 +134,8 @@ def main():
                     	help="Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center")
     parser.add_argument("--scan-scales", default=None, dest='scan_scales',
                     	help="Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space]")
+    parser.add_argument("--debug", default=False, action='store_true', dest='_kDebug',
+                        help="Turn on debug mode, which prints out additional information and uses a smaller dataset")
 
     args = parser.parse_args()
     print("[INFO] welcome to SS_PyMin")

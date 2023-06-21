@@ -33,7 +33,7 @@ def extract_files(filename):
 
     return ret_dict
 
-def get_dataframe(files):
+def get_dataframe(files, debug=False):
     """
     takes in a list of root files for data and mc.
     opens them with uproot into dataframes
@@ -52,6 +52,10 @@ def get_dataframe(files):
     else:
         print("[python][helpers][helper_main] ERROR: file type not recognized")
         raise ValueError("file type not recognized: must be .root, .csv, or .tsv")
+    
+    if debug:
+        # use a smaller dataset for debugging
+        df = df.head(1000000)
 
 
     #clean the data a bit before sending back

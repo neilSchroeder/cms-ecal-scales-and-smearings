@@ -93,6 +93,11 @@ def load_dataframes(files, args):
     if args._kTestMethodAccuracy:
         data = mc.copy()
 
+    if args._kDebug:
+        # only use a small subset of the data for debugging
+        data = data.head(10000)
+        mc = mc.head(10000)
+
     #clean the data a bit before sending back
 
     data[dc.ETA_LEAD] = np.abs(data[dc.ETA_LEAD])

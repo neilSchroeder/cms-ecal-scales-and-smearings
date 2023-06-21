@@ -100,11 +100,11 @@ def get_var(df, info, _isData=True):
 
     if var_key == dc.INVMASS:
         # check if systematics available
-        if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
-            # there's no systematics, so just return the data
-            return np.array(df[mask][var_key].values)
         
         if _isData:
+            if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
+                # there's no systematics, so just return the data
+                return np.array(df[mask][var_key].values)
             # return the data
             return [np.array(df[mask][var_key].values),
                     np.array(df[mask][pvc.KEY_INVMASS_UP].values),
@@ -112,8 +112,6 @@ def get_var(df, info, _isData=True):
 
         # otherwise return mc
         return [np.array(df[mask][var_key].values),
-                np.array(df[mask][pvc.KEY_INVMASS_UP].values),
-                np.array(df[mask][pvc.KEY_INVMASS_DOWN].values),
                 np.array(df[mask][pvc.KEY_PTY].values)]
         
     
