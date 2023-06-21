@@ -17,6 +17,8 @@ from python.classes.constant_classes import (
 def apply(arg):
     #make a returnable df with all runs in this set of scales:
     data,scales = arg    
+    if len(data) == 0: return data
+    if len(scales) == 0: return data
 
     def find_scales(row):
         """finds the scales"""
@@ -95,19 +97,18 @@ def apply(arg):
          
         return (lead_scale, lead_err, sublead_scale, sublead_err)
 
-    # time this function
-    start = time.time()
+    # put values in their own columns 
     these_scales = data.apply(find_scales, axis=1)
-    end = time.time()
-    # print(f"[INFO][scale_data.py] time to apply scales: {(end-start)/len(data)} seconds per row")
+    these_scales = pd.DataFrame(these_scales.values.tolist(), columns=['lead_scale', 'lead_err', 'sublead_scale', 'sublead_err'])
+    print(these_scales.head())
 
-    lead_scales = np.array([x[0] if len(x) > 0 else 0. for x in these_scales])
-    lead_err = np.array([x[1] if len(x) > 0 else 0. for x in these_scales])
+    lead_scales = these_scales['lead_scale'].values
+    lead_err = these_scales['lead_err'].values
     lead_scales_up = np.add(lead_scales,lead_err)
     lead_scales_down = np.subtract(lead_scales, lead_err)
 
-    sub_scales = np.array([x[2] if len(x) > 0 else 0. for x in these_scales])
-    sub_err = np.array([x[3] if len(x) > 0 else 0. for x in these_scales])
+    sub_scales = these_scales['sublead_scale'].values
+    sub_err = these_scales['sublead_err'].values
     sub_scales_up = np.add(sub_scales,sub_err)
     sub_scales_down = np.subtract(sub_scales, sub_err)
 
