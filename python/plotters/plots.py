@@ -220,11 +220,11 @@ def plot_style_paper(data, mc, plot_title, **options):
         axs = [axs]
 
     fig.subplots_adjust(
-        left=style.fig['subplot']['left'], 
-        right=style.fig['subplot']['right'], 
-        top=style.fig['subplot']['top'], 
-        bottom=style.fig['subplot']['bottom'],
-        hspace=None if 'no_ratio' in options.keys() else style.fig['subplot']['hspace'],
+        left=style.subplot['left'], 
+        right=style.subplot['right'], 
+        top=style.subplot['top'], 
+        bottom=style.subplot['bottom'],
+        hspace=None if 'no_ratio' in options.keys() else style.subplot['hspace'],
     )
 
     # top plot
