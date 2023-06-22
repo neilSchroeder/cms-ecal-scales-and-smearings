@@ -234,7 +234,7 @@ class PlottingConstants():
                     'va': 'bottom',
                 },
                 'cms_tag': {
-                    'annot': r'$\textbf{CMS}$ $\textit{Preliminary}$',
+                    'annot': r'\\textbf{CMS} \\textit{Preliminary}',
                     'xy': (0, 1.),
                     'xycoords': 'axes fraction',
                     'ha': 'left',
