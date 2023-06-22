@@ -260,16 +260,34 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     # invert legend order because python is a hassle
     handles, labels = axs[0].get_legend_handles_labels()
-    axs[0].legend( handles[::-1], labels[::-1], loc=style.legend_loc, fontsize=style.legend_fontsize)   
+    axs[0].legend( 
+        handles[::-1], 
+        labels[::-1], 
+        loc=style.legend['loc'], 
+        fontsize=style.legend['fontsize'],
+        )   
 
     # labels
-    axs[0].annotate(
-        style.annotations['cms_tag']['annot'],
-        xy=style.annotations['cms_tag']['xy'],
-        xycoords=style.annotations['cms_tag']['xycoords'],
-        ha=style.annotations['cms_tag']['ha'],
-        va=style.annotations['cms_tag']['va'],
-    )
+    for text in style.annotations.keys():
+        if text == 'plot_title': 
+            if plot_title in style.annotations[text]['annot'].keys():
+                axs[0].annotate(
+                    style.annotations[text]['annot'][plot_title],
+                    xy=style.annotations[text]['xy'],
+                    xycoords=style.annotations[text]['xycoords'],
+                    ha=style.annotations[text]['ha'],
+                    va=style.annotations[text]['va'],
+                )
+            else:
+                print(f"WARNING: {plot_title} not found in annotations, no plot title will be added")
+        else:
+            axs[0].annotate(
+                style.annotations[text]['annot'],
+                xy=style.annotations[text]['xy'],
+                xycoords=style.annotations[text]['xycoords'],
+                ha=style.annotations[text]['ha'],
+                va=style.annotations[text]['va'],
+            )
     
     axs[0].annotate(
         options['lumi'] if 'lumi' in options.keys() else style.annotations['lumi']['annot'],
@@ -279,14 +297,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         va=style.annotations['lumi']['va'],
     )
     
-    if plot_title in style.annotations['plot_title']['annot'].keys():
-        axs[0].annotate(
-            style.annotations['plot_title']['annot'][plot_title],
-            xy=style.annotations['plot_title']['xy'],
-            xycoords=style.annotations['plot_title']['xycoords'],
-            ha=style.annotations['plot_title']['ha'],
-            va=style.annotations['plot_title']['va'],
-        )
+
     else:
         print(f"WARNING: {plot_title} not found in annotations, no plot title will be added")
         
