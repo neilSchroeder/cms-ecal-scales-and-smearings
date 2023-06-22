@@ -211,6 +211,11 @@ class PlottingConstants():
                 'syst': 'red',
             },
             labels = {
+                'x_axis': {
+                    'label': 'M$_{ee}$ [GeV]',
+                    'fontsize': 12,
+                    'ha': 'right',
+                },
                 'data': 'Data',
                 'mc': 'MC',
                 'syst': 'MC stat. $\oplus$ syst. unc.',

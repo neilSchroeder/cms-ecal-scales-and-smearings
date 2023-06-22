@@ -299,9 +299,16 @@ def plot_style_paper(data, mc, plot_title, **options):
     
     # ratio pad
     if 'no_ratio' in options.keys():
-        axs[0].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right',x=1.)
+        axs[0].set_xlabel(style.labels['x_axis']['label'],
+                          ha=style.labels['x_axis']['ha'],
+                        #   fontsize=style.labels['x_axis']['fontsize'],
+                          x=1.)
     else:
-        axs[1].plot(mids, [1. for x in mids], linestyle='dashed', color=style.data_color, alpha=0.5)
+        axs[1].plot(mids, 
+                    [1. for x in mids], 
+                    linestyle='dashed', 
+                    color=style.colors['data'], 
+                    alpha=0.5)
 
         # add syst+unc band to unity line
         if 'syst' in options and options['syst']:
