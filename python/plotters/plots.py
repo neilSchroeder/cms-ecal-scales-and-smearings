@@ -208,11 +208,24 @@ def plot_style_paper(data, mc, plot_title, **options):
     # define figure
     rows = 2
     if 'no_ratio' in options: rows = 1
-    fig,axs = plt.subplots(nrows=rows, ncols=1, figsize=(6, 6), sharex=True, gridspec_kw={'height_ratios': [3, 1]})
+    fig,axs = plt.subplots(
+        nrows=rows, 
+        ncols=1, 
+        figsize=style.fig['size'],
+        sharex=style.fig['sharex'],
+        gridspec_kw={'height_ratios': style.fig['subplot_ratio']}
+        )
+    
     if 'no_ratio' in options:
         axs = [axs]
-    fig.subplots_adjust(left=0.1, right=0.96, top=0.97, bottom=0.075,
-            hspace=None if 'no_ratio' in options.keys() else 0.02)
+
+    fig.subplots_adjust(
+        left=style.fig['subplot']['left'], 
+        right=style.fig['subplot']['right'], 
+        top=style.fig['subplot']['top'], 
+        bottom=style.fig['subplot']['bottom'],
+        hspace=None if 'no_ratio' in options.keys() else style.fig['subplot']['hspace'],
+    )
 
     # top plot
     axs[0].fill_between(
