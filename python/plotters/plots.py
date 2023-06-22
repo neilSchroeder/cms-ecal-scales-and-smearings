@@ -297,10 +297,6 @@ def plot_style_paper(data, mc, plot_title, **options):
         va=style.annotations['lumi']['va'],
     )
     
-
-    else:
-        print(f"WARNING: {plot_title} not found in annotations, no plot title will be added")
-        
     # ratio pad
     if 'no_ratio' in options.keys():
         axs[0].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right',x=1.)
