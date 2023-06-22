@@ -1,4 +1,5 @@
 import numpy as np
+from collections import namedtuple
 
 class PyValConstants():
     """a useful list of contants instead of defining them in every function"""
@@ -159,3 +160,107 @@ class CategoryConstants():
     i_et_max = 7
 
     empty = -1
+
+
+class PlottingConstants():
+
+    HIST_MIN = 80
+    HIST_MAX = 100
+
+    PlotStyle = namedtuple(
+            'PlotStyle',
+            [
+                'style',
+                'binning',
+                'y_scale',
+                'fig',
+                'subplot',
+                'legend',
+                'colors',
+                'labels',
+                'error_bar_style',
+                'sci_notation_offset',
+                'annotations',
+            ]
+
+    )
+
+    paper_style = PlotStyle(
+            style='paperStyle_',
+            binning='auto',
+            y_scale=1.16,
+            fig = {
+                'size': (8,8),
+                'subplot_ratio': [7,3],
+                'sharex': True,
+            },
+            subplot = {
+                'left': 0.1,
+                'right': 0.95,
+                'bottom': 0.09,
+                'top': 0.96,
+                'hspace': 0.02,
+            },
+            legend = {
+                'loc': 'upper right',
+                'fontsize': 10,
+            },
+            colors = {
+                'data': 'black',
+                'mc': 'cornflowerblue',
+                'syst': 'red',
+            },
+            labels = {
+                'data': 'Data',
+                'mc': 'MC',
+                'syst': 'MC stat. $\oplus$ syst. unc.',
+                'ratio': 'Data / MC',
+            },
+            error_bar_style='steps-mid',
+            sci_notation_offset=(-0.065, 0.5),
+            annotations = {
+                'lumi': {
+                    'annot': "XX.X fb$^{-1}$ (13 TeV) 20XX",
+                    'xy': (0, 1.),
+                    'xycoords': 'axes fraction',
+                    'ha': 'left',
+                    'va': 'bottom',
+                },
+                'cms_tag': {
+                    'annot': "$\\bf{CMS}$ \ \\it{Preliminary}$",
+                    'xy': (1, 1.),
+                    'xycoords': 'axes fraction',
+                    'ha': 'right',
+                    'va': 'bottom',
+                },
+                'plot_title': {
+                    'annot': {
+                        "invmass_Barrel-Barrel": "EB-EB",
+                        "invmass_Barrel-Barrel_lowR9": "EB-EB\nHigh Brem",
+                        "invmass_Barrel-Barrel_highR9": "EB-EB\nLow Brem",
+                        "invmass_Barrel-Endcap": "EB-EE",
+                        "invmass_Barrel-Endcap_lowR9": "EB-EE\nHigh Brem",
+                        "invmass_Barrel-Endcap_highR9": "EB-EE\nLow Brem",
+                        "invmass_Endcap-Endcap": "EE-EE",
+                        "invmass_Endcap-Endcap_lowR9": "EE-EE\nHigh Brem",
+                        "invmass_Endcap-Endcap_highR9": "EE-EE\nLow Brem",
+                        "invmass_lead_Pt-32-40": "32 GeV < $p_{T, lead}^{e}$ < 40 GeV",
+                        "invmass_lead_Pt-40-55": "40 GeV < $p_{T, lead}^{e}$ < 55 GeV",
+                        "invmass_lead_Pt-55-65": "55 GeV < $p_{T, lead}^{e}$ < 65 GeV",
+                        "invmass_lead_Pt-65-90": "65 GeV < $p_{T, lead}^{e}$ < 90 GeV",
+                        "invMass_lead_Pt-90-Inf": "90 GeV < $p_{T, lead}^{e}$",
+                        "invMass_diag_Pt-32-40": "32 GeV < $p_{T}^{e}$ < 40 GeV",
+                        "invMass_diag_Pt-40-55": "40 GeV < $p_{T}^{e}$ < 55 GeV",
+                        "invMass_diag_Pt-55-65": "55 GeV < $p_{T}^{e}$ < 65 GeV",
+                        "invMass_diag_Pt-65-90": "65 GeV < $p_{T}^{e}$ < 90 GeV",
+                        "invMass_diag_Pt-90-Inf": "90 GeV < $p_{T}^{e}$",
+                    },
+                    'xy': (0.1, 0.9),
+                    'xycoords': 'axes fraction',
+                    'ha': 'left',
+                    'va': 'top',
+                    'fontsize': 12,
+                },
+
+            }
+    )

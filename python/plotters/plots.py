@@ -10,9 +10,10 @@ import time
 import python.helpers.helper_plots as helper_plots
 from python.classes.config_class import SSConfig
 ss_config = SSConfig()
+from python.classes.constant_classes import PlottingConstants as pc
 
 plt.rcParams.update({
-    "text.usetex": False,
+    "text.usetex": True,
     "font.family": "Helvetica"
 })
 
@@ -152,7 +153,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         None
     ---------------------------------------
     """
-    style = "paperStyle_"
+    style = pc.paper_style
     print("plotting {}".format(plot_title))
 
     # systematics
@@ -161,14 +162,12 @@ def plot_style_paper(data, mc, plot_title, **options):
         mc, mc_weights = mc
 
     # binning scheme
-    binning = 'auto'
-    hist_min = 80.
-    hist_max = 100.
+    binning = style.binning
     if options['bins'] and options['bins'] != 'auto':
-        binning = [hist_min + float(i)*(hist_max-hist_min)/float(options['bins']) for i in range(int(options['bins'])+1)]
+        binning = [pc.HIST_MIN + float(i)*(pc.HIST_MAX-pc.HIST_MIN)/float(options['bins']) for i in range(int(options['bins'])+1)]
 
     # histogram data and mc
-    h_data, h_bins = np.histogram(data, bins=binning, range=[hist_min,hist_max])
+    h_data, h_bins = np.histogram(data, bins=binning, range=[pc.HIST_MIN,pc.HIST_MAX])
     try:
         h_mc, h_bins = np.histogram(mc, bins=h_bins, weights=mc_weights)
     except Exception as e:
@@ -184,7 +183,7 @@ def plot_style_paper(data, mc, plot_title, **options):
     
     mids = [(h_bins[i]+h_bins[i+1])/2 for i in range(len(h_bins)-1)]
     mids_full = mids.copy()
-    mids_full[0], mids_full[-1] = hist_min, hist_max
+    mids_full[0], mids_full[-1] = pc.HIST_MIN, pc.HIST_MAX
     x_err = (h_bins[1]-h_bins[0])/2
 
     # calculate errors
@@ -217,56 +216,85 @@ def plot_style_paper(data, mc, plot_title, **options):
             hspace=None if 'no_ratio' in options.keys() else 0.02)
 
     # top plot
-    axs[0].fill_between(mids_full,h_mc,y2=0,step='mid',alpha=0.2,color='cornflowerblue') #fill mc area
-    axs[0].fill_between(mids_full,mc_err_max,y2=mc_err_min,step='mid', alpha=0.3, color='red', label='mc stat. $\oplus$ syst. unc.') #fill mc error
+    axs[0].fill_between(
+        mids_full,
+        h_mc,
+        y2=0,
+        step='mid',
+        alpha=0.2,
+        color=style.colors['mc'],
+    ) #fill mc area
+    axs[0].fill_between(
+        mids_full,
+        mc_err_max,
+        y2=mc_err_min,
+        step='mid', 
+        alpha=0.3, 
+        color=style.colors['syst'], 
+        label=style.labels['syst']) #fill mc error
     axs[0].errorbar(mids, h_mc, # plot mc
             xerr=x_err,
-            label = 'mc', 
-            color='cornflowerblue',
-            drawstyle='steps-mid',
+            label = style.labels['mc'], 
+            color=style.colors['mc'],
+            drawstyle=style.error_bar_style,
             capsize=0.,
             )
     axs[0].errorbar(mids, h_data, # plot data
             xerr=x_err, yerr=y_err_data, 
-            label = 'data', 
+            label = style.labels['data'], 
+            color=style.colors['data'],
             linestyle='None', 
-            color='black',
             marker='o',
             markersize=marker_size, 
             capsize=0., 
             capthick=0.)
-    axs[0].set_ylim(bottom=0)
-    axs[0].set_xlim(hist_min-1, hist_max+1)
+    
+    axs[0].set_ylim(bottom=0, top=np.max(h_data)*style.y_scale)
+
     axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5)
+    # set grid
+    axs[0].grid(which='major',axis='both')
+    # set scientific notation
+    axs[0].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+    axs[0].yaxis.offsetText.set_position(style.sci_notation_offset)
 
     # invert legend order because python is a hassle
     handles, labels = axs[0].get_legend_handles_labels()
-    axs[0].legend( handles[::-1], labels[::-1], loc='upper right')
+    axs[0].legend( handles[::-1], labels[::-1], loc=style.legend_loc, fontsize=style.legend_fontsize)   
 
     # labels
-    axs[0].annotate("$\\bf{CMS} \ \\it{Preliminary}$", 
-            xy=(0,1.), xycoords='axes fraction', 
-            ha='left', va='bottom')
-    lumi = options['lumi'] if 'lumi' in options.keys() else 'XX.X fb$^{-1} (13 TeV) 20XX'
-    axs[0].annotate(lumi, 
-            xy=(1,1.), xycoords='axes fraction', 
-            ha='right', va='bottom')
-    axs[0].grid(which='major',axis='both')
-    axs[0].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
-    # change location of scientific notation
-    # yticks = axs[0].get_yticks()
-    # yticks = np.append(yticks, axs[0].get_ylim()[1])
-    # yticks = yticks[yticks>0]
-    # axs[0].set_yticks(yticks)
-    # axs[0].yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
-    # axs[0].yaxis.offsetText.set_fontsize(10)
-    axs[0].yaxis.offsetText.set_position((-0.065,0.5))
+    axs[0].annotate(
+        style.annotations['cms_tag']['annot'],
+        xy=style.annotations['cms_tag']['xy'],
+        xycoords=style.annotations['cms_tag']['xycoords'],
+        ha=style.annotations['cms_tag']['ha'],
+        va=style.annotations['cms_tag']['va'],
+    )
+    
+    axs[0].annotate(
+        options['lumi'] if 'lumi' in options.keys() else style.annotations['lumi']['annot'],
+        xy=style.annotations['lumi']['xy'], 
+        xycoords=style.annotations['lumi']['xycoords'],
+        ha=style.annotations['lumi']['ha'],
+        va=style.annotations['lumi']['va'],
+    )
+    
+    if plot_title in style.annotations['plot_title']['annot'].keys():
+        axs[0].annotate(
+            style.annotations['plot_title']['annot'][plot_title],
+            xy=style.annotations['plot_title']['xy'],
+            xycoords=style.annotations['plot_title']['xycoords'],
+            ha=style.annotations['plot_title']['ha'],
+            va=style.annotations['plot_title']['va'],
+        )
+    else:
+        print(f"WARNING: {plot_title} not found in annotations, no plot title will be added")
         
     # ratio pad
     if 'no_ratio' in options.keys():
         axs[0].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right',x=1.)
     else:
-        axs[1].plot(mids, [1. for x in mids], linestyle='dashed', color='black', alpha=0.5)
+        axs[1].plot(mids, [1. for x in mids], linestyle='dashed', color=style.data_color, alpha=0.5)
 
         # add syst+unc band to unity line
         if 'syst' in options and options['syst']:
@@ -276,9 +304,9 @@ def plot_style_paper(data, mc, plot_title, **options):
             
         axs[1].errorbar(mids, ratio, 
                 xerr=x_err, yerr=y_err_ratio, 
-                label='data / mc', 
+                label=style.ratio_label, 
                 linestyle='None',
-                color='black',
+                color=style.data_color,
                 marker='o',
                 markersize=marker_size,
                 capsize=0.,)
@@ -286,10 +314,10 @@ def plot_style_paper(data, mc, plot_title, **options):
         # invert legend order because python is a hassle
         handles, labels = axs[1].get_legend_handles_labels()
         axs[1].legend(handles[::-1], labels[::-1], loc='upper right')
-        axs[1].set_ylabel('data/mc',horizontalalignment='right', y=1.)
+        axs[1].set_ylabel(style.ratio_label,horizontalalignment='right', y=1.)
         axs[1].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right', x=1.)
         axs[1].set_ylim(0.75, 1.25)
-        axs[1].set_xlim(hist_min, hist_max)
+        axs[1].set_xlim(pc.HIST_MIN, pc.HIST_MAX)
         axs[1].grid(which='major',axis='both')
         # set tick size to zero on top plot
         axs[0].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
