@@ -300,7 +300,7 @@ def plot_style_paper(data, mc, plot_title, **options):
             if text == 'lumi':
                 lumi = options['lumi'] if 'lumi' in options.keys() else None
             axs[0].annotate(
-                lumi if lumi else style.annotations[text]['annot'],
+                lumi if lumi else r'{}'.format(style.annotations[text]['annot']),
                 xy=style.annotations[text]['xy'],
                 xycoords=style.annotations[text]['xycoords'],
                 ha=style.annotations[text]['ha'],
