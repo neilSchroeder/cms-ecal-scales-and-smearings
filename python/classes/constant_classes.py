@@ -227,15 +227,15 @@ class PlottingConstants():
             sci_notation_offset=(-0.065, 0.5),
             annotations = {
                 'lumi': {
-                    'annot': "XX.X fb$^{-1}$ (13 TeV) 20XX",
-                    'xy': (0, 1.),
+                    'annot': r"XX.X fb$^{-1}$ (13 TeV) 20XX",
+                    'xy': (1, 1.),
                     'xycoords': 'axes fraction',
                     'ha': 'left',
                     'va': 'bottom',
                 },
                 'cms_tag': {
-                    'annot': "$\\bf{CMS}$ \ \\it{Preliminary}$",
-                    'xy': (1, 1.),
+                    'annot': r"$\\bf{CMS}$ \ \\it{Preliminary}$",
+                    'xy': (0, 1.),
                     'xycoords': 'axes fraction',
                     'ha': 'right',
                     'va': 'bottom',
