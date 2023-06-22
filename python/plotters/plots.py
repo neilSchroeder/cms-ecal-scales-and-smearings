@@ -349,8 +349,8 @@ def plot_style_paper(data, mc, plot_title, **options):
 
 
     # save fig
-    fig.savefig(f"{plot_dir}{style}{options['tag']}_{plot_title}.png")
-    fig.savefig(f"{plot_dir}{style}{options['tag']}_{plot_title}.pdf")
+    fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.png")
+    fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.pdf")
 
     plt.close(fig)
 
