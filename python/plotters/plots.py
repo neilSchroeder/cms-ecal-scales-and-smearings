@@ -324,9 +324,9 @@ def plot_style_paper(data, mc, plot_title, **options):
             
         axs[1].errorbar(mids, ratio, 
                 xerr=x_err, yerr=y_err_ratio, 
-                label=style.ratio_label, 
+                label=style.labels['ratio'], 
                 linestyle='None',
-                color=style.data_color,
+                color=style.colors['data'],
                 marker='o',
                 markersize=marker_size,
                 capsize=0.,)
@@ -334,7 +334,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         # invert legend order because python is a hassle
         handles, labels = axs[1].get_legend_handles_labels()
         axs[1].legend(handles[::-1], labels[::-1], loc='upper right')
-        axs[1].set_ylabel(style.ratio_label,horizontalalignment='right', y=1.)
+        axs[1].set_ylabel(style.labels['ratio'],horizontalalignment='right', y=1.)
         axs[1].set_xlabel(
             style.labels['x_axis']['label'],
             horizontalalignment=style.labels['x_axis']['ha'],
