@@ -100,7 +100,6 @@ def apply(arg):
     # put values in their own columns 
     these_scales = data.apply(find_scales, axis=1)
     these_scales = pd.DataFrame(these_scales.values.tolist(), columns=['lead_scale', 'lead_err', 'sublead_scale', 'sublead_err'])
-    print(these_scales.head())
 
     lead_scales = these_scales['lead_scale'].values
     lead_err = these_scales['lead_err'].values
@@ -179,5 +178,6 @@ def scale(data, scales):
     
     ret = pd.concat([x.result() for x in proc_futures])
     executor.shutdown()
+    print(f"{info} done applying scales")
 
     return ret
