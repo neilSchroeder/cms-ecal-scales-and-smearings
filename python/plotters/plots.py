@@ -281,21 +281,16 @@ def plot_style_paper(data, mc, plot_title, **options):
             else:
                 print(f"WARNING: {plot_title} not found in annotations, no plot title will be added")
         else:
+            lumi = None
+            if text == 'lumi':
+                lumi = options['lumi'] if 'lumi' in options.keys() else None
             axs[0].annotate(
-                style.annotations[text]['annot'],
+                lumi if lumi else style.annotations[text]['annot'],
                 xy=style.annotations[text]['xy'],
                 xycoords=style.annotations[text]['xycoords'],
                 ha=style.annotations[text]['ha'],
                 va=style.annotations[text]['va'],
             )
-    
-    axs[0].annotate(
-        options['lumi'] if 'lumi' in options.keys() else style.annotations['lumi']['annot'],
-        xy=style.annotations['lumi']['xy'], 
-        xycoords=style.annotations['lumi']['xycoords'],
-        ha=style.annotations['lumi']['ha'],
-        va=style.annotations['lumi']['va'],
-    )
     
     # ratio pad
     if 'no_ratio' in options.keys():
@@ -333,8 +328,18 @@ def plot_style_paper(data, mc, plot_title, **options):
 
         # invert legend order because python is a hassle
         handles, labels = axs[1].get_legend_handles_labels()
-        axs[1].legend(handles[::-1], labels[::-1], loc='upper right')
-        axs[1].set_ylabel(style.labels['ratio'],horizontalalignment='right', y=1.)
+        axs[1].legend(
+            handles[::-1], 
+            labels[::-1], 
+            loc=style.legend['loc'],
+            fontsize=style.legend['fontsize'],
+        )
+
+        axs[1].set_ylabel(
+            style.labels['ratio'],
+            horizontalalignment='right', 
+            y=1.
+        )
         axs[1].set_xlabel(
             style.labels['x_axis']['label'],
             horizontalalignment=style.labels['x_axis']['ha'],
