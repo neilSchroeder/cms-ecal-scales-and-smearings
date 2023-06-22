@@ -197,11 +197,11 @@ class PlottingConstants():
                 'sharex': True,
             },
             subplot = {
-                'left': 0.09,
-                'right': 0.96,
-                'bottom': 0.08,
+                'left': 0.08,
+                'right': 0.97,
+                'bottom': 0.07,
                 'top': 0.96,
-                'hspace': 0.02,
+                'hspace': 0.03,
             },
             legend = {
                 'loc': 'upper right',
@@ -234,7 +234,7 @@ class PlottingConstants():
                     'va': 'bottom',
                 },
                 'cms_tag': {
-                    'annot': r'$\\textbf{CMS}$ \ \\textit{Preliminary}$',
+                    'annot': r'\textbf{CMS} \textit{Preliminary}',
                     'xy': (0, 1.),
                     'xycoords': 'axes fraction',
                     'ha': 'left',
@@ -266,7 +266,8 @@ class PlottingConstants():
                     'xycoords': 'axes fraction',
                     'ha': 'left',
                     'va': 'top',
-                    'fontsize': 12,
+                    'fontsize': 14,
+                    'weight': 'bold',
                 },
 
             }

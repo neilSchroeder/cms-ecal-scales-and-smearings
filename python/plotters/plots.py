@@ -291,6 +291,7 @@ def plot_style_paper(data, mc, plot_title, **options):
                     xycoords=style.annotations[text]['xycoords'],
                     ha=style.annotations[text]['ha'],
                     va=style.annotations[text]['va'],
+                    weight=style.annotations[text]['weight'],
                 )
             else:
                 print(f"WARNING: {plot_title} not found in annotations, no plot title will be added")
