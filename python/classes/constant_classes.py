@@ -166,8 +166,8 @@ class PlottingConstants():
 
     HIST_MIN = 80
     HIST_MAX = 100
-    RATIO_MIN = 0.75
-    RATIO_MAX = 1.25
+    RATIO_MIN = 0.5
+    RATIO_MAX = 1.5
 
     PlotStyle = namedtuple(
             'PlotStyle',

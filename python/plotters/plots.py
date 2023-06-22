@@ -269,7 +269,9 @@ def plot_style_paper(data, mc, plot_title, **options):
     # labels
     for text in style.annotations.keys():
         if text == 'plot_title': 
+            print('plot_title': plot_title)
             if plot_title in style.annotations[text]['annot'].keys():
+                print("plot_title found in annotations", style.annotations[text]['annot'][plot_title])
                 axs[0].annotate(
                     style.annotations[text]['annot'][plot_title],
                     xy=style.annotations[text]['xy'],
