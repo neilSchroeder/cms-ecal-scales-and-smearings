@@ -13,7 +13,6 @@ ss_config = SSConfig()
 from python.classes.constant_classes import PlottingConstants as pc
 
 plt.rcParams.update({
-    "text.usetex": False,
     "font.family": "Helvetica"
 })
 
