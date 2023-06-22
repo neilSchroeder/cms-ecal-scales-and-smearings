@@ -314,7 +314,13 @@ def plot_style_paper(data, mc, plot_title, **options):
         if 'syst' in options and options['syst']:
             err = np.sqrt(np.add(np.power(y_err_mc,2),np.power(syst_unc,2)))
             syst_err = np.divide(err,h_mc)
-            axs[1].fill_between(mids_full, syst_err+1, 1-syst_err, step='mid', alpha=0.3, color='red', label='mc stat. $\oplus$ syst. unc.')
+            axs[1].fill_between(mids_full, 
+                                syst_err+1, 
+                                1-syst_err, 
+                                step='mid', 
+                                alpha=0.3, 
+                                color=style.colors['syst'], 
+                                label=style.labels['syst'])
             
         axs[1].errorbar(mids, ratio, 
                 xerr=x_err, yerr=y_err_ratio, 
@@ -329,8 +335,12 @@ def plot_style_paper(data, mc, plot_title, **options):
         handles, labels = axs[1].get_legend_handles_labels()
         axs[1].legend(handles[::-1], labels[::-1], loc='upper right')
         axs[1].set_ylabel(style.ratio_label,horizontalalignment='right', y=1.)
-        axs[1].set_xlabel('M$_{ee}$ [GeV]',horizontalalignment='right', x=1.)
-        axs[1].set_ylim(0.75, 1.25)
+        axs[1].set_xlabel(
+            style.labels['x_axis']['label'],
+            horizontalalignment=style.labels['x_axis']['ha'],
+            x=1.,
+        )
+        axs[1].set_ylim(pc.RATIO_MIN, pc.RATIO_MAX)
         axs[1].set_xlim(pc.HIST_MIN, pc.HIST_MAX)
         axs[1].grid(which='major',axis='both')
         # set tick size to zero on top plot
