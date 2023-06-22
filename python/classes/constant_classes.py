@@ -230,14 +230,14 @@ class PlottingConstants():
                     'annot': r"XX.X fb$^{-1}$ (13 TeV) 20XX",
                     'xy': (1, 1.),
                     'xycoords': 'axes fraction',
-                    'ha': 'left',
+                    'ha': 'right',
                     'va': 'bottom',
                 },
                 'cms_tag': {
-                    'annot': r"$\\bf{CMS}$ \ \\it{Preliminary}$",
+                    'annot': r"$\bf{CMS}$ \ \it{Preliminary}$",
                     'xy': (0, 1.),
                     'xycoords': 'axes fraction',
-                    'ha': 'right',
+                    'ha': 'left',
                     'va': 'bottom',
                 },
                 'plot_title': {
