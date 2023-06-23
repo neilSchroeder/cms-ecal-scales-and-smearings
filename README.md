@@ -226,6 +226,8 @@ What follows is a list of additional options that may be of some use as well as 
 
 ### Advanced Options
 
+To run the minimization or the plotting with a smaller dataset to debug parts of the code, use the `--debug` option. This will run the code on only 1000000 events.
+
 To ignore specific categories by index use the `--ignore` option
 
 To change the lower and upper bounds on the histograms used to evaluate the NLL of the dielectron categories use the `--hist-min` and `--hist-max` options
