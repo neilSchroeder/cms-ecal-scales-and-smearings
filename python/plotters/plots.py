@@ -14,7 +14,8 @@ ss_config = SSConfig()
 from python.classes.constant_classes import PlottingConstants as pc
 
 plt.rcParams.update({
-    "font.family": "Helvetica"
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Helvetica"],
 })
 
 plot_dir = ss_config.DEFAULT_PLOT_PATH
@@ -264,7 +265,7 @@ def plot_style_paper(data, mc, plot_title, **options):
     
     axs[0].set_ylim(bottom=0, top=np.max(h_data)*style.y_scale)
 
-    axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5)
+    axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5, fontsize=14)
     # set grid
     axs[0].grid(which='major',axis='both')
     # set scientific notation
@@ -293,6 +294,7 @@ def plot_style_paper(data, mc, plot_title, **options):
                     ha=style.annotations[text]['ha'],
                     va=style.annotations[text]['va'],
                     weight=style.annotations[text]['weight'],
+                    fontsize=style.annotations[text]['fontsize'],
                 )
             else:
                 print(f"WARNING: {plot_title} not found in annotations, no plot title will be added")
@@ -306,6 +308,7 @@ def plot_style_paper(data, mc, plot_title, **options):
                 xycoords=style.annotations[text]['xycoords'],
                 ha=style.annotations[text]['ha'],
                 va=style.annotations[text]['va'],
+                fontsize=style.annotations[text]['fontsize'],
             )
     
     # ratio pad
@@ -354,12 +357,14 @@ def plot_style_paper(data, mc, plot_title, **options):
         axs[1].set_ylabel(
             style.labels['ratio'],
             horizontalalignment='right', 
-            y=1.
+            y=1.,
+            fontsize=14,
         )
         axs[1].set_xlabel(
             style.labels['x_axis']['label'],
             horizontalalignment=style.labels['x_axis']['ha'],
             x=1.,
+            fontsize=style.labels['x_axis']['fontsize'],
         )
         axs[1].set_ylim(pc.RATIO_MIN, pc.RATIO_MAX)
         axs[1].set_xlim(pc.HIST_MIN, pc.HIST_MAX)
