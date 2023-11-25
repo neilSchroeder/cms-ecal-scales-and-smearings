@@ -124,6 +124,10 @@ With your run bins in hand you can now run the time_stability step:
 ```
 python3 pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
 ```
+and to plot the results of the time stabilization, run the following:
+```
+python3 pymin.py -i <config-file> --cats <run-divide-file> --time-stability -o <output-name> --plot --lumi-label <lumi-string : i.e.('59.7 fb^{-1} (13 TeV) 2018')>
+```
 From here you can run the scales and smearings chain. This requires a couple additional ingredients.
 The first is a categories file, you can see an example below:
 ```
