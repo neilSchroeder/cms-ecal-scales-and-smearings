@@ -13,7 +13,7 @@ import pandas as pd
 
 #project functions
 import python.helpers.helper_pyval as helper_pyval
-import python.utilities.reweight_mc as reweight_mc
+import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
@@ -140,13 +140,13 @@ def main():
         df_mc = helper_pyval.standard_cuts(df_mc)
         if len(dict_config[pvc.KEY_WT]) != 0:
             print("[INFO] reweighting mc")
-            df_mc = reweight_mc.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
+            df_mc = reweight_pt_y.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
         else:
             if not args.no_reweight:
                 #avoid this if you can, just to save time
                 print("[INFO] deriving  pt,Y reweighting for mc")
-                weight_file = reweight_mc.derive_pt_y_weights(df_data, df_mc, args.output_file)
-                df_mc = reweight_mc.add_pt_y_weights(df_mc, weight_file)
+                weight_file = reweight_pt_y.derive_pt_y_weights(df_data, df_mc, args.output_file)
+                df_mc = reweight_pt_y.add_pt_y_weights(df_mc, weight_file)
 
 
     if args.write_location is not None:

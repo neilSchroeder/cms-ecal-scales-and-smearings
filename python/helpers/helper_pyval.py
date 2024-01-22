@@ -55,7 +55,7 @@ def get_dataframe(files, debug=False):
     
     if debug:
         # use a smaller dataset for debugging
-        df = df.head(1000000)
+        df = df.head(100000)
 
 
     #clean the data a bit before sending back

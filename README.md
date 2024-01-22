@@ -124,6 +124,10 @@ With your run bins in hand you can now run the time_stability step:
 ```
 python3 pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
 ```
+and to plot the results of the time stabilization, run the following:
+```
+python3 pymin.py -i <config-file> --cats <run-divide-file> --time-stability -o <output-name> --plot --lumi-label <lumi-string : i.e.('59.7 fb^{-1} (13 TeV) 2018')>
+```
 From here you can run the scales and smearings chain. This requires a couple additional ingredients.
 The first is a categories file, you can see an example below:
 ```
@@ -225,6 +229,8 @@ pyval has the following additional options:
 What follows is a list of additional options that may be of some use as well as a list of tools which are helpful for the scales and smearings studies
 
 ### Advanced Options
+
+To run the minimization or the plotting with a smaller dataset to debug parts of the code, use the `--debug` option. This will run the code on only 1000000 events.
 
 To ignore specific categories by index use the `--ignore` option
 
