@@ -285,36 +285,60 @@ def deactivate_cats(__ZCATS__, ignore_cats):
                 if row[cc.i_type] == cat.lead_index and row[cc.i_eta_min] == cat.sublead_index:
                     cat.valid=False
 
+
+def update_cat(*args, **options):
+    """Update z categories with new scales and smearings."""
+    # unpack args
+    cat, x, updated_scales, __num_smears__, verbose = args
+    if cat.valid:
+        if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
+            if __num_smears__ == 0:
+                cat.update(x[cat.lead_index],
+                        x[cat.sublead_index])
+            else:
+                cat.update(x[cat.lead_index],
+                        x[cat.sublead_index],
+                        x[cat.lead_smear_index],
+                        x[cat.sublead_smear_index])
+
+            if verbose:
+                print("------------- zcat info -------------")
+                cat.print()
+                print("-------------------------------------")
+                print()
+
+
 def target_function(x, *args, verbose=False, **options):
     """ 
     This is the target function, which returns an event weighted -2*Delta NLL
     This function features a small verbose option for debugging purposes.
     target_function accepts an iterable of floats and uses them to evaluate the NLL in each category.
-    Some 'smart' checks prevent the function from evaluating all N(N+1)/2 categories unless absolutely necessary
+    Some 'smart' checks prevent the function from evaluating all N(N+1)/2 categories unless absolutely necessary.
+
+    Args:
+        x (iterable): iterable of floats, representing the scales and smearings chosen by the minimizer
+        *args: a tuple of arguments, which contains the following:
+            __GUESS__ (iterable): iterable of floats, representing the initial guess for the scales and smearings
+            __ZCATS__ (list): list of zcat objects, each representing a category
+            __num_scales__ (int): number of scales to be derived
+            __num_smears__ (int): number of smearings to be derived
     """
     
     #unpack args
-    (__GUESS__, __ZCATS__, __num_scales, __num_smears__) = args
+    (__GUESS__, __ZCATS__, __num_scales__, __num_smears__) = args
 
     updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
     __GUESS__ = x
-    for cat in __ZCATS__:
-        if cat.valid:
-            if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
-                if __num_smears__ == 0:
-                    cat.update(x[cat.lead_index],
-                               x[cat.sublead_index])
-                else:
-                    cat.update(x[cat.lead_index],
-                               x[cat.sublead_index],
-                               x[cat.lead_smear_index],
-                               x[cat.sublead_smear_index])
+    from concurrent.futures import ThreadPoolExecutor
 
-                if verbose:
-                   print("------------- zcat info -------------")
-                   cat.print()
-                   print("-------------------------------------")
-                   print()
+
+    # Create a ThreadPoolExecutor
+    with ThreadPoolExecutor() as executor:
+        # Use the executor to map the update_cat function to each item in __ZCATS__
+        args_for_update_cat = [
+            (cat, x, updated_scales, __num_smears__, verbose) for cat in __ZCATS__ if cat.valid and (cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales)
+        ]
+        executor.map(update_cat, args_for_update_cat)
 
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
