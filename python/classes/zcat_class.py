@@ -6,9 +6,24 @@ from scipy.special import xlogy
 import python.utilities.numba_hist as numba_hist
 
 class zcat:
-    """ produces a 'z category' object to be used in the scales and smearing derivation """
+    """
+    Produces a 'z category' object to be used in the scales and smearing derivation.
+    """
 
     def __init__(self, i, j, data, mc, weights, **options):
+        """
+        Initialize a z category object.
+
+        Args:
+            i (int): index of the first electron in the category
+            j (int): index of the second electron in the category
+            data (np.array): invariant mass of the data
+            mc (np.array): invariant mass of the mc
+            weights (np.array): weights of the mc
+            **options (dict): optional arguments
+        Returns:
+            None
+        """
         self.lead_index=i
         self.sublead_index=j
         self.lead_smear_index=options['smear_i'] if 'smear_i' in options.keys() else -1
@@ -22,12 +37,13 @@ class zcat:
         self.bin_size = options['bin_size'] if 'bin_size' in options.keys() else 0.25
         self.updated = False
         self.NLL = 0
-        self.weight = 1 if i == j else 0.1 # penalize off diagonal fits
-        self.seed = 3543136929 # use a fixed random integer for your seed to avoid fluctuations in nll value from smearings
+        self.weight = 1 if i == j else 0.1 #  penalize off diagonal fits
+        self.seed = 3543136929 #  use a fixed random integer for your seed to avoid fluctuations in nll value from smearings
         self.valid=True
         self.bins=np.array([])
 
     def __delete__(self):
+        """Delete the z category object."""
         del self.lead_index
         del self.sublead_index
         del self.data
@@ -43,6 +59,7 @@ class zcat:
         del self.valid
 
     def print(self):
+        """Print the z category object."""
         print("lead index:", self.lead_index)
         print("sublead index:",self.sublead_index)
         print("lead smearing index:", self.lead_smear_index)
@@ -55,7 +72,17 @@ class zcat:
 
 
     def inject(self, lead_scale, sublead_scale, lead_smear, sublead_smear):
-        #this function artificially injects scales and smearings in to the "toy mc" labelled here as data
+        """
+        Artificially inject scales and smearings in to the "toy mc" labelled here as data.
+
+        Args:
+            lead_scale (float): scale for the leading electron
+            sublead_scale (float): scale for the subleading electron
+            lead_smear (float): smearing for the leading electron
+            sublead_smear (float): smearing for the subleading electron
+        Returns:
+            None
+        """
         self.data = self.data*np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
         if lead_smear != 0 and sublead_smear != 0:
             lead_smear_list = np.random.normal(1, np.abs(lead_smear), len(self.data), dtype=np.float32)
@@ -63,51 +90,80 @@ class zcat:
             self.data = self.data*np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32)
         return
 
-    def get_smeared_mc(self, mc, lead_smear, sublead_smear, seed):
-        # applies a smearing to the invariant mass
+    def get_smeared_mc(self, mc, lead_smear, sublead_smear, seed) -> np.array:
+        """
+        Returns the smeared mc.
+
+        Args:
+            mc (np.array): invariant mass of the mc
+            lead_smear (float): smearing for the leading electron
+            sublead_smear (float): smearing for the subleading electron
+            seed (int): seed for the random number generator
+        Returns:
+            np.array: smeared mc
+        """
         np.random.seed(seed)
         lead_smear_list = np.array(np.random.normal(1, np.abs(lead_smear), len(mc)), dtype=np.float32) if lead_smear != 0 else np.ones(len(mc), dtype=np.float32)
         sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(mc), dtype=np.float32)
         return np.multiply(mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
 
     def update_nllChiSqr(self, binned_data, norm_binned_mc):
-        # Scale MC and calculate errors
+        """
+        Update the NLL and chi squared values for the z category object.
+
+        Args:
+            binned_data (np.array): binned data
+            norm_binned_mc (np.array): normalized binned mc
+        Returns:
+            None
+        """
+        #  Scale MC and calculate errors
         scaled_mc = norm_binned_mc * np.sum(binned_data)
         err_mc = np.sqrt(scaled_mc)
         err_data = np.sqrt(binned_data)
         err = np.sqrt(err_mc**2 + err_data**2)
 
-        # Calculate chi squared
+        #  Calculate chi squared
         num_bins = round((self.hist_max - self.hist_min) / self.bin_size)
         chi_sqr = np.sum(((binned_data - scaled_mc) / err)**2) / num_bins
 
-        # Calculate NLL
+        #  Calculate NLL
         nll = np.nansum(np.where(binned_data != 0, binned_data * np.log(norm_binned_mc), 0)) / len(nll)
 
-        # Calculate penalty
+        #  Calculate penalty
         penalty = np.nansum(np.where(binned_data != np.sum(binned_data), (np.sum(binned_data) - binned_data) * np.log(1 - norm_binned_mc), 0)) / len(penalty)
 
         self.NLL = -2 * (nll + penalty) * chi_sqr
 
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
-        #updates the value of nll for the class using the appropriate scales and smearings
+        """
+        Update the z category with new scales and smearings.
+
+        Args:
+            lead_scale (float): scale for the leading electron
+            sublead_scale (float): scale for the subleading electron
+            lead_smear (float): smearing for the leading electron
+            sublead_smear (float): smearing for the subleading electron
+        Returns:
+            None
+        """
         self.updated=True
 
-        #apply the scales first 
+        # apply the scales first 
         temp_data = self.data * np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
 
         temp_mc = self.mc
         temp_weights = self.weights
-        #apply the smearings second
+        # apply the smearings second
         if lead_smear!=0 or sublead_smear!=0:
             temp_mc = self.get_smeared_mc(temp_mc, lead_smear, sublead_smear, self.seed) 
             
 
-        #determinite binning using the Freedman-Diaconis rule
-        #data_width, mc_width = get_binning()
+        # determinite binning using the Freedman-Diaconis rule
+        # data_width, mc_width = get_binning()
         if self.auto_bin and self.bin_size == 0.25:
-            #prune and check data and mc for validity
+            # prune and check data and mc for validity
             temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, self.hist_max <= self.hist_max)]
             mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
             temp_weights = temp_weights[mask_mc]
@@ -124,13 +180,13 @@ class zcat:
                 del temp_weights
                 return
 
-            #since the data and mc are now pruned go ahead and find the bin size
+            # since the data and mc are now pruned go ahead and find the bin size
             data_width = 2*stats.iqr(temp_data, rng=(25,75), scale="raw", nan_policy="omit")/np.power(len(temp_data), 1./3.)
             mc_width = 2*stats.iqr(temp_mc, rng=(25,75), scale="raw", nan_policy="omit")/np.power(len(temp_mc), 1./3.)
-            self.bin_size = max( data_width, mc_width) #always choose the larger binning scheme
+            self.bin_size = max( data_width, mc_width) # always choose the larger binning scheme
 
-        #prune the data and add a single entry at either end of the histogram range
-        #these end entries ensure the same number of bins in data and mc returned by np.bincount
+        # prune the data and add a single entry at either end of the histogram range
+        # these end entries ensure the same number of bins in data and mc returned by np.bincount
         temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, temp_data <= self.hist_max)]
         temp_data = np.append(temp_data,np.array([self.hist_min,self.hist_max], dtype=np.float32))
         mask_mc = np.logical_and(self.hist_min <= temp_mc, temp_mc <= self.hist_max)
@@ -154,10 +210,10 @@ class zcat:
             del temp_weights
             return
 
-        #clean binned data and mc, log of 0 is a problem
+        # clean binned data and mc, log of 0 is a problem
         binned_mc[binned_mc == 0] = 1e-15
 
-        #normalize mc to use as a pdf
+        # normalize mc to use as a pdf
         norm_binned_mc = binned_mc/np.sum(binned_mc)
 
         self.update_nllChiSqr(binned_data, norm_binned_mc)

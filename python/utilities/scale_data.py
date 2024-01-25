@@ -21,7 +21,14 @@ def apply(arg):
     if len(scales) == 0: return data
 
     def find_scales(row):
-        """finds the scales"""
+        """
+        Finds the scales for a given row in a dataframe
+        
+        Args:
+            row (pandas series): a row in a dataframe
+        Returns:
+            tuple: a tuple of scales
+        """
         # find the run bin (only needs to be computed once)
         run_mask = np.logical_and(
             (scales[:,dc.i_run_min] <= row[dc.RUN]),(row[dc.RUN] <= scales[:,dc.i_run_max])

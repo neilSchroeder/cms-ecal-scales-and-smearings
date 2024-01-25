@@ -2,7 +2,7 @@ import numpy as np
 from collections import namedtuple
 
 class PyValConstants():
-    """a useful list of contants instead of defining them in every function"""
+    """A useful list of contants instead of defining them in every function"""
 
     KEEP_COLS = [
             'R9Ele',
@@ -66,7 +66,6 @@ class DataConstants():
 
     # time stability constants
     TIME_STABILITY_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'median', 'mean', 'sigma', 'scale', 'median_corr', 'mean_corr', 'sigma_corr', 'events']
-
 
     #constants
     MIN_ET = 0
@@ -146,8 +145,9 @@ class DataConstants():
     time_stability_eta_bins_low = [0, 1., 1.2, 1.566, 2.]
     time_stability_eta_bins_high = [1., 1.2, 1.4442, 2., 2.5]
 
+
 class CategoryConstants():
-    """ constants for the categories files """
+    """Constants for the categories files."""
 
     # categories should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
     i_type = 0
