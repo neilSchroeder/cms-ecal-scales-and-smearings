@@ -49,14 +49,26 @@ The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 
 ### Installing
 
+Due to some concerns over changing environments on lxplus, the new installation instructions use Anaconda
+
+#### Installing Anaconda
+please follow the instructions here:
 ```
-export SCRAM_ARCH=slc7_amd64_gcc700
-cmsrel CMSSW_10_2_14
-cd CMSSW_10_2_14/src/
-git cms-init
+curl -O https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
+source Anaconda3-2023.09-0-Linux-x86_64.sh
+```
+
+Once you've installed anaconda you'll be asked to reboot your shell. 
+After that, navigate to a location you'd like to install this repo (your /afs/cern.ch/work/ is recommended).
+
+```
+cd <target-directory>
 git clone ssh://git@gitlab.cern.ch:7999/nschroed/cms-ecal-scales-and-smearings.git
-cd cms-ecal-scales-and-smearings/
+cd cms-ecal-scales-and-smearings
+conda env create -f env.yml
+conda activate scales-env
 ```
+
 Now you'll want to checkout your own branch (name it something useful) and push it to the git repo
 ```
 git branch myBranch
