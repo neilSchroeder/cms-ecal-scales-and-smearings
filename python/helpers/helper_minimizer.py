@@ -404,17 +404,27 @@ def target_function(x, *args, verbose=False, **options):
     updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
     __GUESS__ = x
 
+    for cat in __ZCATS__:
+        if cat.valid:
+            if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
+                if __num_smears__ == 0:
+                    cat.update(x[cat.lead_index],
+                               x[cat.sublead_index])
+                else:
+                    cat.update(x[cat.lead_index],
+                               x[cat.sublead_index],
+                               x[cat.lead_smear_index],
+                               x[cat.sublead_smear_index])
 
-    #  Create a ThreadPoolExecutor
-    with ThreadPoolExecutor() as executor:
-        #  Use the executor to map the update_cat function to each item in __ZCATS__
-        args_for_update_cat = [
-            (cat, x, updated_scales, __num_smears__, verbose) for cat in __ZCATS__ if cat.valid and (cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales)
-        ]
-        executor.map(update_cat, args_for_update_cat)
+                if verbose:
+                   print("------------- zcat info -------------")
+                   cat.print()
+                   print("-------------------------------------")
+                   print()
 
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
+
 
     if verbose:
         print("------------- total info -------------")

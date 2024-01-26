@@ -67,6 +67,8 @@ class DataConstants():
     # time stability constants
     TIME_STABILITY_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'median', 'mean', 'sigma', 'scale', 'median_corr', 'mean_corr', 'sigma_corr', 'events']
 
+    # scales headers
+
     #constants
     MIN_ET = 0
     MAX_ET = 14000
@@ -115,6 +117,7 @@ class DataConstants():
     }
 
     # indices of row in scales
+    SCALES_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'r9_min', 'r9_max', 'et_min', 'et_max', 'gain', 'scale', 'err']
     i_run_min = 0
     i_run_max = 1
     i_eta_min = 2

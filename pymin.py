@@ -141,7 +141,7 @@ def main():
     print("[INFO] welcome to SS_PyMin")
     print("[INFO] you have run the following command:")
 
-    cmd = helper_pymin.get_cmd(sys.argv)
+    cmd = helper_pymin.get_cmd()
     print(cmd)
     if "-" not in cmd:
         print("[ERROR] you have not provided any arguments to this script.")
