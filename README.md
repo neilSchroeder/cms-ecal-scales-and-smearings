@@ -130,7 +130,7 @@ This takes your input files and will write them to tsvs in the folder DEST_PATH 
 
 Now you will need to put the paths to the pruned files in a file, preferably in the config folder to run the run divider
 ```
-python pymin.py -i config/ul2018.dat --run-divide -o ul18
+python pymin.py -i config/pruned_ul18.cfg --run-divide -o ul18
 ```
 If you want fewer run bins you can increase the default number of events per run using the `--minEvents` argument
 
