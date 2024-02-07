@@ -136,7 +136,7 @@ If you want fewer run bins you can increase the default number of events per run
 
 With your run bins in hand you can now run the time_stability step:
 ```
-python pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
+python pymin.py -i config/pruned_ul18.cfg -c datFiles/run_divide_ul18.dat -o ul18 --time-stability
 ```
 and to plot the results of the time stabilization, run the following:
 ```
