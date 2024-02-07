@@ -56,7 +56,7 @@ Due to some concerns over changing environments on lxplus, the new installation 
 please follow the instructions here:
 ```
 curl -O https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
-source Anaconda3-2023.09-0-Linux-x86_64.sh
+bash Anaconda3-2023.09-0-Linux-x86_64.sh
 ```
 
 Once you've installed anaconda you'll be asked to reboot your shell. 
