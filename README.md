@@ -140,7 +140,7 @@ python pymin.py -i config/pruned_ul18.cfg -c datFiles/run_divide_ul18.dat -o ul1
 ```
 and to plot the results of the time stabilization, run the following:
 ```
-python pymin.py -i <config-file> --cats <run-divide-file> --time-stability -o <output-name> --plot --lumi-label <lumi-string : i.e.('59.7 fb^{-1} (13 TeV) 2018')>
+python pymin.py -i config/pruned_ul18.cfg -c datFiles/run_divide_ul18.dat -o ul18 --time-stability --plot --lumi-label '59.7 fb^{-1} (13 TeV) 2018'
 ```
 From here you can run the scales and smearings chain. This requires a couple additional ingredients.
 The first is a categories file, you can see an example below:
