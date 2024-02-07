@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
-import uproot as up
+import uproot3 as up
 
 from python.classes.constant_classes import DataConstants as dc
 
