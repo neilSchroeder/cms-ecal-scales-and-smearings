@@ -3,7 +3,7 @@ import gc
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import uproot as up
+import uproot3 as up
 import statistics as stats
 from scipy.optimize import basinhopping as basinHop
 from scipy.optimize import  differential_evolution as diffEvolve
