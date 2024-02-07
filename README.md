@@ -138,7 +138,8 @@ With your run bins in hand you can now run the time_stability step:
 ```
 python pymin.py -i config/pruned_ul18.cfg -c datFiles/run_divide_ul18.dat -o ul18 --time-stability
 ```
-and to plot the results of the time stabilization, run the following:
+
+You can also run the following instead, if you want to plot the results of the time stabilization:
 ```
 python pymin.py -i config/pruned_ul18.cfg -c datFiles/run_divide_ul18.dat -o ul18 --time-stability --plot --lumi-label '59.7 fb^{-1} (13 TeV) 2018'
 ```
