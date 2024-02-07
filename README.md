@@ -58,6 +58,7 @@ please follow the instructions here:
 curl -O https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
 bash Anaconda3-2023.09-0-Linux-x86_64.sh
 ```
+When installing Anaconda3 you'll probably want to install it in your work repo because it's large and trying to put it into your basic lxplus box will limit your space significantly. It will prompt you to pick an install location, enter: `/afs/cern.ch/work/<u>/<user>/anaconda3` replacing `<u>` and `<user>` with the first initial of your username and your username, respectively. This takes a while, be patient.
 
 Once you've installed anaconda you'll be asked to reboot your shell. 
 After that, navigate to a location you'd like to install this repo (your /afs/cern.ch/work/ is recommended).
