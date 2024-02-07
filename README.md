@@ -171,12 +171,12 @@ Please be extra careful when building your categories to ensure that you do not 
 Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
 
 ```
-python pymin.py -i config/ul2018.dat -c config/cats_step2.tsv -s datFiles/step1_MY_TAG_scales.dat -o ul18_DATE_v0
+python pymin.py -i config/pruned_ul18.dat -c config/cats_step2.tsv -s datFiles/step1_ul18_scales.dat -o ul18
 ```
 This first step runs a derivation of both the scales and smearings
 
 ```
-python pymin.py -i config/ul2018.dat \
+python pymin.py -i config/pruned_ul18.cfg \
            -c config/cats_step2.py \
            -s datFiles/step2_MY_TAG_scales.dat \
            -w datFiles/ptz_x_rapidity_weights_ul18_DATE_v0.tsv \
