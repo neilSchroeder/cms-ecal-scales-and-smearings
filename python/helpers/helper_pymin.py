@@ -7,7 +7,7 @@ import sys
 
 import pandas as pd
 import numpy as np
-import uproot as up
+import uproot3 as up
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
