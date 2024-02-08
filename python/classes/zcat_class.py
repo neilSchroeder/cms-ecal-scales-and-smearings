@@ -128,10 +128,11 @@ class zcat:
         chi_sqr = np.sum(((binned_data - scaled_mc) / err)**2) / num_bins
 
         #  Calculate NLL
-        nll = np.nansum(np.where(binned_data != 0, binned_data * np.log(norm_binned_mc), 0)) / len(nll)
+        nll = np.nansum(np.where(norm_binned_mc != 0, binned_data * np.log(norm_binned_mc), 0)) / len(binned_data)
 
         #  Calculate penalty
-        penalty = np.nansum(np.where(binned_data != np.sum(binned_data), (np.sum(binned_data) - binned_data) * np.log(1 - norm_binned_mc), 0)) / len(penalty)
+        template = 1-norm_binned_mc
+        penalty = np.nansum(np.where(template != 0, (np.sum(binned_data) - binned_data) * np.log(template), 0)) / len(binned_data)
 
         self.NLL = -2 * (nll + penalty) * chi_sqr
 
