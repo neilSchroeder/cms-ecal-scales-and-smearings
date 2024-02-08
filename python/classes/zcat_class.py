@@ -181,8 +181,8 @@ class zcat:
                 return
 
             # since the data and mc are now pruned go ahead and find the bin size
-            data_width = 2*stats.iqr(temp_data, rng=(25,75), scale="raw", nan_policy="omit")/np.power(len(temp_data), 1./3.)
-            mc_width = 2*stats.iqr(temp_mc, rng=(25,75), scale="raw", nan_policy="omit")/np.power(len(temp_mc), 1./3.)
+            data_width = 2*stats.iqr(temp_data, rng=(25,75), nan_policy="omit")/np.power(len(temp_data), 1./3.)
+            mc_width = 2*stats.iqr(temp_mc, rng=(25,75), nan_policy="omit")/np.power(len(temp_mc), 1./3.)
             self.bin_size = max( data_width, mc_width) # always choose the larger binning scheme
 
         # prune the data and add a single entry at either end of the histogram range

@@ -1,18 +1,8 @@
-from concurrent.futures import ThreadPoolExecutor
 import gc
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import uproot3 as up
-import statistics as stats
-from scipy.optimize import basinhopping as basinHop
-from scipy.optimize import  differential_evolution as diffEvolve
-from scipy.optimize import minimize as minz
-from scipy.special import xlogy
-from scipy import stats as scistat 
 
 from python.classes.constant_classes import DataConstants as dc
-from python.classes.constant_classes import PyValConstants as pvc
 from python.classes.constant_classes import CategoryConstants as cc
 from python.classes.zcat_class import zcat
 
@@ -111,20 +101,20 @@ def clean_up(data, mc, cats):
     else:
         if cats.iloc[0,cc.i_r9_min] != cc.empty and cats.iloc[0,cc.i_gain] == cc.empty:
             drop_list = [dc.E_LEAD, 
-                         dc.E_SUB, 
-                         dc.GAIN_LEAD, 
-                         dc.GAIN_SUB, 
-                         dc.RUN]
+                        dc.E_SUB, 
+                        dc.GAIN_LEAD, 
+                        dc.GAIN_SUB, 
+                        dc.RUN]
 
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
             mc.drop(drop_list, axis=1, inplace=True)
         else:
             drop_list = [dc.E_LEAD, 
-                         dc.E_SUB, 
-                         dc.R9_LEAD, 
-                         dc.R9_SUB, 
-                         dc.RUN]
+                        dc.E_SUB, 
+                        dc.R9_LEAD, 
+                        dc.R9_SUB, 
+                        dc.RUN]
             print("[INFO][python/nll] dropping {}".format(drop_list))
             data.drop(drop_list, axis=1, inplace=True)
             mc.drop(drop_list, axis=1, inplace=True)
@@ -182,7 +172,7 @@ def extract_cats( data, mc, cats_df, **options):
                 entries_r9OrEt = data[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
                     &data[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
                 entries_r9OrEt = entries_r9OrEt | (data[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
-                                                   &data[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+                                                    &data[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
             elif cat1[cc.i_r9_min] == cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] != cc.empty:
                 #  this is for et dependent scale derivation
                 entries_r9OrEt = data[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
@@ -192,9 +182,9 @@ def extract_cats( data, mc, cats_df, **options):
                 entries_r9OrEt = data[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
                     &data[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
                 entries_r9OrEt = entries_r9OrEt | (data[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
-                                                   &data[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+                                                    &data[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
                 entries_r9OrEt = entries_r9OrEt & (data[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
-                                                   &data[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max]))
+                                                    &data[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max]))
             else:
                 print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
                 #  please forgive my sin of sloth
@@ -210,7 +200,7 @@ def extract_cats( data, mc, cats_df, **options):
             entries_eta = mc[dc.ETA_LEAD].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max]) \
                 & mc[dc.ETA_SUB].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max])
             entries_eta = entries_eta | (mc[dc.ETA_SUB].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max])\
-                                         &mc[dc.ETA_LEAD].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max]))
+                                        &mc[dc.ETA_LEAD].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max]))
             entries_r9OrEt = []
 
             # now do the same thing for MC
@@ -234,13 +224,13 @@ def extract_cats( data, mc, cats_df, **options):
                 entries_r9OrEt = mc[dc.GAIN_LEAD].between(gainlow1,gainhigh1)\
                     &mc[dc.GAIN_SUB].between(gainlow2,gainhigh2)
                 entries_r9OrEt = entries_r9OrEt | (mc[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
-                                                   &mc[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
+                                                    &mc[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
             elif cat1[cc.i_r9_min] != cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] == cc.empty: 
                 #  this is for R9 dependent scale derivation
                 entries_r9OrEt = mc[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
                     &mc[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
                 entries_r9OrEt = entries_r9OrEt | (mc[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
-                                                   &mc[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+                                                    &mc[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
             elif cat1[cc.i_r9_min] == cc.empty and cat1[cc.i_gain] == cc.empty and cat1[cc.i_et_min] != cc.empty:
                 #  this is for et dependent scale derivation
                 entries_r9OrEt = mc[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
@@ -250,9 +240,9 @@ def extract_cats( data, mc, cats_df, **options):
                 entries_r9OrEt = mc[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
                     &mc[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
                 entries_r9OrEt = entries_r9OrEt | (mc[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
-                                                   &mc[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
+                                                    &mc[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
                 entries_r9OrEt = entries_r9OrEt & (mc[dc.ET_LEAD].between(cat1[cc.i_et_min], cat1[cc.i_et_max])\
-                                                   &mc[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max]))
+                                                    &mc[dc.ET_SUB].between(cat2[cc.i_et_min], cat2[cc.i_et_max]))
             else:
                 print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
                 raise ValueError("Could not identify category type.")
@@ -409,18 +399,18 @@ def target_function(x, *args, verbose=False, **options):
             if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
                 if __num_smears__ == 0:
                     cat.update(x[cat.lead_index],
-                               x[cat.sublead_index])
+                                x[cat.sublead_index])
                 else:
                     cat.update(x[cat.lead_index],
-                               x[cat.sublead_index],
-                               x[cat.lead_smear_index],
-                               x[cat.sublead_smear_index])
+                                x[cat.sublead_index],
+                                x[cat.lead_smear_index],
+                                x[cat.sublead_smear_index])
 
                 if verbose:
-                   print("------------- zcat info -------------")
-                   cat.print()
-                   print("-------------------------------------")
-                   print()
+                    print("------------- zcat info -------------")
+                    cat.print()
+                    print("-------------------------------------")
+                    print()
 
     tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
     ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
@@ -428,7 +418,7 @@ def target_function(x, *args, verbose=False, **options):
 
     if verbose:
         print("------------- total info -------------")
-       # print("weighted nll:",ret/tot)
+        # print("weighted nll:",ret/tot)
         print("diagonal nll vals:", [cat.NLL*cat.weight/tot for cat in __ZCATS__ if cat.lead_index == cat.sublead_index and cat.valid])
         print("using scales:",x)
         print("--------------------------------------")
