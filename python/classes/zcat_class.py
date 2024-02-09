@@ -118,23 +118,23 @@ class zcat:
             None
         """
         #  Scale MC and calculate errors
-        scaled_mc = norm_binned_mc * np.sum(binned_data)
-        err_mc = np.sqrt(scaled_mc)
-        err_data = np.sqrt(binned_data)
-        err = np.sqrt(err_mc**2 + err_data**2)
+        scaled_mc = norm_binned_mc*np.sum(binned_data)
+        err_mc = np.sqrt(scaled_mc, dtype=np.float32)
+        err_data = np.sqrt(binned_data, dtype=np.float32)
+        err = np.sqrt(np.add(np.multiply(err_mc,err_mc, dtype=np.float32), np.multiply(err_data,err_data, dtype=np.float32), dtype=np.float32), dtype=np.float32)
+        num_bins = int(round((self.hist_max-self.hist_min)/self.bin_size,0))
+        chi_sqr = np.sum( np.divide(np.multiply(binned_data-scaled_mc,binned_data-scaled_mc, dtype=np.float32),err, dtype=np.float32))/num_bins
 
-        #  Calculate chi squared
-        num_bins = round((self.hist_max - self.hist_min) / self.bin_size)
-        chi_sqr = np.sum(((binned_data - scaled_mc) / err)**2) / num_bins
+        #evalute nll
+        nll = xlogy(binned_data, norm_binned_mc)
+        nll[nll==-np.inf] = 0
+        nll = np.sum(nll)/len(nll)
+        #evaluate penalty
+        penalty = xlogy(np.sum(binned_data)-binned_data, 1 - norm_binned_mc)
+        penalty[penalty==-np.inf] = 0
+        penalty = np.sum(penalty)/len(penalty)
+        self.NLL = -2*(nll + penalty)*chi_sqr
 
-        #  Calculate NLL
-        nll = np.nansum(np.where(norm_binned_mc != 0, binned_data * np.log(norm_binned_mc), 0)) / len(binned_data)
-
-        #  Calculate penalty
-        template = 1-norm_binned_mc
-        penalty = np.nansum(np.where(template != 0, (np.sum(binned_data) - binned_data) * np.log(template), 0)) / len(binned_data)
-
-        self.NLL = -2 * (nll + penalty) * chi_sqr
 
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
