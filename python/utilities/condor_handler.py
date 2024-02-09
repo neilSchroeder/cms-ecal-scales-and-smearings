@@ -52,10 +52,9 @@ def make_script(cmd, script, done):
     lines = []
     lines.append("#!/bin/bash\n")
     lines.append("cd "+os.getcwd()+"\n")
-    lines.append("eval `scramv1 runtime -sh`  uname -a\n")
-    lines.append("echo $CMSSW_VERSION\n")
+    lines.append("conda activate scales-env\n")
     lines.append('\n')
-    lines.append(f'python3 {cmd} --from-condor\n')
+    lines.append(f'python {cmd} --from-condor\n')
     lines.append('\n')
     lines.append("touch "+done)
 
