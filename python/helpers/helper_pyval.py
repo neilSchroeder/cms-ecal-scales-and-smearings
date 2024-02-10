@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import uproot as up
+import uproot3 as up
 import os
 
 from python.classes.constant_classes import PyValConstants as pvc
