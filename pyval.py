@@ -103,7 +103,7 @@ def main():
             )
     parser.add_argument(
             "--fit",
-            help="flag to turn on BW conv. CB fitting for all distributions"
+            help="flag to turn on BW conv. CB fitting for all distributions",
             dest="_kFit",
             default=False,
     )
