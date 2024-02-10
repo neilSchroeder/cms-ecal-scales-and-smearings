@@ -7,7 +7,7 @@ import sys
 import time
 
 #3rd party
-import uproot as up
+import uproot3 as up
 import numpy as np
 import pandas as pd
 
