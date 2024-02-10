@@ -52,7 +52,7 @@ def make_script(cmd, script, done):
     lines = []
     username = os.environ['USER']
     lines.append("#!/usr/bin/bash\n")
-    lines.append(f"source /afs/cern.ch/{username[0]}/{username}/.bashrc\n")
+    lines.append(f"source /afs/cern.ch/user/{username[0]}/{username}/.bashrc\n")
     lines.append("cd "+os.getcwd()+"\n")
     lines.append(f"conda activate scales-env\n")
     lines.append('\n')
