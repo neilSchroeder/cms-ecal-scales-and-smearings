@@ -42,6 +42,8 @@ def main():
         --no-auto-bin: Turns off the auto binning feature (using Freedman-Diaconis method)
         --bin-size: Size of bins for binned NLL evaluation
         --start-style: Style of starting values for minimization
+        --condor: submit the script to run on condor
+        --queue: (only use with --condor) tell condor which queue to submit to
     --------------------------------
     Returns:
         None

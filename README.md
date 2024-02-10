@@ -186,6 +186,24 @@ python pymin.py -i config/pruned_ul18.cfg \
 ```
 This second step uses the `--closure` option and runs the minimization without any smearings. The MC is smeared ahead of the minimization using the smearings provided and no smearings are given to the minimizer. It can be useful to run this several times if your scales look off.
 
+Because the minimizer can take a long time to derive the scales and smearings, there is a built-in option to submit the script as a job to condor. To do this simply run the above commands appending `--condor --queue <queue>` like so:
+
+```
+python pymin.py -i config/pruned_ul18.cfg -c config/cats_step2.tsv -s datFiles/step1_ul18_scales.dat -o ul18 --condor --queue <queue>
+```
+and 
+```
+python pymin.py -i config/pruned_ul18.cfg \
+           -c config/cats_step2.py \
+           -s datFiles/step2_MY_TAG_scales.dat \
+           -w datFiles/ptz_x_rapidity_weights_ul18_DATE_v0.tsv \
+           -o ul18_step2_DATE_v0_closure \
+           --smearings="datFiles/step2_ul18_DATE_v0_smearings.dat \
+           --closure \
+           --condor --queue <queue>
+```
+
+
 ## Validation
 
 Along side the `pymin.py` program comes the `pyval.py` program. This program is used to make validation plots which can be used to inspect the agreement of data and MC after application of the scales produced in `pymin.py`. 

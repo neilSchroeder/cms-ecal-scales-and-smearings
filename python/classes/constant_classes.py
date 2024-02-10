@@ -60,6 +60,9 @@ class PyValConstants():
 class DataConstants():
     """a useful list of contants instead of defining them in every function"""
 
+    # target mass (for time stability)
+    TARGET_MASS = 91.188
+
     # pruning constants
     KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber']
     DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]']

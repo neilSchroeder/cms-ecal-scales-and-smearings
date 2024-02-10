@@ -15,8 +15,15 @@ from python.classes.constant_classes import (
 
 
 def apply(arg):
-    """applies the scales to the dataframe"""
-    data,scales = arg    
+    """
+    Applies the scales to the dataframe.
+    
+    Args:
+        arg (tuple(pd.DataFrame, pd.DataFrame)): tuple of data and scales
+    Returns:
+        data (pd.DataFrame): scaled data dataframe
+    """
+    data, scales = arg    
     if len(data) == 0: return data
     if len(scales) == 0: return data
 
@@ -131,7 +138,13 @@ def apply(arg):
 
 def scale(data, scales):
     """
-    This function applies the scales in a multi-threaded way
+    This function applies the scales in a multi-threaded way.
+
+    Args:
+        data (pd.DataFrame): dataframe to apply scales to
+        scales (str): path to scales file
+    Returns:
+        data (pd.DataFrame): dataframe with scales applied
     """
     info = "[INFO][scale_data.py]"
     # newformat of scales files is 
