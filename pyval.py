@@ -17,7 +17,7 @@ import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
-import python.utilities.evaluate_systematics as eval_syst
+# import python.utilities.evaluate_systematics as eval_syst
 
 from python.classes.constant_classes import PyValConstants as pvc
 import python.classes.config_class as config_class
@@ -171,7 +171,8 @@ def main():
                 tag=args.output_file,
                 )
     else:
-        eval_syst.evaluate_systematics()
+        # eval_syst.evaluate_systematics()
+        pass
 
     return
 
