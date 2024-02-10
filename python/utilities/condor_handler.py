@@ -50,14 +50,11 @@ def make_script(cmd, script, done):
     """
 
     lines = []
-    lines.append("#!/usr/bin/bash\n")
-    lines.append("cd "+os.getcwd()+"\n")
-    # define conda path
     username = os.environ['USER']
-    conda_path = f"/afs.cern/work/{username[0]}/{username}/anaconda3/"
-    # activate conda profile
-    lines.append(f"source {conda_path}etc/profile.d/conda.sh\n")
-    lines.append(f"{conda_path} activate scales-env\n")
+    lines.append("#!/usr/bin/bash\n")
+    lines.append(f"source /afs/cern.ch/{username[0]}/{username}/.bashrc\n")
+    lines.append("cd "+os.getcwd()+"\n")
+    lines.append(f"conda activate scales-env\n")
     lines.append('\n')
     lines.append(f'python {cmd} --from-condor\n')
     lines.append('\n')
