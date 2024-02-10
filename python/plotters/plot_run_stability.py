@@ -7,6 +7,17 @@ from python.classes.config_class import SSConfig
 ss_config = SSConfig()
 
 def plot_run_stability(inputFile, outputFile, lumi_label, corrected=False):
+    """
+    Plot the run stability of the median dielectron mass.
+
+    Args:
+        inputFile (str): the input file
+        outputFile (str): the output file
+        lumi_label (str): the luminosity label
+        corrected (bool): whether to use the corrected mass
+    Returns:
+        None
+    """
 
     data = np.genfromtxt(inputFile, dtype=float, delimiter='\t', comments='#')
 
@@ -53,7 +64,7 @@ def plot_run_stability(inputFile, outputFile, lumi_label, corrected=False):
                      capsize=0,
                      elinewidth=0)
 
-    plt.subplots_adjust(left=0.1, right=0.99, top=0.95, bottom=0.09)
+    plt.subplots_adjust(left=0.12, right=0.99, top=0.95, bottom=0.09)
     plt.ylim(80, 100)
     plt.text(plt.xlim()[0], plt.ylim()[1]+0.1, "$\\bf{CMS} \ \\it{Preliminary}$", va='bottom')
     plt.text(plt.xlim()[1], plt.ylim()[1]+0.1, lumi_label , ha='right', va='bottom')

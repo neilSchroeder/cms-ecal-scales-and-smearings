@@ -22,11 +22,12 @@ def divide(data, min_num_events):
                 of the run bins.
     ----------
     """
-    print("[INFO][python/divide_by_run][divide] Dividing the data by run with minimum event requirement set to {}".format(min_num_events))
+    INFO = "[INFO][python/divide_by_run][divide]"
+    print(f"{INFO} Dividing the data by run with minimum event requirement set to {min_num_events}")
     runs = data.loc[:,'runNumber'].unique()
     runs.sort()
-    print(f"[INFO][python/divide_by_run][divide] There are {len(runs)} runs ranging from {runs[0]} to {runs[-1]}")
-    run_counts = [np.sum(np.array(data['runNumber'].between(i, i,inclusive=True).values)) for i in runs]
+    print(f"{INFO} There are {len(runs)} runs ranging from {runs[0]} to {runs[-1]}")
+    run_counts = [np.sum(np.array(data['runNumber'].between(i, i, inclusive='both').values)) for i in runs]
     bins = []
     i = int(0)
     while i < len(runs):

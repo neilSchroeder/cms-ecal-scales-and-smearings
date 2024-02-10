@@ -20,7 +20,8 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 
 * Time permitting, or for whoever takes over development, multiprocessing the `zcat.update()` calls would likely speed things up.
 * Implement `--systematics-study` feature in `pyval`. The idea is to automate estimating the systematic uncertainties.
-* Change run divide feature to include/process fill infomation (more granular)
+* Change run divide feature to include/process lumisection infomation (more granular).
+* Build in the BW conv CB fitter into the plotting framework.
 
 
 ## Features
@@ -49,14 +50,27 @@ The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 
 ### Installing
 
+Due to some concerns over changing environments on lxplus, the new installation instructions use Anaconda
+
+#### Installing Anaconda
+please follow the instructions here:
 ```
-export SCRAM_ARCH=slc7_amd64_gcc700
-cmsrel CMSSW_10_2_14
-cd CMSSW_10_2_14/src/
-git cms-init
+curl -O https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
+bash Anaconda3-2023.09-0-Linux-x86_64.sh
+```
+When installing Anaconda3 you'll probably want to install it in your work repo because it's large and trying to put it into your basic lxplus box will limit your space significantly. It will prompt you to pick an install location, enter: `/afs/cern.ch/work/<u>/<user>/anaconda3` replacing `<u>` and `<user>` with the first initial of your username and your username, respectively. This takes a while, be patient.
+
+Once you've installed anaconda you'll be asked to reboot your shell. 
+After that, navigate to a location you'd like to install this repo (your /afs/cern.ch/work/ is recommended).
+
+```
+cd <target-directory>
 git clone ssh://git@gitlab.cern.ch:7999/nschroed/cms-ecal-scales-and-smearings.git
-cd cms-ecal-scales-and-smearings/
+cd cms-ecal-scales-and-smearings
+conda env create -f env.yml
+conda activate scales-env
 ```
+
 Now you'll want to checkout your own branch (name it something useful) and push it to the git repo
 ```
 git branch myBranch
@@ -110,23 +124,24 @@ where *type* is either "data" or "sim", *treeName* is the name of the tree in th
 
 You can now run the pruner:
 ```
-python3 pymin.py -i config/UltraLegacy2018.dat --prune -o 'pruned_ul18'
+python pymin.py -i config/UltraLegacy2018.dat --prune -o 'pruned_ul18'
 ```
 This takes your input files and will write them to tsvs in the folder DEST_PATH using the tage DEST_TAG
 
 Now you will need to put the paths to the pruned files in a file, preferably in the config folder to run the run divider
 ```
-python3 pymin.py -i config/ul2018.dat --run-divide -o ul18
+python pymin.py -i config/pruned_ul18.cfg --run-divide -o ul18
 ```
 If you want fewer run bins you can increase the default number of events per run using the `--minEvents` argument
 
 With your run bins in hand you can now run the time_stability step:
 ```
-python3 pymin.py -i config/ul2018.dat -c datFiles/run_divide_ul2018.dat -o ul2018 --time-stability
+python pymin.py -i config/pruned_ul18.cfg -c datFiles/run_divide_ul18.dat -o ul18 --time-stability
 ```
-and to plot the results of the time stabilization, run the following:
+
+You can also run the following instead, if you want to plot the results of the time stabilization:
 ```
-python3 pymin.py -i <config-file> --cats <run-divide-file> --time-stability -o <output-name> --plot --lumi-label <lumi-string : i.e.('59.7 fb^{-1} (13 TeV) 2018')>
+python pymin.py -i config/pruned_ul18.cfg -c datFiles/run_divide_ul18.dat -o ul18 --time-stability --plot --lumi-label '59.7 fb^{-1} (13 TeV) 2018'
 ```
 From here you can run the scales and smearings chain. This requires a couple additional ingredients.
 The first is a categories file, you can see an example below:
@@ -156,12 +171,12 @@ Please be extra careful when building your categories to ensure that you do not 
 Step2 is coarseEtaR9, step3 is fineEtaR9, step4 is either fineEtaR9Gain, or fineEtaR9Et:
 
 ```
-python3 pymin.py -i config/ul2018.dat -c config/cats_step2.tsv -s datFiles/step1_MY_TAG_scales.dat -o ul18_DATE_v0
+python pymin.py -i config/pruned_ul18.cfg -c config/cats_step2.tsv -s datFiles/step1_ul18_scales.dat -o ul18
 ```
 This first step runs a derivation of both the scales and smearings
 
 ```
-python3 pymin.py -i config/ul2018.dat \
+python pymin.py -i config/pruned_ul18.cfg \
            -c config/cats_step2.py \
            -s datFiles/step2_MY_TAG_scales.dat \
            -w datFiles/ptz_x_rapidity_weights_ul18_DATE_v0.tsv \
@@ -170,6 +185,24 @@ python3 pymin.py -i config/ul2018.dat \
            --closure
 ```
 This second step uses the `--closure` option and runs the minimization without any smearings. The MC is smeared ahead of the minimization using the smearings provided and no smearings are given to the minimizer. It can be useful to run this several times if your scales look off.
+
+Because the minimizer can take a long time to derive the scales and smearings, there is a built-in option to submit the script as a job to condor. To do this simply run the above commands appending `--condor --queue <queue>` like so:
+
+```
+python pymin.py -i config/pruned_ul18.cfg -c config/cats_step2.tsv -s datFiles/step1_ul18_scales.dat -o ul18 --condor --queue <queue>
+```
+and 
+```
+python pymin.py -i config/pruned_ul18.cfg \
+           -c config/cats_step2.py \
+           -s datFiles/step2_MY_TAG_scales.dat \
+           -w datFiles/ptz_x_rapidity_weights_ul18_DATE_v0.tsv \
+           -o ul18_step2_DATE_v0_closure \
+           --smearings="datFiles/step2_ul18_DATE_v0_smearings.dat \
+           --closure \
+           --condor --queue <queue>
+```
+
 
 ## Validation
 
@@ -207,7 +240,7 @@ An example of the category definition file can be found in `config/pyval/plot_ca
 The basic usage looks like this:
 
 ```
-python3 pyval.py \
+python pyval.py \
     -i config/pyval/my_config.cfg \
     -o 'my_output_tag' \
     --data-title="Title Of Data" \

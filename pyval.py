@@ -7,7 +7,7 @@ import sys
 import time
 
 #3rd party
-import uproot as up
+import uproot3 as up
 import numpy as np
 import pandas as pd
 
@@ -17,6 +17,7 @@ import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
+# import python.utilities.evaluate_systematics as eval_syst
 
 from python.classes.constant_classes import PyValConstants as pvc
 import python.classes.config_class as config_class
@@ -28,15 +29,16 @@ def main():
     Main function for the scales and smearings validation and plotting.
     --------------------------------
     Args:
-        -i, --in-file: input file
-        -o, --output-file: string used to create output files
-        --data-title: title used in plots for the data
-        --mc-title: title used in plots for the mc
-        --lumi-label: luminosity label: i.e. 35 fb^{-1} (13 TeV) 2016
-        --binning: Either number of bins, or 'auto' for automatic binning
-        --systematics-study: flag to dump the systematic uncertainty due to variations in R9, Et, and working point ID 
+        -i, --in-file (str): path to input config file
+        -o, --output-file (str): string used to create output files
+        --data-title (str): title used in plots for the data
+        --mc-title (str): title used in plots for the mc
+        --lumi-label (str): luminosity label: i.e. 35 fb^{-1} (13 TeV) 2016
+        --binning (int | str): Either number of bins, or 'auto' for automatic binning
+        --systematics-study (flag): flag to dump the systematic uncertainty due to variations in R9, Et, and working point ID 
             [WARNING]: this is currently not implemented, it is a high priority TODO
-        --plotting-style: style of plots to make
+        --fit (flag): flag to fit invariant mass distributions with BW conv. CB 
+        --debug: flat to turn on debug mode.
     --------------------------------
     Returns:
         None
@@ -84,6 +86,7 @@ def main():
             "--systematics-study",
             help="flag to dump the systematic uncertainty due to variations in R9, Et, and working point ID",
             default=False,
+            dest="_kSystStudy"
             )
     parser.add_argument(
             "--no-reweight",
@@ -98,6 +101,12 @@ def main():
             dest="write_location",
             default=None,
             )
+    parser.add_argument(
+            "--fit",
+            help="flag to turn on BW conv. CB fitting for all distributions",
+            dest="_kFit",
+            default=False,
+    )
     parser.add_argument(
             "--debug",
             default=False,
@@ -155,11 +164,15 @@ def main():
         if len(dict_config[pvc.KEY_MC]) != 0: df_mc.to_csv(output_name+"_mc.tsv", sep='\t')
 
     #plot the plots
-    make_plots.plot(df_data, df_mc, dict_config[pvc.KEY_CAT][0],
-            lumi=args.lumi_label,
-            bins=args.bins,
-            tag=args.output_file,
-            )
+    if not args._kSystStudy:
+        make_plots.plot(df_data, df_mc, dict_config[pvc.KEY_CAT][0],
+                lumi=args.lumi_label,
+                bins=args.bins,
+                tag=args.output_file,
+                )
+    else:
+        # eval_syst.evaluate_systematics()
+        pass
 
     return
 

@@ -2,21 +2,11 @@
 import os
 import gc
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import uproot as up
-import statistics as stats
-import time
-from scipy.optimize import basinhopping as basinHop
-from scipy.optimize import  differential_evolution as diffEvolve
 from scipy.optimize import minimize as minz
-from scipy.special import xlogy
-from scipy import stats as scistat 
 
 import python.helpers.helper_minimizer as helper_minimizer
 import python.plotters.plot_cats as plotter
-from python.classes.zcat_class import zcat
-from python.utilities.smear_mc import smear
 
 __num_scales__ = 0
 __num_smears__ = 0

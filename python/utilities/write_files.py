@@ -441,3 +441,36 @@ def write_time_stability(scales, runs, outFile):
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(outFile, sep='\t',header=False,index=False)
 
+
+def write_weights(basename, weights, x_edges, y_edges):
+    """ 
+    writes weights to a tsv file:
+    ----------
+    Args:
+        basename: name of the file to write to
+        weights: weights to write
+        x_edges: x edges of the weights
+        y_edges: y edges of the weights
+    ----------
+    Returns:
+        out: path to the file written
+    ----------
+    """
+    headers = dc.PTY_WEIGHT_HEADERS
+    dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
+    for col in headers:
+        dictForDf[col] = []
+
+    for i,row in enumerate(weights):
+        row = np.ravel(row)
+        for j,weight in enumerate(row):
+            dictForDf[dc.YMIN].append(x_edges[i])
+            dictForDf[dc.YMAX].append(x_edges[i+1])
+            dictForDf[dc.PTMIN].append(y_edges[j])
+            dictForDf[dc.PTMAX].append(y_edges[j+1])
+            dictForDf[dc.WEIGHT].append(weight)
+
+    out = f"{ss_config.DEFAULT_WRITE_FILES_PATH}ptz_x_rapidity_weights_"+basename+".tsv"
+    df_out = pd.DataFrame(dictForDf)
+    df_out.to_csv(out, sep='\t', index=False)
+    return out

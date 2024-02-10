@@ -7,7 +7,7 @@ import sys
 
 import pandas as pd
 import numpy as np
-import uproot as up
+import uproot3 as up
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
@@ -21,8 +21,15 @@ def get_options(args):
     return ret
 
 
-def get_cmd(args):
-    #reconstructs and returns the command line string used to run the program
+def get_cmd():
+    """
+    Returns the command line string that was used to run the current program.
+
+    Args:
+        args (list): the arguments passed to the program
+    Returns:
+        cmd: the command line string that was used to run the current program
+    """
 
     cmd = ''
     for arg in sys.argv:
@@ -34,7 +41,15 @@ def get_cmd(args):
     return cmd
 
 def get_step(args):
-    #gets the step number from the category file
+    """
+    Returns the step number from the cats file name.
+    TODO: this doesn't work well, fix it
+
+    Args:
+        args (list): the arguments passed to the program
+    Returns:
+        step (int): the step number
+    """
 
     if args.catsFile is not None and not args._kTimeStability:
         if "." in args.catsFile.split("_")[1]:
@@ -44,7 +59,14 @@ def get_step(args):
     return -1
 
 def rewrite(args):
-    # rewrites a set of scales/smearings files
+    """
+    Rewrites the scales and smearings files with the new values.
+
+    Args:
+        args (list): the arguments passed to the program
+    Returns:
+        None
+    """
     step = get_step(args)
     file_name_only_step = args.only_step
     only_step_path = os.path.dirname(file_name_only_step)
@@ -56,7 +78,16 @@ def rewrite(args):
 
 
 def load_dataframes(files, args):
+    """
+    Loads the data and mc dataframes from the root files.
 
+    Args:
+        files (list): the root files to load
+        args (list): the arguments passed to the program
+    Returns:
+        data (pandas dataframe): the data dataframe
+        mc (pandas dataframe): the mc dataframe
+    """
     data = None
     mc = None
 
@@ -66,6 +97,7 @@ def load_dataframes(files, args):
     #import data and mc to dataframes
     print("[INFO] importing data and mc to dataframes (this might take a bit) ...")
 
+    # specifying data types allows for faster loading and less memory usage
     data_types = {
             dc.R9_LEAD: np.float32,
             dc.R9_SUB: np.float32,
@@ -125,7 +157,18 @@ def load_dataframes(files, args):
     return data, mc
 
 def write_results(args, scales_smears):
+    """
+    Write the results of minimization to file.
+
+    Args:
+        args (list): the arguments passed to the program
+        scales_smears (list): the scales and smearings
+    Returns:
+        True if successful, False otherwise
+    """
     try:
+        # this whole thing is wrapped in a try/except block because it's possible that the output
+        # will fail despite the minimization being successful, and we don't want to lose the results
         step = get_step(args)
         cats = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
 
