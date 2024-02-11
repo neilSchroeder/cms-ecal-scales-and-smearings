@@ -43,7 +43,6 @@ def get_cmd():
 def get_step(args):
     """
     Returns the step number from the cats file name.
-    TODO: this doesn't work well, fix it
 
     Args:
         args (list): the arguments passed to the program
@@ -52,9 +51,7 @@ def get_step(args):
     """
 
     if args.catsFile is not None and not args._kTimeStability:
-        if "." in args.catsFile.split("_")[1]:
-            return int(args.catsFile.split("_")[1].split(".")[0][-1])
-        return int(args.catsFile.split("_")[1][-1])
+        return args.catsFile.split("step")[1][0]
 
     return -1
 
