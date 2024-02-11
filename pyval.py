@@ -63,11 +63,13 @@ def main():
     parser.add_argument(
             "--data-title",
             help="title used in plots for the data",
+            dest="data_title",
             default=None,
             )
     parser.add_argument(
             "--mc-title",
             help="title used in plots for the mc",
+            dest="mc_title",
             default=None,
             )
     parser.add_argument(

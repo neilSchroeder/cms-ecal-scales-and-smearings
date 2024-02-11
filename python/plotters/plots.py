@@ -256,14 +256,14 @@ def plot_style_paper(data, mc, plot_title, **options):
         label=style.labels['syst']) #fill mc error
     axs[0].errorbar(mids, h_mc, # plot mc
             xerr=x_err,
-            label = style.labels['mc'], 
+            label = options['mc_title'], 
             color=style.colors['mc'],
             drawstyle=style.error_bar_style,
             capsize=0.,
             )
     axs[0].errorbar(mids, h_data, # plot data
             xerr=x_err, yerr=y_err_data, 
-            label = style.labels['data'], 
+            label = options['data_title'], 
             color=style.colors['data'],
             linestyle='None', 
             marker='o',
