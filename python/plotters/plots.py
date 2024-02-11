@@ -180,13 +180,6 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     h_mc = h_mc*np.sum(h_data)/np.sum(h_mc)
 
-    fit_params_data = None
-    fit_params_mc = None
-    if options['_kFit']:
-        # fit the data
-        fit_params_data = fit_bw_cb(h_bins, h_data, [1.424, 1.86, np.average(h_bins, weights=h_data)-91.188, 1.])
-        fit_params_mc = fit_bw_cb(h_bins, h_mc, [1.424, 1.86, np.average(h_bins, weights=h_mc)-91.188, 1.])
-
     ratio = np.divide(h_data,h_mc)
     ratio[ratio==np.inf] = np.nan
     
@@ -194,6 +187,14 @@ def plot_style_paper(data, mc, plot_title, **options):
     mids_full = mids.copy()
     mids_full[0], mids_full[-1] = pc.HIST_MIN, pc.HIST_MAX
     x_err = (h_bins[1]-h_bins[0])/2
+
+    # fit the data and mc
+    fit_params_data = None
+    fit_params_mc = None
+    if options['_kFit']:
+        # fit the data
+        fit_params_data = fit_bw_cb(mids, h_data, [1.424, 1.86, np.average(mids, weights=h_data)-91.188, 1.])
+        fit_params_mc = fit_bw_cb(mids, h_mc, [1.424, 1.86, np.average(mids, weights=h_mc)-91.188, 1.])
 
     # calculate errors
     y_err_data = np.sqrt(h_data)
