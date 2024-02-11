@@ -50,10 +50,11 @@ def make_script(cmd, script, done):
     """
 
     lines = []
-    lines.append("#!/bin/bash\n")
+    username = os.environ['USER']
+    lines.append("#!/usr/bin/bash\n")
+    lines.append(f"source /afs/cern.ch/user/{username[0]}/{username}/.bashrc\n")
     lines.append("cd "+os.getcwd()+"\n")
-    lines.append("conda init bash\n")
-    lines.append("conda activate scales-env\n")
+    lines.append(f"conda activate scales-env\n")
     lines.append('\n')
     lines.append(f'python {cmd} --from-condor\n')
     lines.append('\n')
