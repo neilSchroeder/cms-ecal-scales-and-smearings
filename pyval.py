@@ -170,6 +170,8 @@ def main():
     #plot the plots
     if not args._kSystStudy:
         make_plots.plot(df_data, df_mc, dict_config[pvc.KEY_CAT][0],
+                data_title=args.data_title,
+                mc_title=args.mc_title,
                 lumi=args.lumi_label,
                 bins=args.bins,
                 tag=args.output_file,
