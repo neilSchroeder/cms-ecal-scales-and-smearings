@@ -173,6 +173,7 @@ def main():
                 lumi=args.lumi_label,
                 bins=args.bins,
                 tag=args.output_file,
+                _kFit=args._kFit,
                 )
     else:
         # eval_syst.evaluate_systematics()
