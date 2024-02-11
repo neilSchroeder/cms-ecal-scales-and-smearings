@@ -86,7 +86,8 @@ def main():
             "--systematics-study",
             help="flag to dump the systematic uncertainty due to variations in R9, Et, and working point ID",
             default=False,
-            dest="_kSystStudy"
+            dest="_kSystStudy",
+            action="store_true",
             )
     parser.add_argument(
             "--no-reweight",
@@ -106,6 +107,7 @@ def main():
             help="flag to turn on BW conv. CB fitting for all distributions",
             dest="_kFit",
             default=False,
+            action="store_true",
     )
     parser.add_argument(
             "--debug",
