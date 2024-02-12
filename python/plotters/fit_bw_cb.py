@@ -3,7 +3,6 @@ import python.classes.crystal_ball as crystal_ball
 import numpy as np
 from scipy.optimize import minimize
 from scipy.special import xlogy
-from scipy.signal import fftconvolve
 import matplotlib.pyplot as plt
 
 def NLL(a,b):
@@ -34,7 +33,17 @@ def target(guess):
     return NLL(_DATA_,y_vals)
 
 
-def fit(x,y,guess_cb):
+def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
+    """
+    Fit a Breit-Wigner convoluted with a Crystal Ball to a set of data
+
+    Args:
+        x (np.array): x values
+        y (np.array): y values
+        guess_cb (list): guess for the crystal ball parameters
+	Returns:
+		dictionary: dictionary containing the fit parameters
+    """
     global thisBW
     global thisCB
     global _DATA_
@@ -64,22 +73,6 @@ def fit(x,y,guess_cb):
     print("mu:", 91.188+result.x[2])
     print("sigma:", result.x[3])
     print("reduced chi squared:", chi_sqr)
-    print()
-    print("plotting")
-
-    fig,axs = plt.subplots(ncols=1,nrows=1) 
-    axs.scatter(x,
-            y,
-            label='data',
-            color='black',
-            marker='o')
-    axs.plot(x,
-            y_vals,
-            label='bw conv cb fit',
-            color='darkred',
-            linestyle='dashed')
-    axs.legend(loc='best')
-    fig.savefig("fit.png")
-    plt.close(fig)
-    return
+    print()    
     
+    return {"mu": 91.188+result.x[2], "sigma": result.x[3], "chi_sqr": chi_sqr}

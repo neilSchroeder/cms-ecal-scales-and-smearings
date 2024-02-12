@@ -63,11 +63,13 @@ def main():
     parser.add_argument(
             "--data-title",
             help="title used in plots for the data",
+            dest="data_title",
             default=None,
             )
     parser.add_argument(
             "--mc-title",
             help="title used in plots for the mc",
+            dest="mc_title",
             default=None,
             )
     parser.add_argument(
@@ -86,7 +88,8 @@ def main():
             "--systematics-study",
             help="flag to dump the systematic uncertainty due to variations in R9, Et, and working point ID",
             default=False,
-            dest="_kSystStudy"
+            dest="_kSystStudy",
+            action="store_true",
             )
     parser.add_argument(
             "--no-reweight",
@@ -106,6 +109,7 @@ def main():
             help="flag to turn on BW conv. CB fitting for all distributions",
             dest="_kFit",
             default=False,
+            action="store_true",
     )
     parser.add_argument(
             "--debug",
@@ -166,9 +170,12 @@ def main():
     #plot the plots
     if not args._kSystStudy:
         make_plots.plot(df_data, df_mc, dict_config[pvc.KEY_CAT][0],
+                data_title=args.data_title,
+                mc_title=args.mc_title,
                 lumi=args.lumi_label,
                 bins=args.bins,
                 tag=args.output_file,
+                _kFit=args._kFit,
                 )
     else:
         # eval_syst.evaluate_systematics()

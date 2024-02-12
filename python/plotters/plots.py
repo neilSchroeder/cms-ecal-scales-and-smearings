@@ -12,6 +12,7 @@ import python.helpers.helper_plots as helper_plots
 from python.classes.config_class import SSConfig
 ss_config = SSConfig()
 from python.classes.constant_classes import PlottingConstants as pc
+from python.plotters.fit_bw_cb import fit_bw_cb
 
 plt.rcParams.update({
     "font.family": "sans-serif",
@@ -187,6 +188,14 @@ def plot_style_paper(data, mc, plot_title, **options):
     mids_full[0], mids_full[-1] = pc.HIST_MIN, pc.HIST_MAX
     x_err = (h_bins[1]-h_bins[0])/2
 
+    # fit the data and mc
+    fit_params_data = None
+    fit_params_mc = None
+    if options['_kFit']:
+        # fit the data
+        fit_params_data = fit_bw_cb(mids, h_data, [1.424, 1.86, np.average(mids, weights=h_data)-91.188, 1.])
+        fit_params_mc = fit_bw_cb(mids, h_mc, [1.424, 1.86, np.average(mids, weights=h_mc)-91.188, 1.])
+
     # calculate errors
     y_err_data = np.sqrt(h_data)
     try:
@@ -248,14 +257,14 @@ def plot_style_paper(data, mc, plot_title, **options):
         label=style.labels['syst']) #fill mc error
     axs[0].errorbar(mids, h_mc, # plot mc
             xerr=x_err,
-            label = style.labels['mc'], 
+            label = options['mc_title'], 
             color=style.colors['mc'],
             drawstyle=style.error_bar_style,
             capsize=0.,
             )
     axs[0].errorbar(mids, h_data, # plot data
             xerr=x_err, yerr=y_err_data, 
-            label = style.labels['data'], 
+            label = options['data_title'], 
             color=style.colors['data'],
             linestyle='None', 
             marker='o',
@@ -274,9 +283,14 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     # invert legend order because python is a hassle
     handles, labels = axs[0].get_legend_handles_labels()
+    handles, labels = handles[::-1], labels[::-1]
+    if options['_kFit'] and fit_params_data and fit_params_mc:
+        labels[0] = f"{labels[0]}: $\mu$ = {fit_params_data['mu']:.3f} GeV, $\sigma$ = {fit_params_data['sigma']:.3f} GeV"
+        labels[1] = f"{labels[1]}: $\mu$ = {fit_params_mc['mu']:.3f} GeV, $\sigma$ = {fit_params_mc['sigma']:.3f} GeV"
+
     axs[0].legend( 
-        handles[::-1], 
-        labels[::-1], 
+        handles,
+        labels,
         loc=style.legend['loc'], 
         fontsize=style.legend['fontsize'],
         )   
