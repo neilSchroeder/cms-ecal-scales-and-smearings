@@ -289,8 +289,8 @@ def plot_style_paper(data, mc, plot_title, **options):
         labels[1] = f"{labels[1]}: $\mu$={fit_params_mc['mu']:.3f} $\sigma$={fit_params_mc['sigma']:.3f}"
 
     axs[0].legend( 
-        handles[::-1], 
-        labels[::-1], 
+        handles,
+        labels,
         loc=style.legend['loc'], 
         fontsize=style.legend['fontsize'],
         )   
