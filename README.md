@@ -53,7 +53,36 @@ The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 Due to some concerns over changing environments on lxplus, the new installation instructions use Anaconda
 
 #### Installing Anaconda
-please follow the instructions here:
+
+First, check if you have access to `conda` by running:
+`which conda`
+if you get an output that looks like this (on lxplus):
+```
+conda ()
+{
+    \local cmd="${1-__missing__}";
+    case "$cmd" in
+        activate | deactivate)
+            __conda_activate "$@"
+        ;;
+        install | update | upgrade | remove | uninstall)
+            __conda_exe "$@" || \return;
+            __conda_reactivate
+        ;;
+        *)
+            __conda_exe "$@"
+        ;;
+    esac
+}
+```
+or like this (on your local machine):
+```
+/home/<user>/anaconda3/bin/conda
+```
+then you already have access to anaconda and you shouldn't need to do a new installation.
+
+
+otherwise you can install anaconda3 like so:
 ```
 curl -O https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh
 bash Anaconda3-2023.09-0-Linux-x86_64.sh
@@ -61,7 +90,8 @@ bash Anaconda3-2023.09-0-Linux-x86_64.sh
 When installing Anaconda3 you'll probably want to install it in your work repo because it's large and trying to put it into your basic lxplus box will limit your space significantly. It will prompt you to pick an install location, enter: `/afs/cern.ch/work/<u>/<user>/anaconda3` replacing `<u>` and `<user>` with the first initial of your username and your username, respectively. This takes a while, be patient.
 
 Once you've installed anaconda you'll be asked to reboot your shell. 
-After that, navigate to a location you'd like to install this repo (your /afs/cern.ch/work/ is recommended).
+
+With anaconda installed, navigate to a location you'd like to install this repo (your /afs/cern.ch/work/ is recommended).
 
 ```
 cd <target-directory>
