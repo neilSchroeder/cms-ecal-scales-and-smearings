@@ -285,8 +285,8 @@ def plot_style_paper(data, mc, plot_title, **options):
     handles, labels = axs[0].get_legend_handles_labels()
     handles, labels = handles[::-1], labels[::-1]
     if options['_kFit'] and fit_params_data and fit_params_mc:
-        labels[0] = f"{labels[0]}: $\mu$={fit_params_data['mu']:.3f} $\sigma$={fit_params_data['sigma']:.3f}"
-        labels[1] = f"{labels[1]}: $\mu$={fit_params_mc['mu']:.3f} $\sigma$={fit_params_mc['sigma']:.3f}"
+        labels[0] = f"{labels[0]}: $\mu$ = {fit_params_data['mu']:.3f} GeV, $\sigma$ = {fit_params_data['sigma']:.3f} GeV"
+        labels[1] = f"{labels[1]}: $\mu$ = {fit_params_mc['mu']:.3f} GeV, $\sigma$ = {fit_params_mc['sigma']:.3f} GeV"
 
     axs[0].legend( 
         handles,
