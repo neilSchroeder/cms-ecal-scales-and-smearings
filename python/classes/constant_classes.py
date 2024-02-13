@@ -64,8 +64,8 @@ class DataConstants():
     TARGET_MASS = 91.188
 
     # pruning constants
-    KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber']
-    DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]']
+    KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber', 'eleID']
+    DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]', 'invMass_ECAL_ele[2]', 'eleID[2]']
 
     # time stability constants
     TIME_STABILITY_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'median', 'mean', 'sigma', 'scale', 'median_corr', 'mean_corr', 'sigma_corr', 'events']
@@ -79,14 +79,16 @@ class DataConstants():
     MIN_EE = 1.566
     MAX_EE = 2.5
     TRACK_MAX = 1000
-    MIN_PT_LEAD = 32
+    MIN_PT_LEAD = 30
     MIN_PT_SUB = 20
     invmass_min = 60 #python/helpers/helper_main.py
     invmass_max = 120 #python/helpers/helper_main.py
     MIN_INVMASS, MAX_INVMASS = 80, 100
-    MIN_ET_LEAD, MAX_ET_LEAD = 32, 14000
+    MIN_ET_LEAD, MAX_ET_LEAD = 30, 14000
     MIN_ET_SUB, MAX_ET_SUB = 20, 14000
     MIN_E, MAX_E = 0, 14000
+    MEDIUM_ID, TIGHT_ID = 0x0008, 0x0010
+    R9_BOUNDARY = 0.96
 
     #dataframe keys
     RUN = 'runNumber'
@@ -103,6 +105,8 @@ class DataConstants():
     INVMASS = 'invMass_ECAL_ele'
     ET_LEAD = 'transverse_energy[0]'
     ET_SUB = 'transverse_energy[1]'
+    ID_LEAD = 'eleID[0]'
+    ID_SUB = 'eleID[1]'
 
     DATA_TYPES = {
         R9_LEAD: np.float32,

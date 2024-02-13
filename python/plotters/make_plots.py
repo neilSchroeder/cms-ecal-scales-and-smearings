@@ -4,6 +4,8 @@ import numpy as np
 from python.classes.constant_classes import PyValConstants as pvc
 from python.classes.constant_classes import DataConstants as dc
 import python.plotters.plots as plots
+from python.utilities.data_loader import custom_cuts
+
 pvc.plotting_functions = {
         'paper': plots.plot_style_paper,
         'crossCheckMC': plots.plot_style_validation_mc
@@ -55,48 +57,10 @@ def get_var(df, info, _isData=True):
     else:
         var_key = info["variable"]
 
-    mask_lead = np.ones(len(df), dtype=bool)
-    mask_sub = np.ones(len(df), dtype=bool)
-    if bounds_eta_lead[0] != -1 and bounds_eta_lead[1] != -1:
-        mask_lead = np.logical_and(mask_lead,
-                np.logical_and(bounds_eta_lead[0] <= df[dc.ETA_LEAD].values, 
-                    df[dc.ETA_LEAD].values < bounds_eta_lead[1]
-                    )
-                )
-    if bounds_eta_sub[0] != -1 and bounds_eta_sub[1] != -1:
-        mask_sub = np.logical_and(mask_sub,
-                np.logical_and(bounds_eta_sub[0] <= df[dc.ETA_SUB].values, 
-                    df[dc.ETA_SUB].values < bounds_eta_sub[1]
-                    )
-                )
-    if bounds_r9_lead[0] != -1 and bounds_r9_lead[1] != -1:
-        mask_lead = np.logical_and(mask_lead, 
-                np.logical_and(bounds_r9_lead[0] <= df[dc.R9_LEAD].values, 
-                    df[dc.R9_LEAD].values < bounds_r9_lead[1]
-                    )
-                )
-    if bounds_r9_sub[0] != -1 and bounds_r9_sub[1] != -1:
-        mask_sub = np.logical_and(mask_sub, 
-                np.logical_and(bounds_r9_sub[0] <= df[dc.R9_SUB].values, 
-                    df[dc.R9_SUB].values < bounds_r9_sub[1]
-                    )
-                )
-    if bounds_et_lead[0] != -1 and bounds_et_lead[1] != -1:
-       mask_lead = np.logical_and(mask_lead, 
-               np.logical_and(
-                   bounds_et_lead[0] <= np.divide(df[dc.E_LEAD].values, np.cosh(df[dc.ETA_LEAD].values)), 
-                   np.divide(df[dc.E_LEAD].values, np.cosh(df[dc.ETA_LEAD].values)) < bounds_et_lead[1]
-                   )
-               )
-    if bounds_et_sub[0] != -1 and bounds_et_sub[1] != -1:
-       mask_sub = np.logical_and(mask_sub, 
-               np.logical_and(
-                   bounds_et_sub[0] <= np.divide(df[dc.E_SUB].values, np.cosh(df[dc.ETA_SUB].values)), 
-                   np.divide(df[dc.E_SUB].values, np.cosh(df[dc.ETA_SUB].values)) < bounds_et_sub[1]
-                   )
-               )
-
-    mask = np.logical_and(mask_lead,mask_sub)
+    df_with_cuts = custom_cuts(df,
+                     eta_cuts=(bounds_eta_lead, bounds_eta_sub),
+                     et_cuts=(bounds_et_lead, bounds_et_sub),
+                     r9_cuts=(bounds_r9_lead, bounds_r9_sub))
 
     if var_key == dc.INVMASS:
         # check if systematics available
@@ -104,18 +68,18 @@ def get_var(df, info, _isData=True):
         if _isData:
             if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
                 # there's no systematics, so just return the data
-                return np.array(df[mask][var_key].values)
+                return np.array(df[var_key].values)
             # return the data
-            return [np.array(df[mask][var_key].values),
-                    np.array(df[mask][pvc.KEY_INVMASS_UP].values),
-                    np.array(df[mask][pvc.KEY_INVMASS_DOWN].values)]
+            return [np.array(df_with_cuts[var_key].values),
+                    np.array(df_with_cuts[pvc.KEY_INVMASS_UP].values),
+                    np.array(df_with_cuts[pvc.KEY_INVMASS_DOWN].values)]
 
         # otherwise return mc
-        return [np.array(df[mask][var_key].values),
-                np.array(df[mask][pvc.KEY_PTY].values)]
+        return [np.array(df_with_cuts[var_key].values),
+                np.array(df_with_cuts[pvc.KEY_PTY].values)]
         
     
-    return np.array(df[mask][var_key].values)
+    return np.array(df_with_cuts[var_key].values)
 
 def plot(data, mc, cats, **options):
     """
