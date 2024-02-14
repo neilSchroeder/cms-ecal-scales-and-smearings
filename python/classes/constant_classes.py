@@ -155,6 +155,73 @@ class DataConstants():
     time_stability_eta_bins_low = [0, 1., 1.2, 1.566, 2.]
     time_stability_eta_bins_high = [1., 1.2, 1.4442, 2., 2.5]
 
+    SYST_CUTS = {
+        "EBin": {
+            "HighR9": {
+                "eta_cuts": ((-1, 1), (-1, 1)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (0, 1, R9_BOUNDARY, -1, -1, -1, -1)
+            },
+            "LowR9": {
+                "eta_cuts": ((-1, 1), (-1, 1)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (0, 1, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+        "EBout": {
+            "HighR9": {
+                "eta_cuts": ((1, 1.4442), (1, 1.4442)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1, 1.4442, R9_BOUNDARY, -1, -1, -1, -1)
+            },
+            "LowR9": {
+                "eta_cuts":((1, 1.4442), (1, 1.4442)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1, 1.4442, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+        "EEin": {
+            "HighR9": {
+                "eta_cuts": ((1.566, 2), (1.566, 2)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1.566, 2, R9_BOUNDARY, -1, -1, -1, -1)
+            }, 
+            "LowR9": {
+                "eta_cuts": ((1.566, 2), (1.566, 2)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1.566, 2, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+        "EEout": {
+            "HighR9": {
+                "eta_cuts": ((2, 2.5), (2,2.5)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (2, 2.5, R9_BOUNDARY, -1, -1, -1, -1)
+            },
+            "LowR9": {
+                "eta_cuts": ((2, 2.5), (2,2.5)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (2, 2.5, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+    }
+
 
 class CategoryConstants():
     """Constants for the categories files."""

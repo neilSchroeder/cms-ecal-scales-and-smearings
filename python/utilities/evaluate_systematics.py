@@ -7,12 +7,11 @@ from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
 global_config = SSConfig()
 
-from python.helpers.helper_pyval import extract_files
+from python.plotters.fit_bw_cb import fit_bw_cb
 from python.utilities.data_loader import (
-    get_dataframe,
     custom_cuts,
 )
-from python.plotters.fit_bw_cb import fit_bw_cb
+from python.utilities.write_files import write_systmatics
 
 
 def evaluate_systematics(data, mc, outfile):
@@ -34,138 +33,170 @@ def evaluate_systematics(data, mc, outfile):
         None
     """
 
-    data_df = get_dataframe(
-
-
-    cuts = {
-        "EBin": {
-            "HighR9": {
-                "eta_cuts": ((-1, 1), (-1, 1)),
-                "r9_cuts": ((dc.R9_boundary, -1), (dc.R9_boundary, -1)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            },
-            "LowR9": {
-                "eta_cuts": ((-1, 1), (-1, 1)),
-                "r9_cuts": ((-1, dc.R9_boundary), (-1, dc.R9_boundary)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            }
-        },
-        "EBout": {
-            "HighR9": {
-                "eta_cuts": ((1, 1.4442), (1, 1.4442)),
-                "r9_cuts": ((dc.R9_boundary, -1), (dc.R9_boundary, -1)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            },
-            "LowR9": {
-                "eta_cuts": ((-1, 1), (-1, 1)),
-                "r9_cuts": ((-1, dc.R9_boundary), (-1, dc.R9_boundary)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            }
-        },
-        "EEin": {
-            "HighR9": {
-                "eta_cuts": ((1.566, 2), (1.566, 2)),
-                "r9_cuts": ((dc.R9_boundary, -1), (dc.R9_boundary, -1)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            },
-            "LowR9": {
-                "eta_cuts": ((1.566, 2), (1.566, 2)),
-                "r9_cuts": ((-1, dc.R9_boundary), (-1, dc.R9_boundary)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            }
-        },
-        "EEout": {
-            "HighR9": {
-                "eta_cuts": ((2, 2.5), (2,2.5)),
-                "r9_cuts": ((dc.R9_boundary, -1), (dc.R9_boundary, -1)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            },
-            "LowR9": {
-                "eta_cuts": ((2, 2.5), (2,2.5)),
-                "r9_cuts": ((-1, dc.R9_boundary), (-1, dc.R9_boundary)),
-                "et_cuts": (dc.MIN_PT_LEAD, dc.MIN_PT_SUB),
-            }
-        },
-    }
+    cuts = dc.SYST_CUTS
 
     mids = [80.125 + 0.25*i for i in range(80)]
 
     nominal_hists = {
-        eta_key: {r9_key: np.histogram(
-                        custom_cuts(base_df, **cuts[eta_key][r9_key])[dc.INVMASS].values
-                        )[0] 
+        eta_key: {r9_key: [np.histogram(
+                        custom_cuts(data, **cuts[eta_key][r9_key])[dc.INVMASS].values
+                        )[0],
+                        np.histogram(
+                            custom_cuts(mc, **cuts[eta_key][r9_key])[dc.INVMASS].values
+                        )[0]]
                    for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
     }
     
     r9_up_hists = {
-        eta_key: {r9_key: np.histogram(
-                        custom_cuts(base_df, 
+        eta_key: {r9_key: [np.histogram(
+                        custom_cuts(data, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     )[dc.INVMASS].values
-                        )[0] 
+                        )[0],
+                        np.histogram(mc,
+                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                                     r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
+                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
+                                    )[dc.INVMASS].values
+                        ] 
                    for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
     }
     r9_down_hists = {
-        eta_key: {r9_key: np.histogram(
-                        custom_cuts(base_df, 
+        eta_key: {r9_key: [np.histogram(
+                        custom_cuts(data, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = ((0.955, -1), (0.955, -1)) if r9_key == "HighR9" else ((-1, 0.935), (-1, 0.935)),
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     )[dc.INVMASS].values
-                        )[0] 
+                        )[0],
+                        np.histogram(custom_cuts(mc, 
+                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                                    r9_cuts = ((0.955, -1), (0.955, -1)) if r9_key == "HighR9" else ((-1, 0.935), (-1, 0.935)),
+                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
+                                    )[dc.INVMASS].values
+                        )[0]]
                    for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
     }
     et_up_hists = {
-        eta_key: {r9_key: np.histogram(
-                        custom_cuts(base_df, 
+        eta_key: {r9_key: [np.histogram(
+                        custom_cuts(data, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=(dc.MIN_PT_LEAD+2, dc.MIN_PT_SUB),
                                     )[dc.INVMASS].values
-                        )[0] 
+                        )[0],
+                        np.histogram(
+                        custom_cuts(mc, 
+                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
+                                    et_cuts=(dc.MIN_PT_LEAD+2, dc.MIN_PT_SUB),
+                                    )[dc.INVMASS].values
+                        )[0]] 
                    for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
     }
     et_down_hists = {
-        eta_key: {r9_key: np.histogram(
-                        custom_cuts(base_df, 
+        eta_key: {r9_key: [np.histogram(
+                        custom_cuts(data, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=(dc.MIN_PT_LEAD-2, dc.MIN_PT_SUB),
                                     )[dc.INVMASS].values
-                        )[0]
+                        )[0],
+                        np.histogram(
+                        custom_cuts(mc, 
+                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
+                                    et_cuts=(dc.MIN_PT_LEAD-2, dc.MIN_PT_SUB),
+                                    )[dc.INVMASS].values
+                        )[0]]
                    for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
     }
     medium_id_hists = {
-        eta_key: {r9_key: np.histogram(
-                        custom_cuts(base_df, 
+        eta_key: {r9_key: [np.histogram(
+                        custom_cuts(data, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     working_point="medium",
                                     )[dc.INVMASS].values
-                        )[0]
+                        )[0],
+                        np.histogram(
+                        custom_cuts(mc, 
+                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
+                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
+                                    working_point="medium",
+                                    )[dc.INVMASS].values
+                        )[0]]
                    for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
     }
     tight_id_hists = {
-        eta_key: {r9_key: np.histogram(
-                        custom_cuts(base_df, 
+        eta_key: {r9_key: [np.histogram(
+                        custom_cuts(data, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     working_point="tight",
                                     )[dc.INVMASS].values
-                        )[0] 
+                        )[0],
+                        np.histogram(
+                        custom_cuts(mc, 
+                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
+                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
+                                    working_point="tight",
+                                    )[dc.INVMASS].values
+                        )[0]]
                    for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
     }
 
-    # we need histograms with the invariant mass for each variation
-    
+    # add all hists to a list for easier looping
+    hists = [
+        nominal_hists,
+        r9_down_hists,
+        r9_up_hists,
+        et_down_hists,
+        et_up_hists,
+        medium_id_hists,
+        tight_id_hists
+    ]
+
+    # now we can fit and take a double ratio for each
+    # variation
+    for hist in hists:
+        for eta_key in hist:
+            for r9_key in hist[eta_key]:
+                data_mu, data_sigma = fit_bw_cb(mids, hist[eta_key][r9_key][0],
+                                                [1.424, 1.86, np.average(mids, weights=hist[eta_key][r9_key][0])-dc.TARGET_MASS, 1.]
+                                                )
+                mc_mu, mc_sigma = fit_bw_cb(mids, hist[eta_key][r9_key][1],
+                                            [1.424, 1.86, np.average(mids, weights=hist[eta_key][r9_key][1])-dc.TARGET_MASS, 1.]
+                                            )
+                hist[eta_key][r9_key] = data_mu/mc_mu
+
+    systematics_categories = {
+        "R9": (hists[1], hists[2]),
+        "Et": (hists[3], hists[4]),
+        "ID": (hists[5], hists[6])
+    }
+    nominal_hists = hists.pop(0)
+    systematics = {
+        eta_key: {
+            r9_key: { 
+                syst_key: 
+                    max([abs(1 - systematics_categories[syst_key][eta_key][r9_key]/nominal_hists[eta_key][r9_key])]) 
+                    for syst_key in systematics_categories.keys()
+            } for r9_key in cuts[eta_key]
+        } for eta_key in cuts.keys()
+    }
+
+    write_systmatics(systematics, outfile)

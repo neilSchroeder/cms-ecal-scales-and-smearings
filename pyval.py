@@ -18,9 +18,12 @@ import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
-# import python.utilities.evaluate_systematics as eval_syst
+from python.utilities.evaluate_systematics import evaluate_systematics
 
-from python.classes.constant_classes import PyValConstants as pvc
+from python.classes.constant_classes import(
+    PyValConstants as pvc,
+    DataConstants as dc
+)
 import python.classes.config_class as config_class
 ss_config = config_class.SSConfig()
 
@@ -138,7 +141,10 @@ def main():
     #load and handle data first
     if len(dict_config[pvc.KEY_DAT]) > 0:
         print("[INFO] loading data")
-        df_data = get_dataframe(dict_config[pvc.KEY_DAT], apply_cuts='standard', debug = args._kDebug)
+        df_data = get_dataframe(dict_config[pvc.KEY_DAT], 
+                                apply_cuts='standard' if not args._kSystStudy else 'custom',
+                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                                debug = args._kDebug)
         if len(dict_config[pvc.KEY_SC]) > 0:
             print("[INFO] scaling data")
             df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
@@ -146,7 +152,10 @@ def main():
     #load and handle mc next
     if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")
-        df_mc = get_dataframe(dict_config[pvc.KEY_MC], debug = args._kDebug)
+        df_mc = get_dataframe(dict_config[pvc.KEY_MC], 
+                                apply_cuts='standard' if not args._kSystStudy else 'custom',
+                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                                debug = args._kDebug)
         if len(dict_config[pvc.KEY_SM]) > 0:
             print("[INFO] smearing mc")
             df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
@@ -177,8 +186,7 @@ def main():
                 _kFit=args._kFit,
                 )
     else:
-        # eval_syst.evaluate_systematics()
-        pass
+        evaluate_systematics(df_data, df_mc, args.output_file)
 
     return
 

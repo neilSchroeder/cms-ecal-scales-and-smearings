@@ -474,3 +474,37 @@ def write_weights(basename, weights, x_edges, y_edges):
     df_out = pd.DataFrame(dictForDf)
     df_out.to_csv(out, sep='\t', index=False)
     return out
+
+def write_systematics(systematics, output_tag):
+    """
+    Writes the systematics to a file
+    --------------------------------
+    Args:
+        systematics (dict): the systematics  
+    --------------------------------
+    Returns:
+        None
+    --------------------------------
+    """
+    out = f"{ss_config.DEFAULT_WRITE_FILES_PATH}systematics_{output_tag}.dat"
+    print(f"[INFO][python/write_files][write_systematics] Writing systematics to {out}")
+
+    headers = dc.SCALES_HEADERS
+    dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
+
+    for eta_key in systematics.keys():
+        for r9_key in systematics.keys():
+            dictForDf[dc.ETA_MIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][0])
+            dictForDf[dc.ETA_MAX].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][1])
+            dictForDf[dc.R9_MIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][2])
+            dictForDf[dc.R9_MAX].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][3])
+            dictForDf[dc.ET_MIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][4])
+            dictForDf[dc.ET_MAX].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][5])
+            dictForDf[dc.GAIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][6])
+            dictForDf[dc.SCALE].append(systematics[eta_key][r9_key])
+
+    dfOut = pd.DataFrame(dictForDf)
+    dfOut.to_csv(out, sep='	',header=False,index=False)
+    return
+
+    
