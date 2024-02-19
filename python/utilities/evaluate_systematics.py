@@ -38,32 +38,43 @@ def evaluate_systematics(data, mc, outfile):
     mids = [80.125 + 0.25*i for i in range(80)]
 
     nominal_hists = {
-        eta_key: {r9_key: [np.histogram(
-                        custom_cuts(data, **cuts[eta_key][r9_key])[dc.INVMASS].values
-                        )[0],
-                        np.histogram(
-                            custom_cuts(mc, **cuts[eta_key][r9_key])[dc.INVMASS].values
-                        )[0]]
-                   for r9_key in cuts[eta_key]}
-            for eta_key in cuts.keys()
+        eta_key: {
+            r9_key: [
+                np.histogram(
+                    custom_cuts(data, **cuts[eta_key][r9_key])[dc.INVMASS].values
+                )[0],
+                np.histogram(
+                    custom_cuts(mc, **cuts[eta_key][r9_key])[dc.INVMASS].values
+                )[0]
+            ]
+            for r9_key in cuts[eta_key]
+        }
+        for eta_key in cuts.keys()
     }
     
     r9_up_hists = {
-        eta_key: {r9_key: [np.histogram(
-                        custom_cuts(data, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    )[dc.INVMASS].values
-                        )[0],
-                        np.histogram(mc,
-                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                     r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    )[dc.INVMASS].values
-                        ] 
-                   for r9_key in cuts[eta_key]}
-            for eta_key in cuts.keys()
+        eta_key: {
+            r9_key: [
+                np.histogram(
+                    custom_cuts(
+                        data, 
+                        eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                        r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
+                        et_cuts=cuts[eta_key][r9_key]["et_cuts"],
+                    )[dc.INVMASS].values
+                )[0],
+                np.histogram(
+                    custom_cuts(
+                        mc,
+                        eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
+                        r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
+                        et_cuts=cuts[eta_key][r9_key]["et_cuts"]
+                    )[dc.INVMASS].values
+                )[0]
+            ] 
+            for r9_key in cuts[eta_key]
+        }
+        for eta_key in cuts.keys()
     }
     r9_down_hists = {
         eta_key: {r9_key: [np.histogram(
