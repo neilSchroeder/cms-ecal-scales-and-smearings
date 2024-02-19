@@ -65,7 +65,7 @@ class DataConstants():
 
     # pruning constants
     KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber', 'eleID']
-    DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]', 'invMass_ECAL_ele[2]', 'eleID[2]']
+    DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]', 'eleID[2]']
 
     # time stability constants
     TIME_STABILITY_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'median', 'mean', 'sigma', 'scale', 'median_corr', 'mean_corr', 'sigma_corr', 'events']
