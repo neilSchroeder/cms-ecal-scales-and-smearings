@@ -11,7 +11,7 @@ from python.plotters.fit_bw_cb import fit_bw_cb
 from python.utilities.data_loader import (
     custom_cuts,
 )
-from python.utilities.write_files import write_systmatics
+from python.utilities.write_files import write_systematics
 
 
 def evaluate_systematics(data, mc, outfile):
@@ -199,4 +199,4 @@ def evaluate_systematics(data, mc, outfile):
         } for eta_key in cuts.keys()
     }
 
-    write_systmatics(systematics, outfile)
+    write_systematics(systematics, outfile)
