@@ -86,7 +86,8 @@ def custom_cuts(df,
                 inv_mass_cuts=None,
                 et_cuts=None,
                 r9_cuts=None,
-                working_point=None):
+                working_point=None,
+                **kwargs):
     """
     Takes in a dataframe and applies the cuts specified in custom_cuts.
 
