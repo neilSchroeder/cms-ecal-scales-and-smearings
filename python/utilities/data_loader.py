@@ -119,7 +119,7 @@ def custom_cuts(df,
             mask = mask & ((df[dc.ETA_SUB] > eta_cuts[0]) & (df[dc.ETA_SUB] < eta_cuts[1]) | (df[dc.ETA_SUB] > eta_cuts[2]) & (df[dc.ETA_SUB] < eta_cuts[3]))
 
     if inv_mass_cuts:
-        mask = mask & (df[dc.INV_MASS] > inv_mass_cuts[0]) & (df[dc.INV_MASS] < inv_mass_cuts[1])
+        mask = mask & (df[dc.INVMASS] > inv_mass_cuts[0]) & (df[dc.INVMASS] < inv_mass_cuts[1])
 
     if et_cuts:
         if isinstance(et_cuts[0], tuple):
