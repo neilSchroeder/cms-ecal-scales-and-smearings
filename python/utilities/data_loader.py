@@ -123,10 +123,10 @@ def custom_cuts(df,
         mask = mask & (df[dc.INVMASS] > inv_mass_cuts[0]) & (df[dc.INVMASS] < inv_mass_cuts[1])
 
     if et_cuts:
+        et_lead = np.divide(df[dc.E_LEAD].values, np.cosh(df[dc.ETA_LEAD].values))
+        et_sub = np.divide(df[dc.E_SUB].values, np.cosh(df[dc.ETA_SUB].values))
         if isinstance(et_cuts[0], tuple):
             # this means cuts on both leading and SUBing electrons
-            et_lead = np.divide(df[dc.E_LEAD].values, np.cosh(df[dc.ETA_LEAD].values))
-            et_sub = np.divide(df[dc.E_SUB].values, np.cosh(df[dc.ETA_SUB].values))
             if et_cuts[0][0] != -1:
                 mask &= (et_lead > et_cuts[0][0])
             if et_cuts[0][1] != -1:
