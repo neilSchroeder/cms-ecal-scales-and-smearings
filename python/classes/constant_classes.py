@@ -121,6 +121,8 @@ class DataConstants():
         RUN: np.int32,
         GAIN_LEAD: np.int16,
         GAIN_SUB: np.int16,
+        ID_LEAD: np.int16,
+        ID_SUB: np.int16,
     }
 
     # indices of row in scales
