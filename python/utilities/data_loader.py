@@ -42,6 +42,7 @@ def get_dataframe(files,
         df.drop(dc.DROP_LIST, axis=1, inplace=True)
     elif ".csv" in files[0] or ".tsv" in files[0]:
         df = pd.concat([pd.read_csv(f, sep='\t',dtype=dc.DATA_TYPES) for f in files])
+        print(df.head())
     else:
         print("[python][helpers][helper_main] ERROR: file type not recognized")
         raise ValueError("file type not recognized: must be .root, .csv, or .tsv")
