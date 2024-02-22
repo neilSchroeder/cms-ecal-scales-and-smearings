@@ -2,7 +2,11 @@ import argparse as ap
 import os
 import pandas as pd
 import sys
-
+### added in Jan2024 to solve the tk configuration problem
+import matplotlib
+matplotlib.use('agg')  # Use Agg backend (no GUI dependency)
+import matplotlib.pyplot as plt
+###
 import python.helpers.helper_pymin as helper_pymin
 
 import python.utilities.divide_by_run as divide_by_run
