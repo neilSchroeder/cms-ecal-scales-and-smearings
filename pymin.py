@@ -46,6 +46,8 @@ def main():
         --no-auto-bin: Turns off the auto binning feature (using Freedman-Diaconis method)
         --bin-size: Size of bins for binned NLL evaluation
         --start-style: Style of starting values for minimization
+        --condor: submit the script to run on condor
+        --queue: (only use with --condor) tell condor which queue to submit to
     --------------------------------
     Returns:
         None
@@ -145,7 +147,7 @@ def main():
     print("[INFO] welcome to SS_PyMin")
     print("[INFO] you have run the following command:")
 
-    cmd = helper_pymin.get_cmd(sys.argv)
+    cmd = helper_pymin.get_cmd()
     print(cmd)
     if "-" not in cmd:
         print("[ERROR] you have not provided any arguments to this script.")

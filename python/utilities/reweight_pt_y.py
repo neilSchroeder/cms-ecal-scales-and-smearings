@@ -5,6 +5,7 @@ import multiprocessing as mp
 from collections import OrderedDict
 
 from python.classes.constant_classes import DataConstants as dc
+from python.utilities.write_files import write_weights
 
 from python.classes.config_class import SSConfig
 ss_config = SSConfig()
@@ -56,38 +57,6 @@ def get_rapidity(df):
 
     return np.abs(0.5*np.log( np.divide( np.add(z_energy, z_pz), np.subtract(z_energy, z_pz))))
 
-def write_weights(basename, weights, x_edges, y_edges):
-    """ 
-    writes weights to a tsv file:
-    ----------
-    Args:
-        basename: name of the file to write to
-        weights: weights to write
-        x_edges: x edges of the weights
-        y_edges: y edges of the weights
-    ----------
-    Returns:
-        out: path to the file written
-    ----------
-    """
-    headers = dc.PTY_WEIGHT_HEADERS
-    dictForDf = OrderedDict.fromkeys(headers) #python hates you and your dictionaries
-    for col in headers:
-        dictForDf[col] = []
-
-    for i,row in enumerate(weights):
-        row = np.ravel(row)
-        for j,weight in enumerate(row):
-            dictForDf[dc.YMIN].append(x_edges[i])
-            dictForDf[dc.YMAX].append(x_edges[i+1])
-            dictForDf[dc.PTMIN].append(y_edges[j])
-            dictForDf[dc.PTMAX].append(y_edges[j+1])
-            dictForDf[dc.WEIGHT].append(weight)
-
-    out = f"{ss_config.DEFAULT_WRITE_FILES_PATH}ptz_x_rapidity_weights_"+basename+".tsv"
-    df_out = pd.DataFrame(dictForDf)
-    df_out.to_csv(out, sep='\t', index=False)
-    return out
     
 def derive_pt_y_weights(df_data, df_mc, basename):
     """ 
@@ -129,7 +98,7 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     
     return write_weights(basename, weights, d_hist_x_edges, d_hist_y_edges)
 
-def add(arg): 
+def add_weights_to_df(arg): 
     """ 
     adds the pt x rapidity weights to the df 
     ----------
@@ -149,7 +118,8 @@ def add(arg):
     def find_weight(ptz):
         """ 
         finds the corresponding weight by ptZ 
-        weights are divided by rapidity before being provided as arguments, so no need to check rapidity compatibility
+        weights are divided by rapidity before being provided as arguments,
+        so no need to check rapidity compatibility
         """
         mask_ptz = (weights[:,i_ptz_min] <= ptz) & (ptz < weights[:,i_ptz_max])
         return np.ravel(weights[mask_ptz])[i_weight] if any(mask_ptz) else 0.
@@ -193,7 +163,7 @@ def add_pt_y_weights(df, weight_file):
     # ship them off to multiple cores
     processors = mp.cpu_count() - 1
     pool = mp.Pool(processes=processors) 
-    scaled_data=pool.map(add, divided_weights) 
+    scaled_data=pool.map(add_weights_to_df, divided_weights) 
     pool.close()
     pool.join()
 

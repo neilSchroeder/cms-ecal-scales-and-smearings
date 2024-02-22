@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pandas as pd
-import uproot as up
+import uproot3 as up
 
 from python.classes.constant_classes import DataConstants as dc
 
@@ -39,7 +39,7 @@ def prune(files, out, out_dir):
         #sim treeName filename
         #each entry is separated by a \t
         line_list = line.split('\t')
-        print("[INFO][python/pruner][prune] Opening {} as a pandas dataframe".format(line_list[2]))
+        print("{} Opening {} as a pandas dataframe".format(INFO,line_list[2]))
         with up.open(line_list[2]) as f:
             df = f[line_list[1]].pandas.df(keep_cols)
             
@@ -70,7 +70,7 @@ def prune(files, out, out_dir):
             data_mc = "data" if line_list[0] == 'data' else 'mc'
             index = data_index if line_list[0] == 'data' else mc_index
 
-            print(f"[INFO][python/utilities/pruner][prune] writing to {out_dir}{out}_{data_mc}_{index}.csv")
+            print(f"{INFO} writing to {out_dir}{out}_{data_mc}_{index}.csv")
             df.to_csv(f"{out_dir}{out}_{data_mc}_{index}.csv", sep='\t', header=True, index=False)
 
             del df
@@ -81,7 +81,7 @@ def prune(files, out, out_dir):
                 mc_index += 1
 
     # merge the csv files
-    print("[INFO][python/utilities/pruner][prune] merging csv files")
+    print(f"{INFO} merging csv files")
     with open(f"{out_dir}{out}_data.csv", 'w') as outfile:
         for index in range(data_index):
             with open(f"{out_dir}{out}_data_{index}.csv") as infile:
@@ -100,9 +100,9 @@ def prune(files, out, out_dir):
                     outfile.write(line)
             os.remove(f"{out_dir}{out}_mc_{index}.csv")
 
-    print(f"[INFO][python/utilities/pruner][prune] writing config files to config/{out}.cfg")
+    print(f"{INFO} writing config files to config/{out}.cfg")
     with open(f"config/{out}.cfg", 'w') as outfile:
         outfile.write(f"{out_dir}{out}_data.csv\n")
         outfile.write(f"{out_dir}{out}_mc.csv")
 
-    print("[INFO][python/utilities/pruner][prune] done")
+    print(f"{INFO} done")

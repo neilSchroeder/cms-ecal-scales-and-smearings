@@ -2,7 +2,7 @@ import numpy as np
 from collections import namedtuple
 
 class PyValConstants():
-    """a useful list of contants instead of defining them in every function"""
+    """A useful list of contants instead of defining them in every function"""
 
     KEEP_COLS = [
             'R9Ele',
@@ -60,6 +60,9 @@ class PyValConstants():
 class DataConstants():
     """a useful list of contants instead of defining them in every function"""
 
+    # target mass (for time stability)
+    TARGET_MASS = 91.188
+
     # pruning constants
     KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber']
     DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]']
@@ -67,6 +70,7 @@ class DataConstants():
     # time stability constants
     TIME_STABILITY_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'median', 'mean', 'sigma', 'scale', 'median_corr', 'mean_corr', 'sigma_corr', 'events']
 
+    # scales headers
 
     #constants
     MIN_ET = 0
@@ -116,6 +120,7 @@ class DataConstants():
     }
 
     # indices of row in scales
+    SCALES_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'r9_min', 'r9_max', 'et_min', 'et_max', 'gain', 'scale', 'err']
     i_run_min = 0
     i_run_max = 1
     i_eta_min = 2
@@ -146,8 +151,9 @@ class DataConstants():
     time_stability_eta_bins_low = [0, 1., 1.2, 1.566, 2.]
     time_stability_eta_bins_high = [1., 1.2, 1.4442, 2., 2.5]
 
+
 class CategoryConstants():
-    """ constants for the categories files """
+    """Constants for the categories files."""
 
     # categories should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
     i_type = 0

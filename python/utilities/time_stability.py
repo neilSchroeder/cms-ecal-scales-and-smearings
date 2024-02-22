@@ -53,7 +53,7 @@ def derive(data, runs, output, _kWriteData=True):
         for j,eta_bin in enumerate(ret):
             bin_mask = np.logical_and(mask, np.logical_and( eta_min[j] <= data[dc.ETA_LEAD].values, data[dc.ETA_LEAD].values < eta_max[j]))
             bin_mask = np.logical_and(bin_mask, np.logical_and( eta_min[j] <= data[dc.ETA_SUB].values, data[dc.ETA_SUB].values < eta_max[j]))
-            eta_bin.append(91.188/stat.median(data[bin_mask][dc.INVMASS].values))
+            eta_bin.append(dc.TARGET_MASS/stat.median(data[bin_mask][dc.INVMASS].values))
             if _kWriteData:
                 dictForDf['run_min'].append(pair[0])
                 dictForDf['run_max'].append(pair[1])

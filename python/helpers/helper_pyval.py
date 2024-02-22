@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import uproot as up
+import uproot3 as up
 import os
 
 from python.classes.constant_classes import PyValConstants as pvc
@@ -10,8 +10,12 @@ ss_config = config_class.SSConfig()
 
 def extract_files(filename):
     """
-    takes in the config dataframe and returns 5 lists separating out 
-    data, mc, scales, smearings, and cats files
+    Extract files to use from a config file.
+
+    Args:
+        filename (str): the name of the config file
+    Returns:
+        ret_dict (dict): a dictionary of lists of files to use
     """
 
     df = pd.read_csv(filename, sep='\t', header=None, comment="#")
@@ -35,8 +39,13 @@ def extract_files(filename):
 
 def get_dataframe(files, debug=False):
     """
-    takes in a list of root files for data and mc.
-    opens them with uproot into dataframes
+    Loads root files into a pandas dataframe.
+
+    Args:
+        files (list): a list of files to load
+        debug (bool): whether to use a smaller dataset for debugging
+    Returns:
+        df (pandas dataframe): the dataframe containing the data
     """
 
     df = pd.DataFrame()
@@ -101,5 +110,17 @@ def standard_cuts(df):
 
 
 def custom_cuts(df, custom_cuts):
+    """
+    Takes in a dataframe and applies the cuts specified in custom_cuts.
 
-    pass #TODO write out custom cuts function
+    Args:
+        df (pandas dataframe): the dataframe to cut
+        custom_cuts (list): a list of cuts to apply
+    Returns:
+        df (pandas dataframe): the dataframe with the cuts applied
+    """
+
+    for cut in custom_cuts:
+        df = df.query(cut)
+
+    return df

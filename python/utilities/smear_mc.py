@@ -10,16 +10,14 @@ def smear(mc,smearings):
     Applies gaussian smearings to the MC
     ----------
     Args:
-        mc: dataframe of mc
-        smearings: path to the smearings file
+        mc (pd.DataFrame): dataframe of mc
+        smearings (str): path to the smearings file
     ----------
     Returns:
-        mc: dataframe of mc with smeared variables
+        mc (pd.DataFrame): dataframe of mc with smeared variables
     ----------
-    """
-
-        
-    np.random.seed(dc.SEED)
+    """ 
+    np.random.seed(dc.SEED) # otherwise there won't be any consistency
 
     i_cat = 0
     delim_cat = "-"

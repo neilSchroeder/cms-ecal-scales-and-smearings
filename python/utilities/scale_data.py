@@ -15,13 +15,27 @@ from python.classes.constant_classes import (
 
 
 def apply(arg):
-    #make a returnable df with all runs in this set of scales:
-    data,scales = arg    
+    """
+    Applies the scales to the dataframe.
+    
+    Args:
+        arg (tuple(pd.DataFrame, pd.DataFrame)): tuple of data and scales
+    Returns:
+        data (pd.DataFrame): scaled data dataframe
+    """
+    data, scales = arg    
     if len(data) == 0: return data
     if len(scales) == 0: return data
 
     def find_scales(row):
-        """finds the scales"""
+        """
+        Finds the scales for a given row in a dataframe
+        
+        Args:
+            row (pandas series): a row in a dataframe
+        Returns:
+            tuple: a tuple of scales
+        """
         # find the run bin (only needs to be computed once)
         run_mask = np.logical_and(
             (scales[:,dc.i_run_min] <= row[dc.RUN]),(row[dc.RUN] <= scales[:,dc.i_run_max])
@@ -124,32 +138,38 @@ def apply(arg):
 
 def scale(data, scales):
     """
-    This function applies the scales in a multi-threaded way
+    This function applies the scales in a multi-threaded way.
+
+    Args:
+        data (pd.DataFrame): dataframe to apply scales to
+        scales (str): path to scales file
+    Returns:
+        data (pd.DataFrame): dataframe with scales applied
     """
     info = "[INFO][scale_data.py]"
-    #newformat of scales files is 
-    #runMin runMax etaMin etaMax r9Min r9Max etMin etMax gain val err
+    # newformat of scales files is 
+    # runMin runMax etaMin etaMax r9Min r9Max etMin etMax gain val err
     run = dc.RUN
     i_run_min = 0
     i_run_max = 1
 
-    #read in scales to df
+    # read in scales to df
     scales_df = pd.read_csv(scales, sep="\t", comment="#", header=None)
     
     processors = mp.cpu_count() - 1
 
-    #grab unique run values low and high from df
+    # grab unique run values low and high from df
     unique_runnums_low = scales_df[:][i_run_min].unique().tolist()
 
     run_bins = unique_runnums_low[::processors]
     run_bins.append(999999)
 
-    #divide data by run number
+    # divide data by run number
     print(f"{info} dividing data by run")
     divided_data = [ data[np.logical_and(run_bins[i] <= data[run].values, data[run].values < run_bins[i+1])] for i in range(len(run_bins)-1)]
     assert(len(data) == sum([len(x) for x in divided_data]))
 
-    #divide scales by run and tuple with divided data
+    # divide scales by run and tuple with divided data
     print(f"{info} dividing scales by run and tuple")
     divided_scales = [(divided_data[i],
         scales_df.loc[
@@ -159,7 +179,7 @@ def scale(data, scales):
         ) for i in range(len(run_bins)-1)]
     assert(len(scales_df) == sum([len(x[1]) for x in divided_scales]))
 
-    #initiate multiprocessing of scales application
+    # initiate multiprocessing of scales application
     print(f"{info} distributing application of scales")
     print(f"{info} please be patient, there are {len(data)} rows to apply scales to")
     print(f"{info} it takes ~ 0.0003 seconds per row, and you've requested {processors} processors")

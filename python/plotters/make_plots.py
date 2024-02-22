@@ -119,17 +119,15 @@ def get_var(df, info, _isData=True):
 
 def plot(data, mc, cats, **options):
     """
-    Plots the data and mc in the categories specified in cats
-    ----------
+    Plots the data and mc in the categories specified in cats.
+
     Args:
-        data: dataframe of the data
-        mc: dataframe of the mc
-        cats: dataframe of the categories
-        **options: options to pass to the plotting functions
-    ----------
+        data (pd.DataFrame): dataframe containing the data
+        mc (pd.DataFrame): dataframe containing the mc
+        cats (str): path to the file containing the categories
+        **options: options to pass to the plotting function
     Returns:
         None
-    ----------
     """
 
     # get constants
