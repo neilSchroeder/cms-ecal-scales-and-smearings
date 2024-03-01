@@ -1,0 +1,7 @@
+style	name	variable	eta0	r90	et0	eta1	r91	et1
+paper	invMass_eta0to1-RSTp96-ene50to65	invMass_ECAL_ele	(0,1.)	(0,0.96)	(50.,65.)	(-1,-1)	(-1,-1)	(-1,-1)
+paper	invMass_eta0to1-RSTp96-eneBT65	invMass_ECAL_ele	(0,1.)	(0,0.96)	(65.,-1)	(-1,-1)	(-1,-1)	(-1,-1)
+paper	invMass_eta2to2p5-RBTp96-ene20to39	invMass_ECAL_ele	(2.,2.5)	(0.96,1.0)	(20.,39)	(-1,-1)	(-1,-1)	(-1,-1)
+paper	invMass_eta2to2p5-RBTp96-ene39to50	invMass_ECAL_ele	(2.,2.5)	(0.96,1.0)	(39.,50)	(-1,-1)	(-1,-1)	(-1,-1)
+paper	invMass_eta2to2p5-RBTp96-ene50to65	invMass_ECAL_ele	(2,2.5)	(0.96,1.0)	(50.,65.)	(-1,-1)	(-1,-1)	(-1,-1)
+paper	invMass_eta2to2p5-RBTp96-eneBT65	invMass_ECAL_ele	(2,2.5)	(0.96,1.0)	(65.,-1)	(-1,-1)	(-1,-1)	(-1,-1)
