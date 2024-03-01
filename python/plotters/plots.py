@@ -155,7 +155,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         None
     ---------------------------------------
     """
-    style = pc.paper_style
+    style = pc.PAPER_STYLE
     print("plotting {}".format(plot_title))
 
     # systematics
@@ -387,10 +387,80 @@ def plot_style_paper(data, mc, plot_title, **options):
         axs[0].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
         # set x label size
 
-
     # save fig
     fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.png")
     fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.pdf")
 
     plt.close(fig)
 
+
+def plot_style_bw_cb_fit(hist, fit, plot_title, **options):
+    """
+    Plot a hist with its BW conv. CB fit.
+
+    Args:
+        hist: data histogram
+        fit: y values of fit (BW conv. CB ::: fit_params['fit_hist'])
+        plot_title: title of plot
+        options: dictionary of options
+            - tag: str, tag for plot name
+    """
+
+    style = pc.BW_CB_FIT_STYLE
+    print("plotting {}".format(plot_title))
+
+    # binning scheme
+    binning = style.binning
+    if options['bins'] and options['bins'] != 'auto':
+        binning = [pc.HIST_MIN + float(i)*(pc.HIST_MAX-pc.HIST_MIN)/float(options['bins']) for i in range(int(options['bins'])+1)]
+
+    # histogram data
+    h_data, h_bins = np.histogram(hist, bins=binning, range=[pc.HIST_MIN,pc.HIST_MAX])
+    bin_width = round(h_bins[1] - h_bins[0], 4)
+    marker_size = 20*bin_width
+
+    mids = [(h_bins[i]+h_bins[i+1])/2 for i in range(len(h_bins)-1)]
+    mids_full = mids.copy()
+    mids_full[0], mids_full[-1] = pc.HIST_MIN, pc.HIST_MAX
+    x_err = (h_bins[1]-h_bins[0])/2
+
+    # calculate errors
+    y_err_data = np.sqrt(h_data)
+
+    # define figure
+    fig,axs = plt.subplots(
+        nrows=1, 
+        ncols=1, 
+        figsize=style.fig['size'],
+        sharex=style.fig['sharex'],
+        gridspec_kw={'height_ratios': style.fig['subplot_ratio']}
+        )
+    
+    fig.subplots_adjust(
+        left=style.subplot['left'], 
+        right=style.subplot['right'], 
+        top=style.subplot['top'], 
+        bottom=style.subplot['bottom'],
+        hspace=None if 'no_ratio' in options.keys() else style.subplot['hspace'],
+    )
+
+    # top plot
+
+    # plot the hist
+    axs.errorbar(mids, h_data, # plot data
+            xerr=x_err, yerr=y_err_data, 
+            label = options['data_title'], 
+            color=style.colors['hist'],
+            linestyle=style.line_styles['hist'], 
+            marker='o',
+            markersize=marker_size, 
+            capsize=0., 
+            capthick=0.)
+
+    axs.plot(mids, fit, # plot fit
+            label = options['fit_title'], 
+            color=style.colors['fit'],
+            linestyle=style.line_styles['fit'],
+            linewidth=2, 
+            )
+            
