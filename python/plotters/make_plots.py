@@ -3,10 +3,15 @@ import numpy as np
 
 from python.classes.constant_classes import PyValConstants as pvc
 from python.classes.constant_classes import DataConstants as dc
-import python.plotters.plots as plots
+from python.plotters.plot_styles import (
+    bw_cb_fit_style,
+    paper_style,
+    mc_validation_style,
+)
 pvc.plotting_functions = {
-        'paper': plots.plot_style_paper,
-        'crossCheckMC': plots.plot_style_validation_mc
+        'crossCheckMC': mc_validation_style.plot_mc_validation,
+        'fit': bw_cb_fit_style.bw_cb_fit_style,
+        'paper': paper_style.paper_style,
     }
 
 def get_tuple(this_string):
