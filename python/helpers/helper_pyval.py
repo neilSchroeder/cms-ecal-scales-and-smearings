@@ -8,6 +8,17 @@ from python.classes.constant_classes import DataConstants as dc
 import python.classes.config_class as config_class
 ss_config = config_class.SSConfig()
 
+def check_args(args):
+    """
+    Check args for consistency.
+    
+    Args:
+        args: parsed cmd line args from pyval run command
+    Returns:
+        None
+    """
+    pass
+
 def extract_files(filename):
     """
     Extract files to use from a config file.

@@ -196,6 +196,11 @@ def plot_style_paper(data, mc, plot_title, **options):
         fit_params_data = fit_bw_cb(mids, h_data, [1.424, 1.86, np.average(mids, weights=h_data)-91.188, 1.])
         fit_params_mc = fit_bw_cb(mids, h_mc, [1.424, 1.86, np.average(mids, weights=h_mc)-91.188, 1.])
 
+        if options['_kPlotFit']:
+            # plot the fits
+            plot_style_bw_cb_fit(h_data, fit_params_data['fit_hist'], f"{plot_title}_data_with_fit")
+            plot_style_bw_cb_fit(h_mc, fit_params_mc['fit_hist'], f"{plot_title}_mc_with_fit")
+
     # calculate errors
     y_err_data = np.sqrt(h_data)
     try:

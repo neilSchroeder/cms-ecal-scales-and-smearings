@@ -112,12 +112,19 @@ def main():
             action="store_true",
     )
     parser.add_argument(
-            "--debug",
-            default=False,
-            action="store_true",
-            dest="_kDebug",
-            help="turn on debug mode",
-        )
+        "--plot-fit",
+        help="Plot the fits, don't just pull numbers",
+        dest="_kPlotFit",
+        default=False,
+        action="store_true"
+    )
+    parser.add_argument(
+        "--debug",
+        default=False,
+        action="store_true",
+        dest="_kDebug",
+        help="turn on debug mode",
+    )
 
     args = parser.parse_args()
 
@@ -130,6 +137,8 @@ def main():
         print(f'[INFO] {arg}: {getattr(args,arg)}')
     print(40*"#")
     print(40*"#")
+
+    helper_pyval.check_args(args)
 
     #open input file and prep our variables and such
     dict_config = helper_pyval.extract_files(args.input_file) 
