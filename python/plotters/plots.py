@@ -198,8 +198,8 @@ def plot_style_paper(data, mc, plot_title, **options):
 
         if options['_kPlotFit']:
             # plot the fits
-            plot_style_bw_cb_fit(h_data, fit_params_data['fit_hist'], f"{plot_title}_data_with_fit")
-            plot_style_bw_cb_fit(h_mc, fit_params_mc['fit_hist'], f"{plot_title}_mc_with_fit")
+            plot_style_bw_cb_fit(h_data, fit_params_data['fit_hist'], h_bins, f"{plot_title}_data_with_fit")
+            plot_style_bw_cb_fit(h_mc, fit_params_mc['fit_hist'], h_bins, f"{plot_title}_mc_with_fit")
 
     # calculate errors
     y_err_data = np.sqrt(h_data)
@@ -333,9 +333,9 @@ def plot_style_paper(data, mc, plot_title, **options):
     # ratio pad
     if 'no_ratio' in options.keys():
         axs[0].set_xlabel(style.labels['x_axis']['label'],
-                          ha=style.labels['x_axis']['ha'],
+                            ha=style.labels['x_axis']['ha'],
                         #   fontsize=style.labels['x_axis']['fontsize'],
-                          x=1.)
+                            x=1.)
     else:
         axs[1].plot(mids, 
                     [1. for x in mids], 
@@ -399,7 +399,7 @@ def plot_style_paper(data, mc, plot_title, **options):
     plt.close(fig)
 
 
-def plot_style_bw_cb_fit(hist, fit, plot_title, **options):
+def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
     """
     Plot a hist with its BW conv. CB fit.
 
@@ -414,23 +414,17 @@ def plot_style_bw_cb_fit(hist, fit, plot_title, **options):
     style = pc.BW_CB_FIT_STYLE
     print("plotting {}".format(plot_title))
 
-    # binning scheme
-    binning = style.binning
-    if options['bins'] and options['bins'] != 'auto':
-        binning = [pc.HIST_MIN + float(i)*(pc.HIST_MAX-pc.HIST_MIN)/float(options['bins']) for i in range(int(options['bins'])+1)]
 
     # histogram data
-    h_data, h_bins = np.histogram(hist, bins=binning, range=[pc.HIST_MIN,pc.HIST_MAX])
-    bin_width = round(h_bins[1] - h_bins[0], 4)
+    bin_width = round(bins[1] - bins[0], 4)
     marker_size = 20*bin_width
-
-    mids = [(h_bins[i]+h_bins[i+1])/2 for i in range(len(h_bins)-1)]
+    mids = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
     mids_full = mids.copy()
     mids_full[0], mids_full[-1] = pc.HIST_MIN, pc.HIST_MAX
-    x_err = (h_bins[1]-h_bins[0])/2
+    x_err = (bins[1]-bins[0])/2
 
     # calculate errors
-    y_err_data = np.sqrt(h_data)
+    y_err_data = np.sqrt(hist)
 
     # define figure
     fig,axs = plt.subplots(
@@ -452,13 +446,13 @@ def plot_style_bw_cb_fit(hist, fit, plot_title, **options):
     # top plot
 
     # plot the hist
-    axs.errorbar(mids, h_data, # plot data
+    axs.errorbar(mids, hist, # plot data
             xerr=x_err, yerr=y_err_data, 
             label = options['data_title'], 
             color=style.colors['hist'],
             linestyle=style.line_styles['hist'], 
             marker='o',
-            markersize=marker_size, 
+            markersize=style.marker_size, 
             capsize=0., 
             capthick=0.)
 
