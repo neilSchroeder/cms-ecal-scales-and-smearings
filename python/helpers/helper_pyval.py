@@ -52,10 +52,10 @@ def check_args(args):
         print("[ERROR] lumi label must be a string")
         raise ValueError("lumi label must be a string")
     
-    if args.binning is None:
+    if args.bins is None:
         print("[ERROR] binning not specified")
         raise ValueError("binning not specified")
-    if args.binning and not isinstance(args.binning, int) and args.binning != "auto":
+    if args.bins and not isinstance(args.bins, int) and args.bins != "auto":
         print("[ERROR] binning must be an integer or 'auto'")
         raise ValueError("binning must be an integer or 'auto'")
     
