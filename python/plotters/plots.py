@@ -452,7 +452,7 @@ def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
             color=style.colors['hist'],
             linestyle=style.line_styles['hist'], 
             marker='o',
-            markersize=style.marker_size, 
+            markersize=marker_size, 
             capsize=0., 
             capthick=0.)
 
@@ -474,7 +474,7 @@ def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
                 linestyle='None',
                 color=style.colors['hist'],
                 marker='o',
-                markersize=style.marker_size,
+                markersize=marker_size,
                 capsize=0.,)
     
     axs[0].set_ylim(bottom=0, top=np.max(hist)*style.y_scale)
