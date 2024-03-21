@@ -193,8 +193,12 @@ def plot_style_paper(data, mc, plot_title, **options):
     fit_params_mc = None
     if options['_kFit']:
         # fit the data
-        fit_params_data = fit_bw_cb(mids, h_data, [1.424, 1.86, np.average(mids, weights=h_data)-91.188, 1.])
-        fit_params_mc = fit_bw_cb(mids, h_mc, [1.424, 1.86, np.average(mids, weights=h_mc)-91.188, 1.])
+        avg_data = np.average(mids, weights=h_data)
+        avg_mc = np.average(mids, weights=h_mc)
+        sigma_data = np.sqrt(np.average(np.power(mids-avg_data, 2), weights=h_data))
+        sigma_mc = np.sqrt(np.average(np.power(mids-avg_mc, 2), weights=h_mc))
+        fit_params_data = fit_bw_cb(mids, h_data, [1.424, 1.86, avg_data-91.188, sigma_data])
+        fit_params_mc = fit_bw_cb(mids, h_mc, [1.424, 1.86, avg_mc-91.188, sigma_mc])
 
         if options['_kPlotFit']:
             # plot the fits

@@ -40,7 +40,7 @@ def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
     Args:
         x (np.array): x values
         y (np.array): y values
-        guess_cb (list): guess for the crystal ball parameters
+        guess_cb (list): guess for the crystal ball parameters [alpha, n, mu, sigma]
 	Returns:
 		dictionary: dictionary containing the fit parameters
     """
