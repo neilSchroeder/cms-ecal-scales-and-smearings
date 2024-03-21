@@ -474,8 +474,7 @@ def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
                 linestyle='None',
                 color=style.colors['hist'],
                 marker='o',
-                markersize=marker_size,
-                capsize=0.,)
+                markersize=marker_size,)
     
     axs[0].set_ylim(bottom=0, top=np.max(hist)*style.y_scale)
     axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5, fontsize=14)
