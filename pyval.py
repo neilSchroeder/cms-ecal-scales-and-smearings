@@ -185,6 +185,7 @@ def main():
                 bins=args.bins,
                 tag=args.output_file,
                 _kFit=args._kFit,
+                _kPlotFit=args._kPlotFit,
                 )
     else:
         # eval_syst.evaluate_systematics()
