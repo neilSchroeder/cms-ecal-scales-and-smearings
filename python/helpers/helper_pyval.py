@@ -17,7 +17,61 @@ def check_args(args):
     Returns:
         None
     """
-    pass
+
+    if args.input_file is None:
+        print("[ERROR] input file not specified")
+        raise ValueError("input file not specified")
+    if os.path.exists(args.input_file) == False:
+        print(f"[ERROR] input file {args.input_file} does not exist")
+        raise FileNotFoundError(f"input file {args.input_file} does not exist")
+    
+    if args.output_file is None:
+        print("[ERROR] output file not specified")
+        raise ValueError("output file not specified")
+    if not isinstance(args.output_file, str):
+        print("[ERROR] output file must be a string")
+        raise ValueError("output file must be a string")
+    
+    if args.data_title is None:
+        print("[ERROR] data title not specified")
+        raise ValueError("data title not specified")        
+    if not isinstance(args.data_title, str):
+        print("[ERROR] data title must be a string")
+        raise ValueError("data title must be a string")
+    
+    if args.mc_title is None:
+        print("[ERROR] mc title not specified")
+        raise ValueError("mc title not specified")
+    if not isinstance(args.mc_title, str):
+        print("[ERROR] mc title must be a string")
+        raise ValueError("mc title must be a string")
+    
+    if args.lumi_label is None:
+        print("[WARNING] lumi label not specified")
+    if args.lumi_label and not isinstance(args.lumi_label, str):
+        print("[ERROR] lumi label must be a string")
+        raise ValueError("lumi label must be a string")
+    
+    if args.binning is None:
+        print("[ERROR] binning not specified")
+        raise ValueError("binning not specified")
+    if args.binning and not isinstance(args.binning, int) and args.binning != "auto":
+        print("[ERROR] binning must be an integer or 'auto'")
+        raise ValueError("binning must be an integer or 'auto'")
+    
+    if args.write_location is None:
+        print("[WARNING] write location not specified, scaled and smeared csvs will not be saved")
+    if args.write_location and not isinstance(args.write_location, str):
+        print("[ERROR] write location must be a string")
+        raise ValueError("write location must be a string")
+    
+    if args._kPlotFit and not args._kFit:
+        print("[ERROR] cannot plot fit without fitting")
+        raise ValueError("cannot plot fit without fitting")
+    
+    if args.no_reweight:
+        print("[WARNING] no reweighting flag set")
+
 
 def extract_files(filename):
     """
