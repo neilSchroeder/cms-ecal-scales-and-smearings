@@ -198,8 +198,8 @@ def plot_style_paper(data, mc, plot_title, **options):
 
         if options['_kPlotFit']:
             # plot the fits
-            plot_style_bw_cb_fit(h_data, fit_params_data['fit_hist'], h_bins, f"{plot_title}_data_with_fit")
-            plot_style_bw_cb_fit(h_mc, fit_params_mc['fit_hist'], h_bins, f"{plot_title}_mc_with_fit")
+            plot_style_bw_cb_fit(h_data, fit_params_data['fit_hist'], h_bins, f"{plot_title}_data_with_fit", fit_title="Fit", data_title="Data", tag=options['tag'])
+            plot_style_bw_cb_fit(h_mc, fit_params_mc['fit_hist'], h_bins, f"{plot_title}_mc_with_fit", fit_title="Fit", data_title="MC", tag=options['tag'])
 
     # calculate errors
     y_err_data = np.sqrt(h_data)
@@ -484,3 +484,14 @@ def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
     axs[0].yaxis.offsetText.set_position(style.sci_notation_offset)
     axs[0].legend(loc=style.legend['loc'], fontsize=style.legend['fontsize'])
     axs[1].legend(loc=style.legend['loc'], fontsize=style.legend['fontsize'])
+
+    axs[1].set_ylabel(style.labels['ratio'],horizontalalignment='right', y=1., fontsize=14)
+    axs[1].set_xlabel(style.labels['x_axis']['label'],horizontalalignment=style.labels['x_axis']['ha'], x=1., fontsize=style.labels['x_axis']['fontsize'])
+    axs[1].set_ylim(pc.RATIO_MIN, pc.RATIO_MAX)
+    axs[1].set_xlim(pc.HIST_MIN, pc.HIST_MAX)
+    axs[1].grid(which='major',axis='both')
+    axs[0].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+    # save fig
+    fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.png")
+    fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.pdf")
