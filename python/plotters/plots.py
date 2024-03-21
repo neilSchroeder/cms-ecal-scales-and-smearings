@@ -428,7 +428,7 @@ def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
 
     # define figure
     fig,axs = plt.subplots(
-        nrows=1, 
+        nrows=2, 
         ncols=1, 
         figsize=style.fig['size'],
         sharex=style.fig['sharex'],
@@ -446,7 +446,7 @@ def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
     # top plot
 
     # plot the hist
-    axs.errorbar(mids, hist, # plot data
+    axs[0].errorbar(mids, hist, # plot data
             xerr=x_err, yerr=y_err_data, 
             label = options['data_title'], 
             color=style.colors['hist'],
@@ -456,10 +456,31 @@ def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
             capsize=0., 
             capthick=0.)
 
-    axs.plot(mids, fit, # plot fit
+    axs[0].plot(mids, fit, # plot fit
             label = options['fit_title'], 
             color=style.colors['fit'],
             linestyle=style.line_styles['fit'],
             linewidth=2, 
             )
-            
+    
+    axs[1].plot(mids,
+                [1. for x in mids], 
+                linestyle='dashed', 
+                color=style.colors['hist'], 
+                alpha=0.5)
+    axs[1].plot(mids, 
+                np.divide(hist, fit), 
+                label=style.labels['ratio'], 
+                linestyle='None',
+                color=style.colors['hist'],
+                marker='o',
+                markersize=style.marker_size,
+                capsize=0.,)
+    
+    axs[0].set_ylim(bottom=0, top=np.max(hist)*style.y_scale)
+    axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5, fontsize=14)
+    axs[0].grid(which='major',axis='both')
+    axs[0].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+    axs[0].yaxis.offsetText.set_position(style.sci_notation_offset)
+    axs[0].legend(loc=style.legend['loc'], fontsize=style.legend['fontsize'])
+    axs[1].legend(loc=style.legend['loc'], fontsize=style.legend['fontsize'])
