@@ -42,5 +42,5 @@ TITLE_ANNOTATIONS = {
     "invMass_eta2to2p5-RBTp96-ene20to39": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$20 < E < 39$ GeV",
     "invMass_eta2to2p5-RBTp96-ene39to50": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$39 < E < 50$ GeV",
     "invMass_eta2to2p5-RBTp96-ene50to65": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$50 < E < 65$ GeV",
-    "invMass_eta2to2p5-RBTp96-eneBT65": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$65 < E$",
+    "invMass_eta2to2p5-RBTp96-eneBT65": r"$2 < |\eta^{e}| < 2.5"+"\nLow Brem\n"+ r"$65 < E$",
 }
