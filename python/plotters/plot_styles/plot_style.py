@@ -37,4 +37,10 @@ TITLE_ANNOTATIONS = {
     "invMass_diag_Pt-55-65": r"55 GeV $ < \mathbf{p_{T}^{e}} < $ 65 GeV",
     "invMass_diag_Pt-65-90": r"65 GeV $ < \mathbf{p_{T}^{e}} < $ 90 GeV",
     "invMass_diag_Pt-90-Inf": r"90 GeV $ < \mathbf{p_{T}^{e}} $",
+    "invMass_eta0to1-RSTp96-ene50to65": r"$0 < |\eta^{e}| < 1$\\High Brem\\$50 < E < 65$ GeV",
+    "invMass_eta0to1-RSTp96-eneBT65": r"$0 < |\eta^{e}| < 1$\\High Brem\\$65 < E$",
+    "invMass_eta2to2p5-RBTp96-ene20to39": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$20 < E < 39$ GeV",
+    "invMass_eta2to2p5-RBTp96-ene39to50": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$39 < E < 50$ GeV",
+    "invMass_eta2to2p5-RBTp96-ene50to65": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$50 < E < 65$ GeV",
+    "invMass_eta2to2p5-RBTp96-eneBT65": r"$2 < |\eta^{e}| < 2.5$\\Low Brem\\$65 < E$",
 }
