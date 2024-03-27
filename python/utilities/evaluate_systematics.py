@@ -34,6 +34,7 @@ def evaluate_systematics(data, mc, outfile):
     """
 
     cuts = dc.SYST_CUTS
+    num_bins = 80
 
     mids = [80.125 + 0.25*i for i in range(80)]
 
@@ -41,10 +42,10 @@ def evaluate_systematics(data, mc, outfile):
         eta_key: {
             r9_key: [
                 np.histogram(
-                    custom_cuts(data, **cuts[eta_key][r9_key])[dc.INVMASS].values
+                    custom_cuts(data, **cuts[eta_key][r9_key])[dc.INVMASS].values, bins=num_bins
                 )[0],
                 np.histogram(
-                    custom_cuts(mc, **cuts[eta_key][r9_key])[dc.INVMASS].values
+                    custom_cuts(mc, **cuts[eta_key][r9_key])[dc.INVMASS].values, bins=num_bins
                 )[0]
             ]
             for r9_key in cuts[eta_key]
@@ -61,7 +62,7 @@ def evaluate_systematics(data, mc, outfile):
                         eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                         r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
                         et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                    )[dc.INVMASS].values
+                    )[dc.INVMASS].values, bins=num_bins
                 )[0],
                 np.histogram(
                     custom_cuts(
@@ -69,7 +70,7 @@ def evaluate_systematics(data, mc, outfile):
                         eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                         r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
                         et_cuts=cuts[eta_key][r9_key]["et_cuts"]
-                    )[dc.INVMASS].values
+                    )[dc.INVMASS].values, bins=num_bins
                 )[0]
             ] 
             for r9_key in cuts[eta_key]
@@ -82,13 +83,13 @@ def evaluate_systematics(data, mc, outfile):
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = ((0.955, -1), (0.955, -1)) if r9_key == "HighR9" else ((-1, 0.935), (-1, 0.935)),
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0],
                         np.histogram(custom_cuts(mc, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = ((0.955, -1), (0.955, -1)) if r9_key == "HighR9" else ((-1, 0.935), (-1, 0.935)),
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0]]
                     for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
@@ -99,14 +100,14 @@ def evaluate_systematics(data, mc, outfile):
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=(dc.MIN_PT_LEAD+2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0],
                         np.histogram(
                         custom_cuts(mc, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=(dc.MIN_PT_LEAD+2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0]] 
                     for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
@@ -117,14 +118,14 @@ def evaluate_systematics(data, mc, outfile):
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=(dc.MIN_PT_LEAD-2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0],
                         np.histogram(
                         custom_cuts(mc, 
                                     eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=(dc.MIN_PT_LEAD-2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0]]
                     for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
@@ -136,7 +137,7 @@ def evaluate_systematics(data, mc, outfile):
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     working_point="medium",
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0],
                         np.histogram(
                         custom_cuts(mc, 
@@ -144,7 +145,7 @@ def evaluate_systematics(data, mc, outfile):
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     working_point="medium",
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0]]
                     for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
@@ -156,7 +157,7 @@ def evaluate_systematics(data, mc, outfile):
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     working_point="tight",
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0],
                         np.histogram(
                         custom_cuts(mc, 
@@ -164,7 +165,7 @@ def evaluate_systematics(data, mc, outfile):
                                     r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
                                     et_cuts=cuts[eta_key][r9_key]["et_cuts"],
                                     working_point="tight",
-                                    )[dc.INVMASS].values
+                                    )[dc.INVMASS].values, bins=num_bins
                         )[0]]
                     for r9_key in cuts[eta_key]}
             for eta_key in cuts.keys()
