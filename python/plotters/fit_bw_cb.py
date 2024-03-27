@@ -59,7 +59,7 @@ def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
     print(guess)
     result = minimize(target, 
             np.array(guess), 
-            method="L-BFGS-B",
+            method="Nelder-Mead",
             bounds=bounds,
             options={"eps":0.0001}
             )
