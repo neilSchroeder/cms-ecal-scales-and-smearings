@@ -191,13 +191,13 @@ def evaluate_systematics(data, mc, outfile):
                 mean_mc = np.average(mids, weights=hist[eta_key][r9_key][1])
                 sigma_data = np.sqrt(np.average((mids-mean_data)**2, weights=hist[eta_key][r9_key][0]))
                 sigma_mc = np.sqrt(np.average((mids-mean_mc)**2, weights=hist[eta_key][r9_key][1]))
-                data_mu, data_sigma = fit_bw_cb(mids, hist[eta_key][r9_key][0],
+                data_fit = fit_bw_cb(mids, hist[eta_key][r9_key][0],
                                                 [1.424, 1.86, mean_data-dc.TARGET_MASS, sigma_data]
                                                 )
-                mc_mu, mc_sigma = fit_bw_cb(mids, hist[eta_key][r9_key][1],
+                mc_fit = fit_bw_cb(mids, hist[eta_key][r9_key][1],
                                             [1.424, 1.86, mean_mc-dc.TARGET_MASS, sigma_mc]
                                             )
-                hist[eta_key][r9_key] = data_mu/mc_mu
+                hist[eta_key][r9_key] = data_fit['mu']/mc_fit['mu']
 
     systematics_categories = {
         "R9": (hists[1], hists[2]),
