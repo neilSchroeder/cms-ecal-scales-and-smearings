@@ -184,9 +184,15 @@ def evaluate_systematics(data, mc, outfile):
 
     # now we can fit and take a double ratio for each
     # variation
-    for hist in hists:
+    for i, hist in enumerate(hists):
         for eta_key in hist:
             for r9_key in hist[eta_key]:
+                print(f"{i= } | {eta_key= } | {r9_key= }")
+                # check for zero weights
+                if sum(hist[eta_key][r9_key][0]) == 0 or sum(hist[eta_key][r9_key][1]) == 0:
+                    print(f"Zero weights for {eta_key} {r9_key}")
+                    print(hist[eta_key][r9_key][0])
+                    print(hist[eta_key][r9_key][1])
                 mean_data = np.average(mids, weights=hist[eta_key][r9_key][0])
                 mean_mc = np.average(mids, weights=hist[eta_key][r9_key][1])
                 sigma_data = np.sqrt(np.average((mids-mean_data)**2, weights=hist[eta_key][r9_key][0]))

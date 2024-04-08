@@ -158,6 +158,11 @@ def custom_cuts(df,
 
     if working_point:
         wp_id = dc.TIGHT_ID if working_point == "tight" else dc.MEDIUM_ID
-        mask = mask & np.array([x&wp_id for x in df[dc.ID_LEAD].values]) & np.array([x&wp_id for x in df[dc.ID_SUB].values])
+        id_lead_mask = np.array([x&wp_id for x in df[dc.ID_LEAD].values])
+        id_sub_mask = np.array([x&wp_id for x in df[dc.ID_SUB].values])
+        print(sum(id_lead_mask), sum(id_sub_mask))
+        print(sum(id_lead_mask & id_sub_mask))
+        mask = mask & id_lead_mask & id_sub_mask
+        print(sum(mask))
 
     return df[mask]
