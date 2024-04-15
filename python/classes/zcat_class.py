@@ -29,7 +29,9 @@ class zcat:
         self.lead_smear_index=options['smear_i'] if 'smear_i' in options.keys() else -1
         self.sublead_smear_index=options['smear_j'] if 'smear_j' in options.keys() else -1
         self.data = np.array(data, dtype=np.float32)
+        # print info about self.data
         self.mc = np.array(mc, dtype=np.float32)
+        print("[INFO][zcat][init] category ({},{}, data = {}, mc = {})".format(self.lead_index, self.sublead_index,len(self.data),len(self.mc)))
         self.weights = np.array(weights, dtype=np.float32)
         self.hist_min = options['hist_min'] if 'hist_min' in options.keys() else 80.
         self.hist_max = options['hist_max'] if 'hist_max' in options.keys() else 100.
