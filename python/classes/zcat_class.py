@@ -42,6 +42,29 @@ class zcat:
         self.valid=True
         self.bins=np.array([])
 
+        # set the bin size if auto binning is enabled
+        if self.auto_bin and self.bin_size == 0.25:
+            # prune and check data and mc for validity
+            temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, self.hist_max <= self.hist_max)]
+            mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
+            temp_weights = temp_weights[mask_mc]
+            temp_mc = temp_mc[mask_mc]
+            if (len(temp_data) < 10 or len(temp_mc) < 1000) or (len(temp_mc) < 2000 and self.lead_index != self.sublead_index): 
+                print("[INFO][zcat][init] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
+                self.NLL = 0
+                self.valid=False
+                del self.data
+                del self.mc
+                del self.weights
+                del temp_data
+                del temp_mc
+                del temp_weights
+                return
+            
+            data_width = 2*stats.iqr(temp_data, rng=(25,75), nan_policy="omit")/np.power(len(temp_data), 1./3.)
+            mc_width = 2*stats.iqr(temp_mc, rng=(25,75), nan_policy="omit")/np.power(len(temp_mc), 1./3.)
+            self.bin_size = max( data_width, mc_width) # always choose the larger binning scheme
+
     def __delete__(self):
         """Delete the z category object."""
         del self.lead_index
@@ -136,7 +159,6 @@ class zcat:
         self.NLL = -2*(nll + penalty)*chi_sqr
 
 
-
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
         """
         Update the z category with new scales and smearings.
@@ -152,8 +174,13 @@ class zcat:
         self.updated=True
 
         # apply the scales first 
-        if lead_scale == 0: lead_scale = 1.0
-        if sublead_scale == 0: sublead_scale = 1.0
+        if lead_scale == 0: 
+            lead_scale = 1.0
+            print("[WARNING][zcat][update] lead scale was set to 0, setting to 1")
+        if sublead_scale == 0: 
+            sublead_scale = 1.0
+            print("[WARNING][zcat][update] sublead scale was set to 0, setting to 1")
+
         temp_data = self.data * np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
 
         temp_mc = self.mc
@@ -161,32 +188,6 @@ class zcat:
         # apply the smearings second
         if lead_smear!=0 or sublead_smear!=0:
             temp_mc = self.get_smeared_mc(temp_mc, lead_smear, sublead_smear, self.seed) 
-            
-
-        # determinite binning using the Freedman-Diaconis rule
-        # data_width, mc_width = get_binning()
-        if self.auto_bin and self.bin_size == 0.25:
-            # prune and check data and mc for validity
-            temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, self.hist_max <= self.hist_max)]
-            mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
-            temp_weights = temp_weights[mask_mc]
-            temp_mc = temp_mc[mask_mc]
-            if (len(temp_data) < 10 or len(temp_mc) < 1000) or (len(temp_mc) < 2000 and self.lead_index != self.sublead_index): 
-                print("[INFO][zcat] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
-                self.NLL = 0
-                self.valid=False
-                del self.data
-                del self.mc
-                del self.weights
-                del temp_data
-                del temp_mc
-                del temp_weights
-                return
-
-            # since the data and mc are now pruned go ahead and find the bin size
-            data_width = 2*stats.iqr(temp_data, rng=(25,75), nan_policy="omit")/np.power(len(temp_data), 1./3.)
-            mc_width = 2*stats.iqr(temp_mc, rng=(25,75), nan_policy="omit")/np.power(len(temp_mc), 1./3.)
-            self.bin_size = max( data_width, mc_width) # always choose the larger binning scheme
 
         # prune the data and add a single entry at either end of the histogram range
         # these end entries ensure the same number of bins in data and mc returned by np.bincount
@@ -203,7 +204,7 @@ class zcat:
         binned_mc,edges = numba_hist.numba_weighted_histogram(temp_mc,temp_weights,num_bins)
 
         if np.sum(binned_data) < 10 or (len(temp_mc) < 1000 and self.lead_index==self.sublead_index) or (len(temp_mc) < 2000 and self.lead_index!=self.sublead_index):
-            print("[INFO][zcat] category ({},{}) was deactivated due to insufficient statistics in data".format(self.lead_index, self.sublead_index))
+            print("[INFO][zcat][update] category ({},{}) was deactivated due to insufficient statistics in data".format(self.lead_index, self.sublead_index))
             self.NLL = 0
             self.valid=False
             del self.data
