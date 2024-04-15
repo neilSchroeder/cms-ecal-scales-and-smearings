@@ -45,7 +45,7 @@ class zcat:
         # set the bin size if auto binning is enabled
         if self.auto_bin and self.bin_size == 0.25:
             # prune and check data and mc for validity
-            temp_data = temp_data[np.logical_and(self.hist_min <= temp_data, self.hist_max <= self.hist_max)]
+            temp_data = self.data[np.logical_and(self.hist_min <= self.data, self.hist_max <= self.hist_max)]
             mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
             temp_weights = temp_weights[mask_mc]
             temp_mc = temp_mc[mask_mc]
