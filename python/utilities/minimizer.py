@@ -193,14 +193,15 @@ def minimize(data, mc, cats_df, args):
     else: #this is the default initialization
         print("[INFO][python/utilities/minimizer][minimize] You've selected scan start. Beginning scan:")
         
-        guess = helper_minimizer.scan_nll(guess,
-                                          zcats=__ZCATS__,
-                                          __GUESS__=__GUESS__,
-                                          cats=cats_df,
-                                          num_smears=__num_smears__,
-                                          num_scales=__num_scales__,
-                                          **args
-                                          )
+        guess = helper_minimizer.scan_nll(
+                                        guess,
+                                        zcats=__ZCATS__,
+                                        __GUESS__=__GUESS__,
+                                        cats=cats_df,
+                                        num_smears=__num_smears__,
+                                        num_scales=__num_scales__,
+                                        **args
+                                    )
 
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess, 
         helper_minimizer.target_function(guess, __GUESS__,__ZCATS__,__num_scales__, __num_smears__)))
@@ -212,11 +213,11 @@ def minimize(data, mc, cats_df, args):
 
     #minimize
     optimum = minz(helper_minimizer.target_function,
-                   np.array(guess), 
-                   args=(__GUESS__,__ZCATS__,__num_scales__, __num_smears__),
-                   method="L-BFGS-B", # might be interesting to try Nelder-Mead
-                   bounds=bounds,
-                   options=min_step_dict) 
+                    np.array(guess), 
+                    args=(__GUESS__,__ZCATS__,__num_scales__, __num_smears__),
+                    method="L-BFGS-B", # might be interesting to try Nelder-Mead
+                    bounds=bounds,
+                    options=min_step_dict) 
 
     print("[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:")
     print(optimum)

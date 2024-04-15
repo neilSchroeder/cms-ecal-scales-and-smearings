@@ -152,6 +152,8 @@ class zcat:
         self.updated=True
 
         # apply the scales first 
+        if lead_scale == 0: lead_scale = 1.0
+        if sublead_scale == 0: sublead_scale = 1.0
         temp_data = self.data * np.sqrt(lead_scale*sublead_scale, dtype=np.float32)
 
         temp_mc = self.mc
