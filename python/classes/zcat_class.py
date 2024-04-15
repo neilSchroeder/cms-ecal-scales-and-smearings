@@ -46,9 +46,9 @@ class zcat:
         if self.auto_bin and self.bin_size == 0.25:
             # prune and check data and mc for validity
             temp_data = self.data[np.logical_and(self.hist_min <= self.data, self.hist_max <= self.hist_max)]
-            mask_mc = np.logical_and(temp_mc >= self.hist_min,temp_mc <= self.hist_max)
-            temp_weights = temp_weights[mask_mc]
-            temp_mc = temp_mc[mask_mc]
+            mask_mc = np.logical_and(self.mc >= self.hist_min,self.mc <= self.hist_max)
+            temp_weights = self.weights[mask_mc]
+            temp_mc = self.mc[mask_mc]
             if (len(temp_data) < 10 or len(temp_mc) < 1000) or (len(temp_mc) < 2000 and self.lead_index != self.sublead_index): 
                 print("[INFO][zcat][init] category ({},{}, data = {}, mc = {}) was deactivated due to insufficient statistics".format(self.lead_index, self.sublead_index,len(temp_data),len(temp_mc)))
                 self.NLL = 0
