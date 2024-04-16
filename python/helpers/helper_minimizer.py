@@ -441,6 +441,7 @@ def scan_nll(x, **options):
     weights = [(cat.weight, cat.lead_smear_index) for cat in __ZCATS__ if cat.valid and cat.lead_smear_index == cat.sublead_smear_index]
     weights.sort(key=lambda x: x[0])
 
+    print(weights, options['num_smears'])
     if options['num_smears'] > 0:
         while weights:
             max_index = cc.empty
