@@ -30,10 +30,6 @@ def add_transverse_energy(data,mc):
     mc[dc.ET_LEAD] = np.divide(energy_0,np.cosh(eta_0))
     mc[dc.ET_SUB] = np.divide(energy_1,np.cosh(eta_1))
 
-    drop_list = [dc.E_LEAD, dc.E_SUB, dc.GAIN_LEAD, dc.GAIN_SUB, dc.RUN]
-    data.drop(drop_list, axis=1, inplace=True)
-    mc.drop(drop_list, axis=1, inplace=True)
-
     #  impose an et cut of 32 on leading and 20 on subleading
     mask_lead = data[dc.ET_LEAD].between(dc.MIN_ET_LEAD, dc.MAX_ET_LEAD) \
         & data[dc.ET_SUB].between(dc.MAX_ET_SUB, dc.MAX_ET_SUB)
