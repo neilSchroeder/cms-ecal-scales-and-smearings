@@ -108,7 +108,7 @@ def apply(arg):
             if len(np.ravel(scales[sublead_mask])) > 0 else 0.
         sublead_err = np.ravel(scales[sublead_mask])[dc.i_err] \
             if len(np.ravel(scales[sublead_mask])) > 0 else 0.
-         
+
         return (lead_scale, lead_err, sublead_scale, sublead_err)
 
     # put values in their own columns 
@@ -125,6 +125,12 @@ def apply(arg):
     sub_scales_up = np.add(sub_scales,sub_err)
     sub_scales_down = np.subtract(sub_scales, sub_err)
 
+    if np.sqrt(np.multiply(lead_scales,sub_scales)).any() <= 0.9:
+        print(f"[WARNING][scale_data.py] some scales are less than 0.9")
+        print(f"[WARNING][scale_data.py] lead scales: {lead_scales}")
+        print(f"[WARNING][scale_data.py] sub scales: {sub_scales}")
+        print(data.head())
+        print(these_scales)
     data[dc.E_LEAD] = np.multiply(data[dc.E_LEAD].values,lead_scales, dtype=np.float32)
     data[dc.E_SUB] = np.multiply(data[dc.E_SUB].values,sub_scales, dtype=np.float32)
     data[pvc.KEY_INVMASS_UP] = np.multiply(data[dc.INVMASS].values, 
