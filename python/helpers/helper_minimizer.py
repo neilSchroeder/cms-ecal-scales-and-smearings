@@ -137,6 +137,7 @@ def extract_cats( data, mc, cats_df, **options):
         __ZCATS__ (list): list of zcat objects, each representing a dielectron category
     """
     __ZCATS__ = []
+    print(data.head())
     for index1 in range(options['num_scales']):
         for index2 in range(index1+1):
             cat1 = cats_df.iloc[index1]
