@@ -96,26 +96,15 @@ def clean_up(data, mc, cats):
     if cats.iloc[0,cc.i_et_min] != cc.empty:
         data, mc = add_transverse_energy(data, mc)
 
-    else:
-        if cats.iloc[0,cc.i_r9_min] != cc.empty and cats.iloc[0,cc.i_gain] == cc.empty:
-            drop_list = [dc.E_LEAD, 
-                        dc.E_SUB, 
-                        dc.GAIN_LEAD, 
-                        dc.GAIN_SUB, 
-                        dc.RUN]
+    drop_list = [dc.E_LEAD, 
+                dc.E_SUB, 
+                dc.RUN]
+    if cats.iloc[0,cc.i_gain] == cc.empty:
+        drop_list += [dc.GAIN_LEAD, dc.GAIN_SUB]
 
-            print("[INFO][python/nll] dropping {}".format(drop_list))
-            data.drop(drop_list, axis=1, inplace=True)
-            mc.drop(drop_list, axis=1, inplace=True)
-        else:
-            drop_list = [dc.E_LEAD, 
-                        dc.E_SUB, 
-                        dc.R9_LEAD, 
-                        dc.R9_SUB, 
-                        dc.RUN]
-            print("[INFO][python/nll] dropping {}".format(drop_list))
-            data.drop(drop_list, axis=1, inplace=True)
-            mc.drop(drop_list, axis=1, inplace=True)
+    print("[INFO][python/nll] dropping {}".format(drop_list))
+    data.drop(drop_list, axis=1, inplace=True)
+    mc.drop(drop_list, axis=1, inplace=True)
 
     return data, mc
 
