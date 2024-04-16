@@ -89,9 +89,11 @@ def clean_up(data, mc, cats):
         data (pandas.DataFrame): cleaned data dataframe
         mc (pandas.DataFrame): cleaned mc dataframe
     """
+    print(data.head())
     if cats.iloc[0,cc.i_et_min] != cc.empty:
         data, mc = add_transverse_energy(data, mc)
 
+    print(data.head())
     drop_list = [dc.E_LEAD, 
                 dc.E_SUB, 
                 dc.RUN]
@@ -101,6 +103,7 @@ def clean_up(data, mc, cats):
     print("[INFO][python/nll] dropping {}".format(drop_list))
     data.drop(drop_list, axis=1, inplace=True)
     mc.drop(drop_list, axis=1, inplace=True)
+    print(data.head())
 
     return data, mc
 
@@ -121,10 +124,10 @@ def extract_cats( data, mc, cats_df, **options):
     """
     # check for empty data
     if len(data) == 0:
-        print("[INFO][python/nll] no data, returning")
+        print("[WARNING][python/nll] no data, returning")
         return []
     if len(mc) == 0:
-        print("[INFO][python/nll] no mc, returning")
+        print("[WARNING][python/nll] no mc, returning")
         return []
     
     __ZCATS__ = []
@@ -441,7 +444,6 @@ def scan_nll(x, **options):
     weights = [(cat.weight, cat.lead_smear_index) for cat in __ZCATS__ if cat.valid and cat.lead_smear_index == cat.sublead_smear_index]
     weights.sort(key=lambda x: x[0])
 
-    print(weights, options['num_smears'])
     if options['num_smears'] > 0:
         while weights:
             max_index = cc.empty
