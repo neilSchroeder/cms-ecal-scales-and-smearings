@@ -149,8 +149,6 @@ def main():
             print("[INFO] scaling data")
             df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
 
-    print(df_data.describe())
-
     #load and handle mc next
     if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")

@@ -133,11 +133,12 @@ def apply(arg):
         print(these_scales)
     data[dc.E_LEAD] = np.multiply(data[dc.E_LEAD].values,lead_scales, dtype=np.float32)
     data[dc.E_SUB] = np.multiply(data[dc.E_SUB].values,sub_scales, dtype=np.float32)
-    data[pvc.KEY_INVMASS_UP] = np.multiply(data[dc.INVMASS].values, 
+    invmass = data[dc.INVMASS].values.copy()
+    data[pvc.KEY_INVMASS_UP] = np.multiply(invmass, 
                                             np.sqrt(np.multiply(lead_scales_up,sub_scales_up)), dtype=np.float32)
-    data[pvc.KEY_INVMASS_DOWN] = np.multiply(data[dc.INVMASS].values, 
+    data[pvc.KEY_INVMASS_DOWN] = np.multiply(invmass, 
                                             np.sqrt(np.multiply(lead_scales_down,sub_scales_down)), dtype=np.float32)
-    data[dc.INVMASS] = np.multiply(data[dc.INVMASS].values, np.sqrt(np.multiply(lead_scales,sub_scales)), dtype=np.float32)
+    data[dc.INVMASS] = np.multiply(invmass, np.sqrt(np.multiply(lead_scales,sub_scales)), dtype=np.float32)
 
     return data
 
@@ -211,6 +212,10 @@ def scale(data, scales):
                 print(x.result())
         raise RuntimeError
     
+    for i in range(len(proc_futures)):
+        print(divided_data[i].head())
+        print(proc_futures[i].result().head())
+        
     ret = pd.concat([x.result() for x in proc_futures])
     executor.shutdown()
     print(f"{info} done applying scales")
