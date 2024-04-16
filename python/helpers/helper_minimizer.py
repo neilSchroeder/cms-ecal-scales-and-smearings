@@ -192,6 +192,8 @@ def extract_cats( data, mc, cats_df, **options):
 
             df = data[entries_eta&entries_r9OrEt]
             mass_list_data = np.array(df[dc.INVMASS])
+            print(index1, index2, len(df))
+
             del df
             del entries_eta
             del entries_r9OrEt
@@ -248,7 +250,6 @@ def extract_cats( data, mc, cats_df, **options):
                 raise ValueError("Could not identify category type.")
 
             df = mc[entries_eta&entries_r9OrEt]
-            print(index1, index2, len(df))
             mass_list_mc = np.array(df[dc.INVMASS].values, dtype=np.float32)
             weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32) if 'pty_weight' in df.columns else np.ones(len(mass_list_mc))
             # MC needs to be over smeared in order to have good "resolution" on the scales and smearings
