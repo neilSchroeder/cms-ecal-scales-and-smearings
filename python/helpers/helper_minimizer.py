@@ -93,10 +93,8 @@ def clean_up(data, mc, cats):
         data (pandas.DataFrame): cleaned data dataframe
         mc (pandas.DataFrame): cleaned mc dataframe
     """
-    if (cats.iloc[1, cc.i_r9_min] == cc.empty and cats.iloc[1, cc.i_gain] == cc.empty) \
-        or (cats.iloc[1,cc.i_r9_min] != cc.empty and cats.iloc[1, cc.i_et_min] != cc.empty):
-        data,mc = add_transverse_energy(data, mc)
-        gc.collect()
+    if cats.iloc[0,cc.i_et_min] != cc.empty:
+        data, mc = add_transverse_energy(data, mc)
 
     else:
         if cats.iloc[0,cc.i_r9_min] != cc.empty and cats.iloc[0,cc.i_gain] == cc.empty:
@@ -136,8 +134,15 @@ def extract_cats( data, mc, cats_df, **options):
     Returns:
         __ZCATS__ (list): list of zcat objects, each representing a dielectron category
     """
+    # check for empty data
+    if len(data) == 0:
+        print("[INFO][python/nll] no data, returning")
+        return []
+    if len(mc) == 0:
+        print("[INFO][python/nll] no mc, returning")
+        return []
+    
     __ZCATS__ = []
-    print(data.head())
     for index1 in range(options['num_scales']):
         for index2 in range(index1+1):
             cat1 = cats_df.iloc[index1]
@@ -182,13 +187,8 @@ def extract_cats( data, mc, cats_df, **options):
                 gain_mask = gain_mask | (data[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
                                         &data[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
             
-            print(sum(eta_mask))
-            print(sum(r9_mask))
-            print(sum(et_mask))
-            print(sum(gain_mask))
             df = data[eta_mask&r9_mask&et_mask&gain_mask]
             mass_list_data = np.array(df[dc.INVMASS])
-            print(index1, index2, len(mass_list_data))
 
             eta_mask = np.ones(len(mc), dtype=bool)
             if cat1[cc.i_eta_min] != cc.empty:

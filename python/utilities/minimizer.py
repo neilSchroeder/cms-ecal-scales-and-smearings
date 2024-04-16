@@ -69,7 +69,6 @@ def minimize(data, mc, cats_df, args):
     -------------------------------------------------------------
     """
 
-    print(data.head())
 
     ignore_cats=args["ignore"] #categories to ignore
     hist_min=round(float(args["hist_min"]),2) #bottom edge of histogram
