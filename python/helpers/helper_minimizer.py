@@ -181,7 +181,10 @@ def extract_cats( data, mc, cats_df, **options):
                 gain_mask = gain_mask | (data[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
                                         &data[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
             
-
+            print(sum(eta_mask))
+            print(sum(r9_mask))
+            print(sum(et_mask))
+            print(sum(gain_mask))
             df = data[eta_mask&r9_mask&et_mask&gain_mask]
             mass_list_data = np.array(df[dc.INVMASS])
             print(index1, index2, len(mass_list_data))
