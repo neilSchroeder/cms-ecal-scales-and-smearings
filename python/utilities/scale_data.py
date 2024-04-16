@@ -212,10 +212,6 @@ def scale(data, scales):
                 print(x.result())
         raise RuntimeError
     
-    for i in range(len(proc_futures)):
-        print(divided_data[i].head())
-        print(proc_futures[i].result().head())
-        
     ret = pd.concat([x.result() for x in proc_futures])
     executor.shutdown()
     print(f"{info} done applying scales")
