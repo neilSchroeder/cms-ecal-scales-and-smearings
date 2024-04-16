@@ -254,9 +254,7 @@ def main():
                 print("[ERROR] please resubmit with a --output argument")
                 return
             print("[INFO] deriving Y(Z), Pt(Z) weights")
-            print(data.head())
             weight_file = reweight_pt_y.derive_pt_y_weights(data, mc, args.output)
-            print(data.head())
         mc = reweight_pt_y.add_pt_y_weights(mc, weight_file)
 
 

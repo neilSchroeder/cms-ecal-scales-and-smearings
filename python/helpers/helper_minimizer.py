@@ -249,11 +249,6 @@ def extract_cats( data, mc, cats_df, **options):
                             )
                         )
 
-            del df
-            del entries_eta
-            del entries_r9OrEt
-            gc.collect()
-
     return __ZCATS__
 
 def set_bounds(cats, **options):
