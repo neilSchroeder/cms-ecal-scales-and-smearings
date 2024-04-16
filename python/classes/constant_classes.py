@@ -138,6 +138,7 @@ class DataConstants():
     i_gain = 8
     i_scale = 9
     i_err = 10
+    MC_RUNS = [1, 2, 3, 999999]
 
     SEED = 3543136929
 
