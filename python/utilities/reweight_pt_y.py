@@ -84,9 +84,6 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     y_data = get_rapidity(df_data)
     y_mc = get_rapidity(df_mc)
 
-    pt_hist, x_edges_pt = np.histogram(zpt_data, bins=ptz_bins)
-    yz_hist, x_edges_y = np.histogram(y_data, bins=yz_bins)
-
     d_hist, d_hist_x_edges, d_hist_y_edges = np.histogram2d(y_data, zpt_data, [yz_bins,ptz_bins])
     m_hist, m_hist_x_edges, m_hist_y_edges = np.histogram2d(y_mc, zpt_mc, [yz_bins,ptz_bins])
 

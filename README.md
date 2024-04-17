@@ -134,6 +134,8 @@ You will need a set of root files for data and simulation that must have a tree 
 *............................................................................*
 *Br    6 :gainSeedSC : gainSeedSC[3]/b                                       *
 *............................................................................*
+*Br    7 :eleID     : eleID[3]/i                                             *
+*............................................................................*
 ```
 
 Note that the file size, compression, basket size, etc. are irrelevant. The requirement is the variable names.

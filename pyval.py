@@ -12,14 +12,18 @@ import numpy as np
 import pandas as pd
 
 #project functions
-import python.helpers.helper_pyval as helper_pyval
+from python.helpers.helper_pyval import extract_files
+from python.utilities.data_loader import get_dataframe
 import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
-# import python.utilities.evaluate_systematics as eval_syst
+from python.utilities.evaluate_systematics import evaluate_systematics
 
-from python.classes.constant_classes import PyValConstants as pvc
+from python.classes.constant_classes import(
+    PyValConstants as pvc,
+    DataConstants as dc
+)
 import python.classes.config_class as config_class
 ss_config = config_class.SSConfig()
 
@@ -132,25 +136,29 @@ def main():
     print(40*"#")
 
     #open input file and prep our variables and such
-    dict_config = helper_pyval.extract_files(args.input_file) 
+    dict_config = extract_files(args.input_file) 
 
     #load and handle data first
     if len(dict_config[pvc.KEY_DAT]) > 0:
         print("[INFO] loading data")
-        df_data = helper_pyval.get_dataframe(dict_config[pvc.KEY_DAT], args._kDebug)
+        df_data = get_dataframe(dict_config[pvc.KEY_DAT], 
+                                apply_cuts='standard' if not args._kSystStudy else 'custom',
+                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                                debug = args._kDebug)
         if len(dict_config[pvc.KEY_SC]) > 0:
             print("[INFO] scaling data")
             df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
-        df_data = helper_pyval.standard_cuts(df_data)
 
     #load and handle mc next
     if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")
-        df_mc = helper_pyval.get_dataframe(dict_config[pvc.KEY_MC], args._kDebug)
+        df_mc = get_dataframe(dict_config[pvc.KEY_MC], 
+                                apply_cuts='standard' if not args._kSystStudy else 'custom',
+                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                                debug = args._kDebug)
         if len(dict_config[pvc.KEY_SM]) > 0:
             print("[INFO] smearing mc")
             df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
-        df_mc = helper_pyval.standard_cuts(df_mc)
         if len(dict_config[pvc.KEY_WT]) != 0:
             print("[INFO] reweighting mc")
             df_mc = reweight_pt_y.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
@@ -178,8 +186,7 @@ def main():
                 _kFit=args._kFit,
                 )
     else:
-        # eval_syst.evaluate_systematics()
-        pass
+        evaluate_systematics(df_data, df_mc, args.output_file)
 
     return
 

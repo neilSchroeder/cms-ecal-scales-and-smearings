@@ -64,8 +64,8 @@ class DataConstants():
     TARGET_MASS = 91.188
 
     # pruning constants
-    KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber']
-    DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]']
+    KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber', 'eleID']
+    DROP_LIST = ['R9Ele[2]', 'energy_ECAL_ele[2]', 'etaEle[2]', 'phiEle[2]', 'gainSeedSC[2]', 'eleID[2]']
 
     # time stability constants
     TIME_STABILITY_HEADERS = ['run_min', 'run_max', 'eta_min', 'eta_max', 'median', 'mean', 'sigma', 'scale', 'median_corr', 'mean_corr', 'sigma_corr', 'events']
@@ -79,14 +79,16 @@ class DataConstants():
     MIN_EE = 1.566
     MAX_EE = 2.5
     TRACK_MAX = 1000
-    MIN_PT_LEAD = 32
+    MIN_PT_LEAD = 30
     MIN_PT_SUB = 20
     invmass_min = 60 #python/helpers/helper_main.py
     invmass_max = 120 #python/helpers/helper_main.py
     MIN_INVMASS, MAX_INVMASS = 80, 100
-    MIN_ET_LEAD, MAX_ET_LEAD = 32, 14000
+    MIN_ET_LEAD, MAX_ET_LEAD = 30, 14000
     MIN_ET_SUB, MAX_ET_SUB = 20, 14000
     MIN_E, MAX_E = 0, 14000
+    MEDIUM_ID, TIGHT_ID = 0x0008, 0x0010
+    R9_BOUNDARY = 0.96
 
     #dataframe keys
     RUN = 'runNumber'
@@ -103,6 +105,8 @@ class DataConstants():
     INVMASS = 'invMass_ECAL_ele'
     ET_LEAD = 'transverse_energy[0]'
     ET_SUB = 'transverse_energy[1]'
+    ID_LEAD = 'eleID[0]'
+    ID_SUB = 'eleID[1]'
 
     DATA_TYPES = {
         R9_LEAD: np.float32,
@@ -117,6 +121,8 @@ class DataConstants():
         RUN: np.int32,
         GAIN_LEAD: np.int16,
         GAIN_SUB: np.int16,
+        ID_LEAD: np.uint32,
+        ID_SUB: np.uint32,
     }
 
     # indices of row in scales
@@ -132,6 +138,7 @@ class DataConstants():
     i_gain = 8
     i_scale = 9
     i_err = 10
+    MC_RUNS = [1, 2, 3, 999999]
 
     SEED = 3543136929
 
@@ -150,6 +157,73 @@ class DataConstants():
 
     time_stability_eta_bins_low = [0, 1., 1.2, 1.566, 2.]
     time_stability_eta_bins_high = [1., 1.2, 1.4442, 2., 2.5]
+
+    SYST_CUTS = {
+        "EBin": {
+            "HighR9": {
+                "eta_cuts": ((-1, 1), (-1, 1)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (0, 1, R9_BOUNDARY, -1, -1, -1, -1)
+            },
+            "LowR9": {
+                "eta_cuts": ((-1, 1), (-1, 1)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (0, 1, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+        "EBout": {
+            "HighR9": {
+                "eta_cuts": ((1, 1.4442), (1, 1.4442)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1, 1.4442, R9_BOUNDARY, -1, -1, -1, -1)
+            },
+            "LowR9": {
+                "eta_cuts":((1, 1.4442), (1, 1.4442)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1, 1.4442, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+        "EEin": {
+            "HighR9": {
+                "eta_cuts": ((1.566, 2), (1.566, 2)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1.566, 2, R9_BOUNDARY, -1, -1, -1, -1)
+            }, 
+            "LowR9": {
+                "eta_cuts": ((1.566, 2), (1.566, 2)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (1.566, 2, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+        "EEout": {
+            "HighR9": {
+                "eta_cuts": ((2, 2.5), (2,2.5)),
+                "r9_cuts": ((R9_BOUNDARY, -1), (R9_BOUNDARY, -1)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (2, 2.5, R9_BOUNDARY, -1, -1, -1, -1)
+            },
+            "LowR9": {
+                "eta_cuts": ((2, 2.5), (2,2.5)),
+                "r9_cuts": ((-1, R9_BOUNDARY), (-1, R9_BOUNDARY)),
+                "et_cuts": (MIN_PT_LEAD, MIN_PT_SUB),
+                "ele_cats":
+                    (2, 2.5, -1, R9_BOUNDARY, -1, -1, -1)
+            }
+        },
+    }
 
 
 class CategoryConstants():

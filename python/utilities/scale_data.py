@@ -108,7 +108,7 @@ def apply(arg):
             if len(np.ravel(scales[sublead_mask])) > 0 else 0.
         sublead_err = np.ravel(scales[sublead_mask])[dc.i_err] \
             if len(np.ravel(scales[sublead_mask])) > 0 else 0.
-         
+
         return (lead_scale, lead_err, sublead_scale, sublead_err)
 
     # put values in their own columns 
@@ -125,13 +125,20 @@ def apply(arg):
     sub_scales_up = np.add(sub_scales,sub_err)
     sub_scales_down = np.subtract(sub_scales, sub_err)
 
+    if np.sqrt(np.multiply(lead_scales,sub_scales)).any() <= 0.9:
+        print(f"[WARNING][scale_data.py] some scales are less than 0.9")
+        print(f"[WARNING][scale_data.py] lead scales: {lead_scales}")
+        print(f"[WARNING][scale_data.py] sub scales: {sub_scales}")
+        print(data.head())
+        print(these_scales)
     data[dc.E_LEAD] = np.multiply(data[dc.E_LEAD].values,lead_scales, dtype=np.float32)
     data[dc.E_SUB] = np.multiply(data[dc.E_SUB].values,sub_scales, dtype=np.float32)
-    data[pvc.KEY_INVMASS_UP] = np.multiply(data[dc.INVMASS].values, 
-                                     np.sqrt(np.multiply(lead_scales_up,sub_scales_up)), dtype=np.float32)
-    data[pvc.KEY_INVMASS_DOWN] = np.multiply(data[dc.INVMASS].values, 
-                                       np.sqrt(np.multiply(lead_scales_down,sub_scales_down)), dtype=np.float32)
-    data[dc.INVMASS] = np.multiply(data[dc.INVMASS].values, np.sqrt(np.multiply(lead_scales,sub_scales)), dtype=np.float32)
+    invmass = data[dc.INVMASS].values.copy()
+    data[pvc.KEY_INVMASS_UP] = np.multiply(invmass, 
+                                            np.sqrt(np.multiply(lead_scales_up,sub_scales_up)), dtype=np.float32)
+    data[pvc.KEY_INVMASS_DOWN] = np.multiply(invmass, 
+                                            np.sqrt(np.multiply(lead_scales_down,sub_scales_down)), dtype=np.float32)
+    data[dc.INVMASS] = np.multiply(invmass, np.sqrt(np.multiply(lead_scales,sub_scales)), dtype=np.float32)
 
     return data
 
@@ -155,6 +162,10 @@ def scale(data, scales):
 
     # read in scales to df
     scales_df = pd.read_csv(scales, sep="\t", comment="#", header=None)
+
+    # drop MC runs, they are not needed
+    scales_df = scales_df[~scales_df[i_run_min].isin(dc.MC_RUNS)]
+    scales_df = scales_df[~scales_df[i_run_max].isin(dc.MC_RUNS)]
     
     processors = mp.cpu_count() - 1
 
@@ -171,12 +182,17 @@ def scale(data, scales):
 
     # divide scales by run and tuple with divided data
     print(f"{info} dividing scales by run and tuple")
-    divided_scales = [(divided_data[i],
-        scales_df.loc[
-        np.logical_and(scales_df[:][i_run_min] >= run_bins[i],
-            scales_df[:][i_run_min] < run_bins[i+1])
-        ].values
-        ) for i in range(len(run_bins)-1)]
+    divided_scales = [
+        (
+            divided_data[i], # divided data
+            scales_df.loc[
+                np.logical_and(
+                    scales_df[:][i_run_min] >= run_bins[i], 
+                    scales_df[:][i_run_min] < run_bins[i+1]
+                )
+            ].values # scales divided by run
+        ) for i in range(len(run_bins)-1)
+    ]
     assert(len(scales_df) == sum([len(x[1]) for x in divided_scales]))
 
     # initiate multiprocessing of scales application
