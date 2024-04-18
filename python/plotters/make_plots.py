@@ -1,11 +1,13 @@
 import pandas as pd
 import numpy as np
 
+from python.classes.config_class import SSConfig
 from python.classes.constant_classes import PyValConstants as pvc
 from python.classes.constant_classes import DataConstants as dc
 import python.plotters.plots as plots
 from python.utilities.data_loader import custom_cuts
 
+config = SSConfig()
 pvc.plotting_functions = {
         'paper': plots.plot_style_paper,
         'crossCheckMC': plots.plot_style_validation_mc
@@ -96,12 +98,17 @@ def plot(data, mc, cats, **options):
 
     # get constants
     df_cats = pd.read_csv(cats, sep='\t', comment='#')
+    # copy categories into a new dataframe
+    df_results = df_cats.copy()
+    # add a column for the results
+    df_results[pvc.i_plot_results] = None
 
     # loop over cats
     plotting_class = pvc()
+    results = []
     for i,row in df_cats.iterrows():
         print(row[pvc.i_plot_name])
-        plotting_class.get_plotting_function(row[pvc.i_plot_style])(  # gets the plotting function
+        val = plotting_class.get_plotting_function(row[pvc.i_plot_style])(  # gets the plotting function
             get_var(data, row[pvc.i_plot_var::]),  # gets events from data to plot
             get_var(mc, row[pvc.i_plot_var::], _isData=False),  # gets events from mc to plot
             row[pvc.i_plot_name],  # plot title
@@ -109,5 +116,9 @@ def plot(data, mc, cats, **options):
             syst= (row[pvc.i_plot_var] == dc.INVMASS and 'invmass_up' in data.columns and 'invmass_down' in data.columns),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
             #no_ratio=True
             )
+        df_results.loc[i, pvc.i_plot_results] = val
+
+    # save the results
+    df_results.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/{options['tag']}_plot_results.csv", sep='\t', index=False)
 
     return

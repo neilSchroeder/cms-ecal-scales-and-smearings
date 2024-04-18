@@ -34,6 +34,15 @@ class SSConfig(object):
         # set up the directories
         self.is_on_eos = os.path.exists('/eos/')
         self.set_up_directories()
+        '''
+        sets up the following variables:
+        
+        self.DEFAULT_EOS_PATH
+        self.DEFAULT_DATA_PATH
+        self.DEFAULT_PLOT_PATH
+        self.DEFAULT_WRITE_FILES_PATH
+        self.DEFAULT_CONDOR_PATH
+        '''
 
 
     def configure_default_eos_path(self):
