@@ -45,6 +45,7 @@ class PyValConstants():
     i_plot_bounds_r9_sub = 6
     i_plot_bounds_et_lead = 7
     i_plot_bounds_et_sub = 8
+    i_plot_results = 9
     
     plotting_functions = {}
 
