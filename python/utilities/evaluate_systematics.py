@@ -32,7 +32,7 @@ def evaluate_systematics(data, mc, outfile):
     Returns:
         None
     """
-
+    print(f"[INFO][evaluate_systematics] Evaluating systematics")
     cuts = dc.SYST_CUTS
     num_bins = 80
 

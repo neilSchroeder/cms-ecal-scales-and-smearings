@@ -336,10 +336,36 @@ To scan the NLL phase space of a set of categories use the `--scan-nll` options,
 
 This framework comes with some very useful tools that can be run independently from the minimizer or validator. Please see the python/tools/ page for more details
 
+## Modifying the Framework
+
+There are numerous reasons to need to modify the network. I'll try to list the ones I anticipate to be the most common, from practical experience, here.
+
+### New Variables
+
+If you want to add new variables to the CSV file dumped in the pruning step, you can check the [keep](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L68) and [drop](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L69) lists in python/classes/constant_classes.py and add the variable you want to put in the CSV. 
+
+Then if you want to apply cuts to that variable, you'll want to update the [python/utilities/data_loader.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/utilities/data_loader.py) to add cut options and a function for this variable.
+
+If this variable is going to be used in minimization or category definitions you'll also need to edit either the [minimizer](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/utilities/minimizer.py), [helper_minimizer](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/helpers/helper_minimizer.py), [zcat_class](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/zcat_class.py), or [data_loader.py/extract_cats](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/utilities/data_loader.py) to incorporate the new variable into the minimization.
+
+### New Minimization Strategy
+
+If you want to change the minimization strategy you can change that in [constant_classes.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L92) and you can find the documentation for [scipy.optimize.minimize](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html), the recommended approaches are "L-BFGS-B" or "Nelder-Mead".
+
+If you want to completely overhaul the minimization engine you can do so by schanging [minimize.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/utilities/minimizer.py?ref_type=heads#L218) accordingly.
+
+### New Loss Function
+
+If you'd like to re-work the loss function you can do so in [minimize.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/helpers/helper_minimizer.py?ref_type=heads#L218) and [zcat_class.py]()
+
+### New Z Categories
+
+### New Plot Style
+
 ## Credit
 
 Thanks to Shervin Nourbahksh, Peter Hansen, and Rajdeep Chatterjee for development on the previous scales and smearings code in ECALELF.
-Thanks to Rajdeep Chatterjee for input on and review of this code.
+Thanks to Rajdeep Chatterjee and Onuray Sancar for input on and review of this code.
 
 ## Contact
 

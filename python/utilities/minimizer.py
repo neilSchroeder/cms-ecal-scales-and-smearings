@@ -5,8 +5,10 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize as minz
 
+
 import python.helpers.helper_minimizer as helper_minimizer
 import python.plotters.plot_cats as plotter
+from python.classes.constant_classes import DataConstants as dc
 
 __num_scales__ = 0
 __num_smears__ = 0
@@ -216,7 +218,7 @@ def minimize(data, mc, cats_df, args):
     optimum = minz(helper_minimizer.target_function,
                     np.array(guess), 
                     args=(__GUESS__,__ZCATS__,__num_scales__, __num_smears__),
-                    method="L-BFGS-B", # might be interesting to try Nelder-Mead
+                    method=dc.MINIMIZATION_STRATEGY, # might be interesting to try Nelder-Mead
                     bounds=bounds,
                     options=min_step_dict) 
 
