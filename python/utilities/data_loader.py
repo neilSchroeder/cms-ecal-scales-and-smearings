@@ -161,15 +161,11 @@ def custom_cuts(
             # otherwise you're just providing a minimum value for both electrons
             mask = mask & (df[dc.R9_LEAD] > r9_cuts[0]) & (df[dc.R9_SUB] > r9_cuts[1])
 
-    print(working_point)
     if working_point is not None:
         wp_id = dc.TIGHT_ID if working_point == "tight" else dc.MEDIUM_ID
         id_lead_mask = np.array([(x&wp_id) == wp_id for x in df[dc.ID_LEAD].values])
         id_sub_mask = np.array([(x&wp_id) == wp_id for x in df[dc.ID_SUB].values])
-        print(sum(id_lead_mask), sum(id_sub_mask))
-        print(sum(id_lead_mask & id_sub_mask))
         mask = mask & id_lead_mask & id_sub_mask
-        print(sum(mask))
 
     return df[mask]
 
