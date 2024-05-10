@@ -215,7 +215,7 @@ def evaluate_systematics(data, mc, outfile):
         eta_key: {
             r9_key: { 
                 syst_key: 
-                    max([abs(1 - systematics_categories[syst_key][eta_key][r9_key]/nominal_hists[eta_key][r9_key])]) 
+                    max([1 - ((systematics_categories[syst_key][0][eta_key][r9_key] / systematics_categories[syst_key][1][eta_key][r9_key]) / (nominal_hists[eta_key][r9_key] / nominal_hists[eta_key][r9_key])) for syst_key in systematics_categories.keys()])
                     for syst_key in systematics_categories.keys()
             } for r9_key in cuts[eta_key]
         } for eta_key in cuts.keys()
