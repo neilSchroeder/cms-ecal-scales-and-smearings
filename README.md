@@ -35,11 +35,16 @@ A new python framework for deriving the residual scales and additional smearings
 
 ## Motivation
 
+[table of contents](#table-of-contents)
+
 This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. 
 The goal of this software is to improve usability, speed, and performance of the scales and smearings derivation. 
 Additionally, this software serves as a portion of the thesis of Neil Schroeder from the University of Minnesota, Twin Cities School of Physics and Astronomy.
 
 ## Example Results
+
+[table of contents](#table-of-contents)
+
 
 Here is an example of the kind of agreement that can be obtained between data and MC.
 These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smearings.
@@ -49,6 +54,9 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 
 ## To Do
 
+[table of contents](#table-of-contents)
+
+
 * Time permitting, or for whoever takes over development, multiprocessing the `zcat.update()` calls would likely speed things up.
 * I think there's a better way to parallelize the application of the scales.
 * Implement `--systematics-study` feature in `pyval`. The idea is to automate estimating the systematic uncertainties.
@@ -56,6 +64,9 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 
 
 ## Features
+
+[table of contents](#table-of-contents)
+
 
 This software has a number of interesting features:
 * A pruner to convert root files into tsv files with only relevant branches
@@ -75,13 +86,22 @@ This software has a number of interesting features:
 
 ## Getting Started
 
+[table of contents](#table-of-contents)
+
+
 Some basic instructions on how to get started:
 
 ### Prerequisites
 
+[table of contents](#table-of-contents)
+
+
 The framework was built for use with python 3.6.4 on CMSSW_10_2_14.
 
 ### Installing
+
+[table of contents](#table-of-contents)
+
 
 Due to some concerns over changing environments on lxplus, the new installation instructions use Anaconda
 
@@ -143,9 +163,15 @@ git checkout myBranch
 
 ## Running the Framework
 
+[table of contents](#table-of-contents)
+
+
 This framework has many options. To demonstrate it's uses, consider the following example:
 
 ### Ntuples
+
+[table of contents](#table-of-contents)
+
 
 You will need a set of root files for data and simulation that must have a tree named `selected` with the following branches:
 
@@ -175,6 +201,9 @@ Note that the file size, compression, basket size, etc. are irrelevant. The requ
 
 
 ### Basic 2018 Workflow
+
+[table of contents](#table-of-contents)
+
 
 To start, you will need a file containing a list of data and mc files in the format 
 ```
@@ -271,9 +300,15 @@ python pymin.py -i config/pruned_ul18.cfg \
 
 ## Validation
 
+[table of contents](#table-of-contents)
+
+
 Along side the `pymin.py` program comes the `pyval.py` program. This program is used to make validation plots which can be used to inspect the agreement of data and MC after application of the scales produced in `pymin.py`. 
 
 ### Setup
+
+[table of contents](#table-of-contents)
+
 
 To get started you'll need a .cfg file to provide to `pyval`. The .cfg file contains tab separated values and is structured as follows:
 
@@ -302,6 +337,9 @@ An example of the category definition file can be found in `config/pyval/plot_ca
 
 ### Usage
 
+[table of contents](#table-of-contents)
+
+
 The basic usage looks like this:
 
 ```
@@ -317,6 +355,9 @@ python pyval.py \
 
 ### Additional Options
 
+[table of contents](#table-of-contents)
+
+
 pyval has the following additional options:
 
 * `--log`: sets the logging level, this is mostly for debugging purposes
@@ -324,9 +365,15 @@ pyval has the following additional options:
 
 ## Advanced Options and Additional Tools
 
+[table of contents](#table-of-contents)
+
+
 What follows is a list of additional options that may be of some use as well as a list of tools which are helpful for the scales and smearings studies
 
 ### Advanced Options
+
+[table of contents](#table-of-contents)
+
 
 To run the minimization or the plotting with a smaller dataset to debug parts of the code, use the `--debug` option. This will run the code on only 1000000 events.
 
@@ -350,15 +397,24 @@ To submit the minimization to condor, use the `--condor` option, additionally yo
 
 ### Additional Use Options
 
+[table of contents](#table-of-contents)
+
+
 To rewrite the scales/smearings file you've just created, rerun the same command with the `--rewrite` option
 
 To merge an "only-step" file with a scales file, you can use the `--combine-files` option and provide the scales file with `-s` and the only step scales file with `--only-step`
 
 ### Plotting Options for pymin
 
+[table of contents](#table-of-contents)
+
+
 To plot the 1D mass scans for each dielectron category provide the `--plot` option and provide the directory where the plots will be written with `--plot-dir`
 
 ### Advanced Diagnostic Options
+
+[table of contents](#table-of-contents)
+
 
 To test the accuracy of the method, you can use the `--test-method-accuracy` option which will inject scales and smearings to MC in an attempt to derive the injected values back.
 
@@ -367,13 +423,22 @@ To scan the NLL phase space of a set of categories use the `--scan-nll` options,
 
 ### Additional Tools
 
+[table of contents](#table-of-contents)
+
+
 This framework comes with some very useful tools that can be run independently from the minimizer or validator. Please see the python/tools/ page for more details
 
 ## Modifying the Framework
 
+[table of contents](#table-of-contents)
+
+
 There are numerous reasons to need to modify the network. I'll try to list the ones I anticipate to be the most common, from practical experience, here.
 
 ### New Variables
+
+[table of contents](#table-of-contents)
+
 
 If you want to add new variables to the CSV file dumped in the pruning step, you can check the [keep](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L68) and [drop](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L69) lists in python/classes/constant_classes.py and add the variable you want to put in the CSV. 
 
@@ -383,24 +448,42 @@ If this variable is going to be used in minimization or category definitions you
 
 ### New Minimization Strategy
 
+[table of contents](#table-of-contents)
+
+
 If you want to change the minimization strategy you can change that in [constant_classes.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L92) and you can find the documentation for [scipy.optimize.minimize](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html), the recommended approaches are "L-BFGS-B" or "Nelder-Mead".
 
 If you want to completely overhaul the minimization engine you can do so by schanging [minimize.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/utilities/minimizer.py?ref_type=heads#L218) accordingly.
 
 ### New Loss Function
 
+[table of contents](#table-of-contents)
+
+
 If you'd like to re-work the loss function you can do so in [minimize.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/helpers/helper_minimizer.py?ref_type=heads#L218) and [zcat_class.py]()
 
 ### New Z Categories
 
+[table of contents](#table-of-contents)
+
+
 ### New Plot Style
 
+[table of contents](#table-of-contents)
+
+
 ## Credit
+
+[table of contents](#table-of-contents)
+
 
 Thanks to Shervin Nourbahksh, Peter Hansen, and Rajdeep Chatterjee for development on the previous scales and smearings code in ECALELF.
 Thanks to Rajdeep Chatterjee and Onuray Sancar for input on and review of this code.
 
 ## Contact
+
+[table of contents](#table-of-contents)
+
 
 should something arise in which I must be contacted you can reach me at   
 schr1077@umn.edu
