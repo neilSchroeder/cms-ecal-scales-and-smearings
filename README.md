@@ -2,6 +2,34 @@
 
 A new python framework for deriving the residual scales and additional smearings for the electron energy scale.
 
+## Table of Contents
+- [Motivation](#motivation)
+- [Example Results](#example-results)
+- [To Do](#to-do)
+- [Features](#features)
+- [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installing](#installing)
+        - [Installing Anaconda](#installing-anaconda)
+    - [Running the Framework](#running-the-framework)
+        - [Ntuples](#ntuples)
+        - [Basic 2018 Workflow](#basic-2018-workflow)
+- [Validation](#validation)
+- [Advanced Options and Additional Tools](#advanced-options-and-additional-tools)
+    - [Advanced Options](#advanced-options)
+    - [Additional Use Options](#additional-use-options)
+    - [Plotting Options for pymin](#plotting-options-for-pymin)
+    - [Advanced Diagnostic Options](#advanced-diagnostic-options)
+    - [Additional Tools](#additional-tools)
+- [Modifying the Framework](#modifying-the-framework)
+    - [New Variables](#new-variables)
+    - [New Minimization Strategy](#new-minimization-strategy)
+    - [New Loss Function](#new-loss-function)
+    - [New Z Categories](#new-z-categories)
+    - [New Plot Style](#new-plot-style)
+- [Credit](#credit)
+- [Contact](#contact)
+
 ## Motivation
 
 This project exists as a response to the state of the process of deriving the scales and smearings for the electron energy scale using ECALELF. 
@@ -19,9 +47,9 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 ## To Do
 
 * Time permitting, or for whoever takes over development, multiprocessing the `zcat.update()` calls would likely speed things up.
+* I think there's a better way to parallelize the application of the scales.
 * Implement `--systematics-study` feature in `pyval`. The idea is to automate estimating the systematic uncertainties.
 * Change run divide feature to include/process lumisection infomation (more granular).
-* Build in the BW conv CB fitter into the plotting framework.
 
 
 ## Features
@@ -39,6 +67,8 @@ This software has a number of interesting features:
     * Any variable from the trees can be plotted
     * Cuts on both leading and subleading Eta, Et, and R9 can be made
     * different styles of plots can be selected for different kinds of validation
+* A program for testing the accuracy of the method by injecting scales and smearings into MC and attempting to derive them back
+* A program for evaluating the systematic uncertainties of the scales+smearings by varying R9, Et, and working point ID
 
 ## Getting Started
 
