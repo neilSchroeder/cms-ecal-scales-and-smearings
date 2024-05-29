@@ -12,7 +12,10 @@ import numpy as np
 import pandas as pd
 
 #project functions
-from python.helpers.helper_pyval import extract_files
+from python.helpers.helper_pyval import (
+    extract_files,
+    # get_dataframe,
+)
 from python.utilities.data_loader import get_dataframe
 import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data as scale_data
@@ -141,7 +144,7 @@ def main():
     #load and handle data first
     if len(dict_config[pvc.KEY_DAT]) > 0:
         print("[INFO] loading data")
-        df_data = get_dataframe(dict_config[pvc.KEY_DAT], 
+        df_data = get_dataframe(dict_config[pvc.KEY_DAT],
                                 apply_cuts='standard' if not args._kSystStudy else 'custom',
                                 eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
                                 debug = args._kDebug)
@@ -152,7 +155,7 @@ def main():
     #load and handle mc next
     if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")
-        df_mc = get_dataframe(dict_config[pvc.KEY_MC], 
+        df_mc = get_dataframe(dict_config[pvc.KEY_MC],
                                 apply_cuts='standard' if not args._kSystStudy else 'custom',
                                 eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
                                 debug = args._kDebug)

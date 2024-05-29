@@ -494,14 +494,14 @@ def write_systematics(systematics, output_tag):
 
     for eta_key in systematics.keys():
         for r9_key in systematics.keys():
-            dictForDf[dc.ETA_MIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][0])
-            dictForDf[dc.ETA_MAX].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][1])
-            dictForDf[dc.R9_MIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][2])
-            dictForDf[dc.R9_MAX].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][3])
-            dictForDf[dc.ET_MIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][4])
-            dictForDf[dc.ET_MAX].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][5])
-            dictForDf[dc.GAIN].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][6])
-            dictForDf[dc.SCALE].append(systematics[eta_key][r9_key])
+            dictForDf[dc.SCALES_HEADERS[2]].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][0])
+            dictForDf[dc.SCALES_HEADERS[3]].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][1])
+            dictForDf[dc.SCALES_HEADERS[4]].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][2])
+            dictForDf[dc.SCALES_HEADERS[5]].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][3])
+            dictForDf[dc.SCALES_HEADERS[6]].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][4])
+            dictForDf[dc.SCALES_HEADERS[7]].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][5])
+            dictForDf[dc.SCALES_HEADERS[8]].append(dc.SYST_CUTS[eta_key][r9_key]["ele_cats"][6])
+            dictForDf[dc.SCALES_HEADERS[9]].append(systematics[eta_key][r9_key])
 
     dfOut = pd.DataFrame(dictForDf)
     dfOut.to_csv(out, sep='	',header=False,index=False)
