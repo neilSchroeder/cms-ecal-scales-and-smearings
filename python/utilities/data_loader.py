@@ -82,7 +82,7 @@ def standard_cuts(df):
         df,
         eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
         inv_mass_cuts=(dc.MIN_INVMASS, dc.MAX_INVMASS),
-        et_cuts=(dc.MIN_ET_LEAD, dc.MIN_ET_SUB),
+        # et_cuts=(dc.MIN_ET_LEAD, dc.MIN_ET_SUB),
     )
 
 
