@@ -12,8 +12,11 @@ import numpy as np
 import pandas as pd
 
 #project functions
-from python.helpers.helper_pyval import extract_files
-from python.utilities.data_loader import get_dataframe
+from python.helpers.helper_pyval import (
+    extract_files,
+    get_dataframe,
+)
+# from python.utilities.data_loader import get_dataframe
 import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
@@ -141,10 +144,10 @@ def main():
     #load and handle data first
     if len(dict_config[pvc.KEY_DAT]) > 0:
         print("[INFO] loading data")
-        df_data = get_dataframe(dict_config[pvc.KEY_DAT], 
-                                apply_cuts='standard' if not args._kSystStudy else 'custom',
-                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
-                                debug = args._kDebug)
+        df_data = get_dataframe(dict_config[pvc.KEY_DAT],)
+                                # apply_cuts='standard' if not args._kSystStudy else 'custom',
+                                # eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                                # debug = args._kDebug)
         if len(dict_config[pvc.KEY_SC]) > 0:
             print("[INFO] scaling data")
             df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
@@ -152,10 +155,10 @@ def main():
     #load and handle mc next
     if len(dict_config[pvc.KEY_MC]) > 0:
         print("[INFO] loading mc")
-        df_mc = get_dataframe(dict_config[pvc.KEY_MC], 
-                                apply_cuts='standard' if not args._kSystStudy else 'custom',
-                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
-                                debug = args._kDebug)
+        df_mc = get_dataframe(dict_config[pvc.KEY_MC],)
+                                # apply_cuts='standard' if not args._kSystStudy else 'custom',
+                                # eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                                # debug = args._kDebug)
         if len(dict_config[pvc.KEY_SM]) > 0:
             print("[INFO] smearing mc")
             df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
