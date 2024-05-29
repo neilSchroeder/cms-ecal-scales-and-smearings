@@ -203,8 +203,168 @@ def add_transverse_energy(data: pd.DataFrame, mc: pd.DataFrame) -> tuple[pd.Data
     mc = mc[mask_lead]
     return data,mc
 
+def extract_cats( data, mc, cats_df, **options):
+    """
+    Extract the dielectron categories from the data and mc dataframes.
 
-def extract_cats(
+    Args:
+        data (pandas.DataFrame): data dataframe
+        mc (pandas.DataFrame): mc dataframe
+        cats_df (pandas.DataFrame): dataframe containing the categories
+        **options: keyword arguments, which contain the following:
+            num_scales (int): number of scales to be derived
+            num_smears (int): number of smearings to be derived
+    
+    Returns:
+        __ZCATS__ (list): list of zcat objects, each representing a dielectron category
+    """
+    __ZCATS__ = []
+    for index1 in range(options['num_scales']):
+        for index2 in range(index1+1):
+            cat1 = cats_df.iloc[index1]
+            cat2 = cats_df.iloc[index2]
+            # thisCat should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
+            entries_eta = data[dc.ETA_LEAD].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max]) & data[dc.ETA_SUB].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max])
+            entries_eta = entries_eta | (data[dc.ETA_SUB].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max])&data[dc.ETA_LEAD].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max]))
+            # need to handle the gain and et scales 
+            entries_r9OrEt = []
+            if cat1[dc.i_gain] != dc.empty:
+                gainlow1 = 0
+                gainhigh1 = 0
+                gainlow2 = 0
+                gainhigh2 = 0
+                if cat1[dc.i_gain] == 6:
+                    gainlow1 = 1
+                    gainhigh1 = 1
+                if cat1[dc.i_gain] == 1:
+                    gainlow1 = 2
+                    gainhigh1 = 99999
+                if cat2[dc.i_gain] == 6:
+                    gainlow2 = 1
+                    gainhigh2 = 1
+                if cat2[dc.i_gain] == 1:
+                    gainlow2 = 2
+                    gainhigh2 = 99999
+                entries_r9OrEt = data[dc.GAIN_LEAD].between(gainlow1,gainhigh1)\
+                    &data[dc.GAIN_SUB].between(gainlow2,gainhigh2)
+                entries_r9OrEt = entries_r9OrEt | (data[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
+                                                    &data[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
+            elif cat1[dc.i_r9_min] != dc.empty and cat1[dc.i_gain] == dc.empty and cat1[dc.i_et_min] == dc.empty: 
+                #  this is for R9 dependent scale derivation
+                entries_r9OrEt = data[dc.R9_LEAD].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                    &data[dc.R9_SUB].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (data[dc.R9_SUB].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                                                    &data[dc.R9_LEAD].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max]))
+            elif cat1[dc.i_r9_min] == dc.empty and cat1[dc.i_gain] == dc.empty and cat1[dc.i_et_min] != dc.empty:
+                #  this is for et dependent scale derivation
+                entries_r9OrEt = data[dc.ET_LEAD].between(cat1[dc.i_et_min], cat1[dc.i_et_max])\
+                    &data[dc.ET_SUB].between(cat2[dc.i_et_min], cat2[dc.i_et_max])
+            elif cat1[dc.i_r9_min] != dc.empty and cat1[dc.i_gain] == dc.empty and cat1[dc.i_et_min] != dc.empty:
+                #  this is specifically for stochastic smearings
+                entries_r9OrEt = data[dc.R9_LEAD].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                    &data[dc.R9_SUB].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (data[dc.R9_SUB].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                                                    &data[dc.R9_LEAD].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max]))
+                entries_r9OrEt = entries_r9OrEt & (data[dc.ET_LEAD].between(cat1[dc.i_et_min], cat1[dc.i_et_max])\
+                                                    &data[dc.ET_SUB].between(cat2[dc.i_et_min], cat2[dc.i_et_max]))
+            else:
+                print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
+                #  please forgive my sin of sloth
+                raise ValueError("Could not identify category type.")
+
+            df = data[entries_eta&entries_r9OrEt]
+            mass_list_data = np.array(df[dc.INVMASS])
+            print(index1, index2, len(df))
+
+            entries_eta = mc[dc.ETA_LEAD].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max]) \
+                & mc[dc.ETA_SUB].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max])
+            entries_eta = entries_eta | (mc[dc.ETA_SUB].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max])\
+                                        &mc[dc.ETA_LEAD].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max]))
+            entries_r9OrEt = []
+
+            # now do the same thing for MC
+            if cat1[dc.i_gain] != dc.empty:
+                gainlow1 = 0
+                gainhigh1 = 0
+                gainlow2 = 0
+                gainhigh2 = 0
+                if cat1[dc.i_gain] == 6:
+                    gainlow1 = 1
+                    gainhigh1 = 1
+                if cat1[dc.i_gain] == 1:
+                    gainlow1 = 2
+                    gainhigh1 = 99999
+                if cat2[dc.i_gain] == 6:
+                    gainlow2 = 1
+                    gainhigh2 = 1
+                if cat2[dc.i_gain] == 1:
+                    gainlow2 = 2
+                    gainhigh2 = 99999
+                entries_r9OrEt = mc[dc.GAIN_LEAD].between(gainlow1,gainhigh1)\
+                    &mc[dc.GAIN_SUB].between(gainlow2,gainhigh2)
+                entries_r9OrEt = entries_r9OrEt | (mc[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
+                                                    &mc[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
+            elif cat1[dc.i_r9_min] != dc.empty and cat1[dc.i_gain] == dc.empty and cat1[dc.i_et_min] == dc.empty: 
+                #  this is for R9 dependent scale derivation
+                entries_r9OrEt = mc[dc.R9_LEAD].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                    &mc[dc.R9_SUB].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (mc[dc.R9_SUB].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                                                    &mc[dc.R9_LEAD].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max]))
+            elif cat1[dc.i_r9_min] == dc.empty and cat1[dc.i_gain] == dc.empty and cat1[dc.i_et_min] != dc.empty:
+                #  this is for et dependent scale derivation
+                entries_r9OrEt = mc[dc.ET_LEAD].between(cat1[dc.i_et_min], cat1[dc.i_et_max])\
+                    &mc[dc.ET_SUB].between(cat2[dc.i_et_min], cat2[dc.i_et_max])
+            elif cat1[dc.i_r9_min] != dc.empty and cat1[dc.i_gain] == dc.empty and cat1[dc.i_et_min] != dc.empty:
+                #  this is specifically for stochastic smearings
+                entries_r9OrEt = mc[dc.R9_LEAD].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                    &mc[dc.R9_SUB].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max])
+                entries_r9OrEt = entries_r9OrEt | (mc[dc.R9_SUB].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
+                                                    &mc[dc.R9_LEAD].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max]))
+                entries_r9OrEt = entries_r9OrEt & (mc[dc.ET_LEAD].between(cat1[dc.i_et_min], cat1[dc.i_et_max])\
+                                                    &mc[dc.ET_SUB].between(cat2[dc.i_et_min], cat2[dc.i_et_max]))
+            else:
+                print("[INFO][python/nll][extract_cats] Something has gone wrong in the category definitions. Please review and try again")
+                raise ValueError("Could not identify category type.")
+
+            df = mc[entries_eta&entries_r9OrEt]
+            mass_list_mc = np.array(df[dc.INVMASS].values, dtype=np.float32)
+            weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32) if 'pty_weight' in df.columns else np.ones(len(mass_list_mc))
+            # MC needs to be over smeared in order to have good "resolution" on the scales and smearings
+            while len(mass_list_mc) < max(50*len(mass_list_data),50000) and len(mass_list_mc) > 100 and len(mass_list_data) > 10 and len(mass_list_mc) < 1000000:
+                mass_list_mc = np.append(mass_list_mc,mass_list_mc)
+                weight_list_mc = np.append(weight_list_mc,weight_list_mc)
+
+            # drop any "bad" entries
+            mass_list_data = mass_list_data[~np.isnan(mass_list_data)]
+            weight_list_mc = weight_list_mc[~np.isnan(mass_list_mc)]
+            mass_list_mc = mass_list_mc[~np.isnan(mass_list_mc)]
+            
+            if options['num_smears'] > 0:
+                __ZCATS__.append(
+                        zcat(
+                            index1, index2, mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(), 
+                            smear_i=get_smearing_index(cats_df,index1), smear_j=get_smearing_index(cats_df,index2), 
+                            **options
+                            )
+                        )
+            else:
+                __ZCATS__.append(
+                        zcat(
+                            index1, index2, # no smearing categories, so no smearing indices
+                            mass_list_data.copy(), mass_list_mc.copy(), weight_list_mc.copy(),
+                            **options
+                            )
+                        )
+
+            del df
+            del entries_eta
+            del entries_r9OrEt
+            gc.collect()
+
+    return __ZCATS__
+
+
+def extract_cats_new(
         data: pd.DataFrame,
         mc: pd.DataFrame, 
         cats_df: pd.DataFrame, 
