@@ -78,12 +78,16 @@ def standard_cuts(df):
     |eta| < 2.5 and !(1.4442 < |eta| < 1.566)
     """
     #masks
-    return custom_cuts(
-        df,
-        eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
-        inv_mass_cuts=(dc.MIN_INVMASS, dc.MAX_INVMASS),
-        # et_cuts=(dc.MIN_ET_LEAD, dc.MIN_ET_SUB),
-    )
+    mask = np.ones(len(df), dtype=bool)
+    transition_mask_lead = ~df[dc.ETA_LEAD].between(dc.MAX_EB,dc.MIN_EE)
+    transition_mask_sub = ~df[dc.ETA_SUB].between(dc.MAX_EB,dc.MIN_EE)
+    tracker_mask_lead = ~df[dc.ETA_LEAD].between(dc.MAX_EE, dc.TRACK_MAX)
+    tracker_mask_sub = ~df[dc.ETA_SUB].between(dc.MAX_EE, dc.TRACK_MAX)
+    invmass_mask = df[dc.INVMASS].between(dc.invmass_min, dc.invmass_max)
+
+    mask = transition_mask_lead&transition_mask_sub&tracker_mask_lead&tracker_mask_sub&invmass_mask
+
+    return df[mask]
 
 
 def custom_cuts(
