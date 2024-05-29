@@ -143,6 +143,8 @@ def custom_cuts(
                 mask &= (et_sub < et_cuts[1][1])
         else:
             # otherwise you're just providing minimum values for both electrons
+            n_events = sum(mask)
+            print(n_events - sum(mask & (et_lead > et_cuts[0]) & (et_sub > et_cuts[1])))
             mask = mask & (et_lead > et_cuts[0]) & (et_sub > et_cuts[1])
 
     if r9_cuts:
