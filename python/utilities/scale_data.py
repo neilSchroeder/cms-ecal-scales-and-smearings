@@ -120,7 +120,7 @@ def apply(arg):
     et_lead = data[dc.E_LEAD] / np.cosh(data[dc.ETA_LEAD])
     et_lead_mask = et_lead > 80
     lead_non_lin_unc = np.multiply(np.add(et_lead_mask * 0.0001, (~et_lead_mask)*0.0005), lead_scales)
-    lead_err = np.sqrt(np.pow(lead_non_lin_unc,2) + np.pow(lead_err,2))
+    lead_err = np.sqrt(np.power(lead_non_lin_unc,2) + np.power(lead_err,2))
     lead_scales_up = np.add(lead_scales,lead_err)
     lead_scales_down = np.subtract(lead_scales, lead_err)
 
@@ -129,7 +129,7 @@ def apply(arg):
     et_sub = data[dc.E_SUB] / np.cosh(data[dc.ETA_SUB])
     et_sub_mask = et_sub > 80
     sub_non_lin_unc = np.multiply(np.add(et_sub_mask * 0.0001, (~et_sub_mask)*0.0005), sub_scales)
-    sub_err = np.sqrt(np.pow(sub_non_lin_unc,2) + np.pow(sub_err,2))
+    sub_err = np.sqrt(np.power(sub_non_lin_unc,2) + np.power(sub_err,2))
     sub_scales_up = np.add(sub_scales,sub_err)    
     sub_scales_down = np.subtract(sub_scales, sub_err)
 
