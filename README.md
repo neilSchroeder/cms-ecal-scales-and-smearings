@@ -467,9 +467,13 @@ If you'd like to re-work the loss function you can do so in [minimize.py](https:
 [table of contents](#table-of-contents)
 
 
-### New Plot Style
+### New Plots
 
 [table of contents](#table-of-contents)
+
+#### New Plot Title
+
+Simply add a new entry to the 'annot' dictionary in [constant_classes.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L328). The key should be the name you provide in your pyval config file, the title must be a string. If you want to use special LaTeX characters you must use a [raw string](https://realpython.com/python-raw-strings/).
 
 
 ## Credit
