@@ -114,7 +114,7 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     axes[0].invert_yaxis()
     # set z axis limits to 0.001 to 1.001
     new_weights = np.subtract(1, np.divide(d_hist,m_hist).T)
-    sns.heatmap(new_weights, ax=axes[1], cmap='viridis', square=True, vmin=-1e-10, vmax=1e-10)
+    sns.heatmap(new_weights, ax=axes[1], cmap='viridis', square=True, vmin=-1e-11, vmax=1e-11)
     axes[1].set_title('1 - Data / Weighted MC')
     axes[1].set_xlabel('Y(Z)')
     axes[1].set_ylabel('Pt(Z)')

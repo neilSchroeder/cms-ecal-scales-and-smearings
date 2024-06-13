@@ -271,6 +271,7 @@ def extract_cats(
             
             # gain mask should be all true if gain is not specified
             gain_mask = np.ones(len(data), dtype=bool)
+            print(cat1)
             if cat1[dc.i_gain] != dc.empty:
                 # possible gain values are 12, 6, 1
                 # if gain is 12, then gainSeedSC is 0
