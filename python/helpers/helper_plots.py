@@ -33,10 +33,6 @@ def get_systematic_uncertainty(bins, data, data_up, data_down):
         data: data values
         data_up: data values with systematic uncertainty up
         data_down: data values with systematic uncertainty down
-        mc: MC values
-        mc_up: MC values with systematic uncertainty up
-        mc_down: MC values with systematic uncertainty down
-        mc_weights: MC weights
     ----------
     Returns:
         ret: array of uncertainties
