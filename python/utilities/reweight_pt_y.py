@@ -113,7 +113,7 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     axes[1].set_xlabel('Y(Z)')
     axes[1].set_ylabel('Pt(Z)')
     plt.tight_layout()
-    plt.savefig(f'{ss_config.output_dir}/weights_{basename}.png')
+    plt.savefig(f'{ss_config.DEFAULT_WRITE_FILES_PATH}/weights_{basename}.png')
     
     return write_weights(basename, weights, d_hist_x_edges, d_hist_y_edges)
 
