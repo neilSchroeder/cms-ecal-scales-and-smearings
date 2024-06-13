@@ -103,11 +103,11 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     # plot weights, 
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     sns.heatmap(weights.T, ax=axes[0], cmap='viridis', square=True)
-    axes[0].set_title('Data')
+    axes[0].set_title('Data/ Unweighted MC')
     axes[0].set_xlabel('Y(Z)')
     axes[0].set_ylabel('Pt(Z)')
     sns.heatmap(np.divide(d_hist,m_hist).T, ax=axes[1], cmap='viridis', square=True)
-    axes[1].set_title('MC')
+    axes[1].set_title('Data / Weighted MC')
     axes[1].set_xlabel('Y(Z)')
     axes[1].set_ylabel('Pt(Z)')
     plt.tight_layout()
