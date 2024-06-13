@@ -9,6 +9,7 @@ from scipy.optimize import minimize as minz
 import python.helpers.helper_minimizer as helper_minimizer
 import python.plotters.plot_cats as plotter
 from python.classes.constant_classes import DataConstants as dc
+from python.utilities import data_loader
 
 __num_scales__ = 0
 __num_smears__ = 0
@@ -108,7 +109,7 @@ def minimize(data, mc, cats_df, args):
     print("[INFO][python/nll] extracting lists from category definitions")
 
     #extract the categories
-    __ZCATS__ = helper_minimizer.extract_cats(data, mc, cats_df, 
+    __ZCATS__ = data_loader.extract_cats(data, mc, cats_df, 
                                               num_scales=__num_scales__, num_smears=__num_smears__, 
                                               **args
                                               )
