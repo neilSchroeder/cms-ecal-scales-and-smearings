@@ -94,7 +94,9 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     weights = np.divide(d_hist, m_hist)
     weights /= np.sum(weights)
 
-    m_hist, m_hist_x_edges, m_hist_y_edges = np.histogram2d(y_mc, zpt_mc, [yz_bins,ptz_bins], weights=weights)
+    # find a weight for each entry in the data
+    event_weights = np.array([weights[np.digitize(y_data, m_hist_y_edges)-1, np.digitize(zpt_data, m_hist_x_edges)-1] for y_data, zpt_data in zip(y_data, zpt_data)])
+    m_hist, m_hist_x_edges, m_hist_y_edges = np.histogram2d(y_mc, zpt_mc, [yz_bins,ptz_bins], weights=event_weights)
     m_hist /= np.sum(m_hist)
 
     # plot data/mc before and after reweighting
