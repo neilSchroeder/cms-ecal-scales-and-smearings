@@ -8,6 +8,7 @@ from python.classes.constant_classes import DataConstants as dc
 from python.utilities.write_files import write_weights
 
 from python.classes.config_class import SSConfig
+import seaborn as sns
 ss_config = SSConfig()
 
 def get_zpt(df):
@@ -92,6 +93,25 @@ def derive_pt_y_weights(df_data, df_mc, basename):
 
     weights = np.divide(d_hist, m_hist)
     weights /= np.sum(weights)
+
+    m_hist, m_hist_x_edges, m_hist_y_edges = np.histogram2d(y_mc, zpt_mc, [yz_bins,ptz_bins], weights=weights)
+    m_hist /= np.sum(m_hist)
+
+    # plot data/mc before and after reweighting
+    import matplotlib.pyplot as plt
+
+    # plot weights, 
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    sns.heatmap(weights.T, ax=axes[0], cmap='viridis', square=True)
+    axes[0].set_title('Data')
+    axes[0].set_xlabel('Y(Z)')
+    axes[0].set_ylabel('Pt(Z)')
+    sns.heatmap(np.divide(d_hist,m_hist).T, ax=axes[1], cmap='viridis', square=True)
+    axes[1].set_title('MC')
+    axes[1].set_xlabel('Y(Z)')
+    axes[1].set_ylabel('Pt(Z)')
+    plt.tight_layout()
+    plt.show()
     
     return write_weights(basename, weights, d_hist_x_edges, d_hist_y_edges)
 
@@ -125,7 +145,8 @@ def add_weights_to_df(arg):
         
 def add_pt_y_weights(df, weight_file):
     """
-    Adds the pt x y weight as a column to the df 
+    Adds the pt x y weight as a column to the df.
+    Includes a plot of data/mc before and after reweighting.
     ----------
     Args:
         df: dataframe to add the weights to
