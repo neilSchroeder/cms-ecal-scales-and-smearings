@@ -289,7 +289,7 @@ def extract_cats(
                                         &data[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
             
             df = data[eta_mask&r9_mask&et_mask&gain_mask]
-            mass_list_data = np.array(df[cc.iNVMASS])
+            mass_list_data = np.array(df[dc.INVMASS])
 
             eta_mask = np.ones(len(mc), dtype=bool)
             if cat1[cc.i_eta_min] != dc.empty:
@@ -325,7 +325,7 @@ def extract_cats(
                                         &mc[dc.GAIN_LEAD].between(gainlow2,gainhigh2))
 
             df = mc[eta_mask&r9_mask&et_mask&gain_mask]
-            mass_list_mc = np.array(df[cc.iNVMASS].values, dtype=np.float32)
+            mass_list_mc = np.array(df[dc.INVMASS].values, dtype=np.float32)
             weight_list_mc = np.array(df['pty_weight'].values, dtype=np.float32) if 'pty_weight' in df.columns else np.ones(len(mass_list_mc))
             # MC needs to be over smeared in order to have good "resolution" on the scales and smearings
             while len(mass_list_mc) < max(50*len(mass_list_data),50000) and len(mass_list_mc) > 100 and len(mass_list_data) > 10 and len(mass_list_mc) < 1000000:

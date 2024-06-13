@@ -108,7 +108,7 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     sns.heatmap(old_weights, ax=axes[0], cmap='viridis', square=True, vmin=0.995, vmax=1.)
     axes[0].set_title('1 - Data / Unweighted MC')
     axes[0].set_xlabel('Y(Z)')
-    axes[0].set_ylabel('Pt(Z)')
+    axes[0].set_ylabel('Pt(Z) [GeV]')
     # make full width of plot
     axes[0].set_aspect('auto')
     axes[0].invert_yaxis()
@@ -117,7 +117,7 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     sns.heatmap(new_weights, ax=axes[1], cmap='viridis', square=True, vmin=-1e-11, vmax=1e-11)
     axes[1].set_title('1 - Data / Weighted MC')
     axes[1].set_xlabel('Y(Z)')
-    axes[1].set_ylabel('Pt(Z)')
+    axes[1].set_ylabel('Pt(Z) [GeV]')
     axes[1].set_aspect('auto')
     axes[1].invert_yaxis()
     plt.tight_layout()
