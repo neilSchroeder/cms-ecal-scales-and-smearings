@@ -105,7 +105,7 @@ def derive_pt_y_weights(df_data, df_mc, basename):
     # plot weights, 
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     old_weights = np.subtract(1, weights.T)
-    sns.heatmap(old_weights, ax=axes[0], cmap='viridis', square=True, vmin=0.95, vmax=1.)
+    sns.heatmap(old_weights, ax=axes[0], cmap='viridis', square=True, vmin=0.995, vmax=1.)
     axes[0].set_title('1 - Data / Unweighted MC')
     axes[0].set_xlabel('Y(Z)')
     axes[0].set_ylabel('Pt(Z)')
