@@ -70,13 +70,14 @@ def get_var(df, info, _isData=True):
                     r9_cuts=(bounds_r9_lead, bounds_r9_sub))
     
     # plot all variables in grid
-    print(df_with_cuts.describe(include='all'))
+    described_df = df_with_cuts.describe(include='all')
     # sns.pairplot(df_with_cuts, diag_kind='hist')
 
     if var_key == dc.INVMASS:
         # check if systematics available
         
         if _isData:
+            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_data.csv", sep='\t', index=True)
             if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
                 # there's no systematics, so just return the data
                 return np.array(df[var_key].values)
@@ -84,7 +85,8 @@ def get_var(df, info, _isData=True):
             return [np.array(df_with_cuts[var_key].values),
                     np.array(df_with_cuts[pvc.KEY_INVMASS_UP].values),
                     np.array(df_with_cuts[pvc.KEY_INVMASS_DOWN].values)]
-
+        else:
+            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_mc.csv", sep='\t', index=True)
         # otherwise return mc
         return [np.array(df_with_cuts[var_key].values),
                 np.array(df_with_cuts[pvc.KEY_PTY].values)]

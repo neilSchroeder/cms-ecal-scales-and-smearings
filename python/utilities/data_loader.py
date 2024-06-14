@@ -135,6 +135,8 @@ def custom_cuts(
     if et_cuts:
         et_lead = np.divide(df[dc.E_LEAD].values, np.cosh(df[dc.ETA_LEAD].values))
         et_sub = np.divide(df[dc.E_SUB].values, np.cosh(df[dc.ETA_SUB].values))
+        df["et_lead"] = et_lead
+        df["et_sub"] = et_sub
         if isinstance(et_cuts[0], tuple):
             # this means cuts on both leading and subleading electrons
             if et_cuts[0][0] != -1:
