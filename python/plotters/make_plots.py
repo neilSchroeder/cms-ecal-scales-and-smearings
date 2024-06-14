@@ -6,6 +6,7 @@ from python.classes.constant_classes import PyValConstants as pvc
 from python.classes.constant_classes import DataConstants as dc
 import python.plotters.plots as plots
 from python.utilities.data_loader import custom_cuts
+import seaborn as sns
 
 config = SSConfig()
 pvc.plotting_functions = {
@@ -43,7 +44,7 @@ def get_var(df, info, _isData=True):
     ----------
     """
 
-     # unpack the info
+    # unpack the info
     bounds_eta_lead = get_tuple(info[pvc.ETA_LEAD])
     bounds_r9_lead = get_tuple(info[pvc.R9_LEAD])
     bounds_et_lead = get_tuple(info[pvc.ET_LEAD])
@@ -51,18 +52,26 @@ def get_var(df, info, _isData=True):
     bounds_r9_sub = get_tuple(info[pvc.R9_SUB])
     bounds_et_sub = get_tuple(info[pvc.ET_SUB])
 
-     # determine what variable we're plotting
+    # determine what variable we're plotting
     var_key = None
     if info["variable"] not in df.columns:
-         # gonna have to do something fancier here
+        # gonna have to do something fancier here
         raise ValueError("variable not in dataframe")
     else:
-        var_key = info["variable"]
+        var_key = info["variable"] 
 
-    df_with_cuts = custom_cuts(df,
-                     eta_cuts=(bounds_eta_lead, bounds_eta_sub),
-                     et_cuts=(bounds_et_lead, bounds_et_sub),
-                     r9_cuts=(bounds_r9_lead, bounds_r9_sub))
+    # apply the cuts
+    print(f"Lead eta: {bounds_eta_lead}, Lead r9: {bounds_r9_lead}, Lead et: {bounds_et_lead}")
+    print(f"Sub eta: {bounds_eta_sub}, Sub r9: {bounds_r9_sub}, Sub et: {bounds_et_sub}")
+    df_with_cuts = custom_cuts(df, 
+                    inv_mass_cuts=(80, 100),
+                    eta_cuts=(bounds_eta_lead, bounds_eta_sub),
+                    et_cuts=(bounds_et_lead, bounds_et_sub),
+                    r9_cuts=(bounds_r9_lead, bounds_r9_sub))
+    
+    # plot all variables in grid
+    print(df_with_cuts.describe(include='all'))
+    # sns.pairplot(df_with_cuts, diag_kind='hist')
 
     if var_key == dc.INVMASS:
         # check if systematics available
