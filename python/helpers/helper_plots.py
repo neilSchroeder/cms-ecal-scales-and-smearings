@@ -24,7 +24,7 @@ def get_bin_uncertainties(bins, values, weights):
 
     return np.array(ret)
 
-def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_weights):
+def get_systematic_uncertainty(bins, data, data_up, data_down):
     """
     Calculates the systematic uncertainties for data and MC
     ----------
@@ -48,7 +48,6 @@ def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_weights):
     d_up = d_up*sum(d)/sum(d_up)
     d_down, _ = np.histogram(data_down, bins=d_bins)
     d_down = d_down*sum(d)/sum(d_down)
-    m, m_bins = np.histogram(mc, bins=bins, range=[dc.MIN_INVMASS,dc.MAX_INVMASS], weights=mc_weights)
 
     diff_up_data = np.abs(np.subtract(d, d_up))
     diff_down_data = np.abs(np.subtract(d, d_down))
@@ -56,3 +55,42 @@ def get_systematic_uncertainty(bins, data, data_up, data_down, mc, mc_weights):
     max_data = np.maximum(diff_up_data, diff_down_data)
 
     return max_data
+
+
+def get_chi2(data, data_err, mc, mc_err):
+    """
+    Calculates the chi2 of data and MC
+    ----------
+    Args:
+        data: data values
+        data_err: data uncertainties
+        mc: MC values
+        mc_err: MC uncertainties
+    ----------
+    Returns:
+        ret: chi2
+    ----------
+    """
+
+    return np.sum(np.power(np.divide(np.subtract(data, mc), np.sqrt(np.power(data_err, 2) + np.power(mc_err, 2))), 2))
+
+
+def get_reduced_chi2(data, data_err, mc, mc_err):
+    """
+    Calculates the chi2 and ndf of data and MC
+    ----------
+    Args:
+        data: data values
+        data_err: data uncertainties
+        mc: MC values
+        mc_err: MC uncertainties
+    ----------
+    Returns:
+        ret: chi2, ndf
+    ----------
+    """
+
+    chi2 = get_chi2(data, data_err, mc, mc_err)
+    ndf = len(data) - 1
+
+    return chi2/ndf

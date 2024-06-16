@@ -11,6 +11,7 @@ import uproot3 as up
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
+from python.utilities.data_loader import get_dataframe
 import python.utilities.write_files as write_files
 config = SSConfig()
 
@@ -94,28 +95,10 @@ def load_dataframes(files, args):
     #import data and mc to dataframes
     print("[INFO] importing data and mc to dataframes (this might take a bit) ...")
 
-    # specifying data types allows for faster loading and less memory usage
-    data_types = {
-            dc.R9_LEAD: np.float32,
-            dc.R9_SUB: np.float32,
-            dc.ETA_LEAD: np.float32,
-            dc.ETA_SUB: np.float32,
-            dc.E_LEAD: np.float32,
-            dc.E_SUB: np.float32,
-            dc.PHI_LEAD: np.float32,
-            dc.PHI_SUB: np.float32,
-            dc.INVMASS: np.float32,
-            dc.RUN: np.int32,
-            dc.GAIN_LEAD: np.int16,
-            dc.GAIN_SUB: np.int16,
-            }
-
     if root_files[0].find("data") != -1:
-        data = pd.read_csv(root_files[0], sep='\t',dtype=data_types)
-        mc = pd.read_csv(root_files[1], sep='\t',dtype=data_types)
+        data, mc = get_dataframe([root_files[0]]), get_dataframe([root_files[1]])
     elif root_files[1].find("data") != -1:
-        data = pd.read_csv(root_files[1], sep='\t',dtype=data_types)
-        mc = pd.read_csv(root_files[0], sep='\t',dtype=data_types)
+        data, mc = get_dataframe([root_files[1]]), get_dataframe([root_files[0]])
     else:
         print("[ERROR] could not find a data file to open")
         return
@@ -127,31 +110,8 @@ def load_dataframes(files, args):
         data = data.head(10000)
         mc = mc.head(10000)
 
-    #clean the data a bit before sending back
-
-    data[dc.ETA_LEAD] = np.abs(data[dc.ETA_LEAD])
-    data[dc.ETA_SUB] = np.abs(data[dc.ETA_SUB])
-
-    transition_mask_lead = ~data[dc.ETA_LEAD].between(dc.MAX_EB, dc.MIN_EE)
-    transition_mask_sub = ~data[dc.ETA_SUB].between(dc.MAX_EB, dc.MIN_EE)
-    tracker_mask_lead = ~data[dc.ETA_LEAD].between(dc.MAX_EE, dc.TRACK_MAX)
-    tracker_mask_sub = ~data[dc.ETA_SUB].between(dc.MAX_EE, dc.TRACK_MAX)
-    invmass_mask = data[dc.INVMASS].between(dc.invmass_min, dc.invmass_max)
-    mask = transition_mask_lead&transition_mask_sub&tracker_mask_lead&tracker_mask_sub&invmass_mask
-    data = data.loc[mask]
-
-    mc[dc.ETA_LEAD] = np.abs(mc[dc.ETA_LEAD])
-    mc[dc.ETA_SUB] = np.abs(mc[dc.ETA_SUB])
-
-    transition_mask_lead = ~mc[dc.ETA_LEAD].between(dc.MAX_EB, dc.MIN_EE)
-    transition_mask_sub = ~mc[dc.ETA_SUB].between(dc.MAX_EB, dc.MIN_EE)
-    tracker_mask_lead = ~mc[dc.ETA_LEAD].between(dc.MAX_EE, dc.TRACK_MAX)
-    tracker_mask_sub = ~mc[dc.ETA_SUB].between(dc.MAX_EE, dc.TRACK_MAX)
-    invmass_mask = mc[dc.INVMASS].between(dc.invmass_min, dc.invmass_max)
-    mask = transition_mask_lead&transition_mask_sub&tracker_mask_lead&tracker_mask_sub&invmass_mask
-    mc = mc.loc[mask]
-
     return data, mc
+
 
 def write_results(args, scales_smears):
     """

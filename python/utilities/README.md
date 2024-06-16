@@ -6,6 +6,8 @@ These are utilities that work together to make the framework run. They are heavi
 | === | === |
 | `condor_handler.py` | Functions used when running `pymin.py` with the `--condor` option. Writes condor files and submits a job to condor. |
 | --- | --- |
+| `data_loader.py` | Functions for loading root files into dataframes and manipulating dataframes. |
+| --- | --- |
 | `divide_by_run.py` | Divides the data into run bins of at least 10,000 events. |
 | --- | --- |
 | `minimizer.py` | The main utility of the framework. This is the utility that is used to run the minimization process. |

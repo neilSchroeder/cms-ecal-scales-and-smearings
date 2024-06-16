@@ -220,7 +220,7 @@ def plot_style_paper(data, mc, plot_title, **options):
     # include syst uncertainties if they exist
     syst_unc = []
     if options['syst']:
-        syst_unc = helper_plots.get_systematic_uncertainty(h_bins, data, data_up, data_down, mc, mc_weights)
+        syst_unc = helper_plots.get_systematic_uncertainty(h_bins, data, data_up, data_down,)
         err = np.sqrt(np.add(np.power(y_err_mc, 2), np.power(syst_unc, 2)))
         mc_err_max, mc_err_min = np.add(h_mc, err), np.subtract(h_mc, err)
         y_err_ratio = np.divide(y_err_data, h_data)
@@ -401,6 +401,8 @@ def plot_style_paper(data, mc, plot_title, **options):
     fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.pdf")
 
     plt.close(fig)
+
+    return helper_plots.get_reduced_chi2(h_data, h_mc, y_err_data, y_err_mc)
 
 
 def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):

@@ -270,12 +270,14 @@ def main():
     print(f"[INFO] importing categories from {args.catsFile}")
     cats_df = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
 
-    if args._kClosure:
+    if args._kClosure or args.smearings is not None:
         if not args._kTestMethodAccuracy:
             if args.smearings is None:
                 print("[ERROR] you have requested a closure test, but have not provided a smearings file")
                 print("[ERROR] please resubmit with a --smearings argument")
                 return
+            print(f"[WARNING] applying {args.smearings} to the mc")
+            print(f"[WARNING] please make sure this was intentional")
             mc = smear_mc.smear(mc, args.smearings)
 
     # derive scales and smearings
