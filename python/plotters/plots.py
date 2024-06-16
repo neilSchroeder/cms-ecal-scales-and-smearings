@@ -204,6 +204,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         # probably failed because no weights (unusual)
         y_err_mc = np.sqrt(h_mc)
     y_err_ratio = np.array([])
+    y_err_ratio_stat_only = np.array([])
 
     mc_err_max = np.add(h_mc,y_err_mc)
     mc_err_min = np.subtract(h_mc,y_err_mc)
@@ -215,6 +216,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         err = np.sqrt(np.add(np.power(y_err_mc, 2), np.power(syst_unc, 2)))
         mc_err_max, mc_err_min = np.add(h_mc, err), np.subtract(h_mc, err)
         y_err_ratio = np.divide(y_err_data, h_data)
+
 
     # define figure
     rows = 2
