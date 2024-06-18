@@ -49,16 +49,6 @@ class PyValConstants():
     i_plot_bounds_et_lead = 7
     i_plot_bounds_et_sub = 8
     i_plot_results = 9
-    
-    plotting_functions = {}
-
-    def get_plotting_function(self, style):
-        if style in self.plotting_functions.keys():
-            return self.plotting_functions[style]
-        else:
-            print(f'[ERROR] style {style} does not have a corresponding plotting function')
-            print(f'[ERROR] please either define it or check your config file')
-            return None
         
 
 class DataConstants():
@@ -253,6 +243,16 @@ class PlottingConstants():
     HIST_MAX = 100
     RATIO_MIN = 0.5
     RATIO_MAX = 1.5
+
+    plotting_functions = {}
+
+    def get_plotting_function(self, style):
+        if style in self.plotting_functions.keys():
+            return self.plotting_functions[style]
+        else:
+            print(f'[ERROR] style {style} does not have a corresponding plotting function')
+            print(f'[ERROR] please either define it or check your config file')
+            return None
 
     PAPER_STYLE = paper_style
     BW_CB_FIT_STYLE = bw_cb_fit_style

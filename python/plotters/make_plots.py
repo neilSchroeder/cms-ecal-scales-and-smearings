@@ -2,7 +2,10 @@ import pandas as pd
 import numpy as np
 
 from python.classes.config_class import SSConfig
-from python.classes.constant_classes import PyValConstants as pvc
+from python.classes.constant_classes import (
+    PyValConstants as pvc,
+    PlottingConstants as pc,
+)
 from python.classes.constant_classes import DataConstants as dc
 from python.plotters.plots import(
     plot_style_bw_cb_fit,
@@ -14,7 +17,7 @@ from python.utilities.data_loader import custom_cuts
 import seaborn as sns
 
 config = SSConfig()
-pvc.plotting_functions = {
+pc.plotting_functions = {
     'crossCheckMC': plot_style_validation_mc,
     'fit': plot_style_bw_cb_fit,
     'paper': plot_style_paper,
@@ -121,18 +124,21 @@ def plot(data, mc, cats, **options):
     df_results[pvc.i_plot_results] = None
 
     # loop over cats
-    plotting_class = pvc()
     results = []
     for i,row in df_cats.iterrows():
         print(row[pvc.i_plot_name])
-        val = plotting_class.get_plotting_function(row[pvc.i_plot_style])(  # gets the plotting function
-            get_var(data, row[pvc.i_plot_var::]),  # gets events from data to plot
-            get_var(mc, row[pvc.i_plot_var::], _isData=False),  # gets events from mc to plot
-            row[pvc.i_plot_name],  # plot title
-            **options,
-            syst= (row[pvc.i_plot_var] == dc.INVMASS and 'invmass_up' in data.columns and 'invmass_down' in data.columns),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
-            #no_ratio=True
-            )
+        # determine what plot style and plotting function to use
+        plotting_class = pc.get_plotting_function(row[pvc.i_plot_style])
+        # run the plotting function
+        val = plotting_class(
+                get_var(data, row[pvc.i_plot_var::]),  # gets events from data to plot
+                get_var(mc, row[pvc.i_plot_var::], _isData=False),  # gets events from mc to plot
+                row[pvc.i_plot_name],  # plot title
+                **options,
+                syst= (row[pvc.i_plot_var] == dc.INVMASS and 'invmass_up' in data.columns and 'invmass_down' in data.columns),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
+                #no_ratio=True
+        )
+        
         df_results.loc[i, pvc.i_plot_results] = val
 
     # save the results
