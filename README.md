@@ -30,6 +30,7 @@ A new python framework for deriving the residual scales and additional smearings
     - [New Loss Function](#new-loss-function)
     - [New Z Categories](#new-z-categories)
     - [New Plot Style](#new-plot-style)
+    - [New Plot Title](#new-plot-title)
 - [Credit](#credit)
 - [Contact](#contact)
 
@@ -471,9 +472,24 @@ If you'd like to re-work the loss function you can do so in [minimize.py](https:
 
 [table of contents](#table-of-contents)
 
+#### New Plot Style
+
+[table of contents](#table-of-contents)
+
+To add a new style of plot, for the sake of example NewStyle, you will need to do the following:
+- create a new style file under python/plotters/plot_styles. If the style is called "New" then make a file called `new_style.py`. You may want to use `paper_style.py` as a template. It is the most detailed example.
+- add your plotting function to [plots.py]() with a name like `plot_style_new()`, do not forget to import the new style at the beginning of the file. 
+- In [make_plots.py]()
+    - import the style
+    - add the style as a new entry to `pc.plotting_functions`
+    
+
+
 #### New Plot Title
 
-Simply add a new entry to the 'annot' dictionary in [constant_classes.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/classes/constant_classes.py?ref_type=heads#L328). The key should be the name you provide in your pyval config file, the title must be a string. If you want to use special LaTeX characters you must use a [raw string](https://realpython.com/python-raw-strings/).
+[table of contents](#table-of-contents)
+
+Simply add a new entry to the 'TITLE_ANOTTATION' dictionary in [plot_style.py](https://gitlab.cern.ch/nschroed/cms-ecal-scales-and-smearings/-/blob/master/python/plotters/plot_styles/plot_style.py). The key should be the name you provide in your pyval config file, the title must be a string. If you want to use special LaTeX characters you must use a [raw string](https://realpython.com/python-raw-strings/).
 
 
 ## Credit

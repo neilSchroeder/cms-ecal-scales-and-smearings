@@ -155,7 +155,7 @@ def plot_style_paper(data, mc, plot_title, **options):
         None
     ---------------------------------------
     """
-    style = pc.paper_style
+    style = pc.PAPER_STYLE
     print("plotting {}".format(plot_title))
 
     # systematics
@@ -193,8 +193,17 @@ def plot_style_paper(data, mc, plot_title, **options):
     fit_params_mc = None
     if options['_kFit']:
         # fit the data
-        fit_params_data = fit_bw_cb(mids, h_data, [1.424, 1.86, np.average(mids, weights=h_data)-91.188, 1.])
-        fit_params_mc = fit_bw_cb(mids, h_mc, [1.424, 1.86, np.average(mids, weights=h_mc)-91.188, 1.])
+        avg_data = np.average(mids, weights=h_data)
+        avg_mc = np.average(mids, weights=h_mc)
+        sigma_data = np.sqrt(np.average(np.power(mids-avg_data, 2), weights=h_data))
+        sigma_mc = np.sqrt(np.average(np.power(mids-avg_mc, 2), weights=h_mc))
+        fit_params_data = fit_bw_cb(mids, h_data, [1.424, 1.86, avg_data-91.188, sigma_data])
+        fit_params_mc = fit_bw_cb(mids, h_mc, [1.424, 1.86, avg_mc-91.188, sigma_mc])
+
+        if options['_kPlotFit']:
+            # plot the fits
+            plot_style_bw_cb_fit(h_data, fit_params_data['fit_hist'], h_bins, f"{plot_title}_data_with_fit", fit_title="Fit", data_title="Data", tag=options['tag'])
+            plot_style_bw_cb_fit(h_mc, fit_params_mc['fit_hist'], h_bins, f"{plot_title}_mc_with_fit", fit_title="Fit", data_title="MC", tag=options['tag'])
 
     # calculate errors
     y_err_data = np.sqrt(h_data)
@@ -328,9 +337,9 @@ def plot_style_paper(data, mc, plot_title, **options):
     # ratio pad
     if 'no_ratio' in options.keys():
         axs[0].set_xlabel(style.labels['x_axis']['label'],
-                          ha=style.labels['x_axis']['ha'],
+                            ha=style.labels['x_axis']['ha'],
                         #   fontsize=style.labels['x_axis']['fontsize'],
-                          x=1.)
+                            x=1.)
     else:
         axs[1].plot(mids, 
                     [1. for x in mids], 
@@ -387,7 +396,6 @@ def plot_style_paper(data, mc, plot_title, **options):
         axs[0].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
         # set x label size
 
-
     # save fig
     fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.png")
     fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.pdf")
@@ -396,3 +404,99 @@ def plot_style_paper(data, mc, plot_title, **options):
 
     return helper_plots.get_reduced_chi2(h_data, h_mc, y_err_data, y_err_mc)
 
+
+def plot_style_bw_cb_fit(hist, fit, bins, plot_title, **options):
+    """
+    Plot a hist with its BW conv. CB fit.
+
+    Args:
+        hist: data histogram
+        fit: y values of fit (BW conv. CB ::: fit_params['fit_hist'])
+        plot_title: title of plot
+        options: dictionary of options
+            - tag: str, tag for plot name
+    """
+
+    style = pc.BW_CB_FIT_STYLE
+    print("plotting {}".format(plot_title))
+
+
+    # histogram data
+    bin_width = round(bins[1] - bins[0], 4)
+    marker_size = 20*bin_width
+    mids = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
+    mids_full = mids.copy()
+    mids_full[0], mids_full[-1] = pc.HIST_MIN, pc.HIST_MAX
+    x_err = (bins[1]-bins[0])/2
+
+    # calculate errors
+    y_err_data = np.sqrt(hist)
+
+    # define figure
+    fig,axs = plt.subplots(
+        nrows=2, 
+        ncols=1, 
+        figsize=style.fig['size'],
+        sharex=style.fig['sharex'],
+        gridspec_kw={'height_ratios': style.fig['subplot_ratio']}
+        )
+    
+    fig.subplots_adjust(
+        left=style.subplot['left'], 
+        right=style.subplot['right'], 
+        top=style.subplot['top'], 
+        bottom=style.subplot['bottom'],
+        hspace=None if 'no_ratio' in options.keys() else style.subplot['hspace'],
+    )
+
+    # top plot
+
+    # plot the hist
+    axs[0].errorbar(mids, hist, # plot data
+            xerr=x_err, yerr=y_err_data, 
+            label = options['data_title'], 
+            color=style.colors['hist'],
+            linestyle=style.line_styles['hist'], 
+            marker='o',
+            markersize=marker_size, 
+            capsize=0., 
+            capthick=0.)
+
+    axs[0].plot(mids, fit, # plot fit
+            label = options['fit_title'], 
+            color=style.colors['fit'],
+            linestyle=style.line_styles['fit'],
+            linewidth=2, 
+            )
+    
+    axs[1].plot(mids,
+                [1. for x in mids], 
+                linestyle='dashed', 
+                color=style.colors['hist'], 
+                alpha=0.5)
+    axs[1].plot(mids, 
+                np.divide(hist, fit), 
+                label=style.labels['ratio'], 
+                linestyle='None',
+                color=style.colors['hist'],
+                marker='o',
+                markersize=marker_size,)
+    
+    axs[0].set_ylim(bottom=0, top=np.max(hist)*style.y_scale)
+    axs[0].set_ylabel("Events/{x:.3f} GeV".format(x=bin_width), horizontalalignment='right',y=1., labelpad=5, fontsize=14)
+    axs[0].grid(which='major',axis='both')
+    axs[0].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+    axs[0].yaxis.offsetText.set_position(style.sci_notation_offset)
+    axs[0].legend(loc=style.legend['loc'], fontsize=style.legend['fontsize'])
+    axs[1].legend(loc=style.legend['loc'], fontsize=style.legend['fontsize'])
+
+    axs[1].set_ylabel(style.labels['ratio'],horizontalalignment='right', y=1., fontsize=14)
+    axs[1].set_xlabel(style.labels['x_axis']['label'],horizontalalignment=style.labels['x_axis']['ha'], x=1., fontsize=style.labels['x_axis']['fontsize'])
+    axs[1].set_ylim(pc.RATIO_MIN, pc.RATIO_MAX)
+    axs[1].set_xlim(pc.HIST_MIN, pc.HIST_MAX)
+    axs[1].grid(which='major',axis='both')
+    axs[0].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+    # save fig
+    fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.png")
+    fig.savefig(f"{plot_dir}{style.style}{options['tag']}_{plot_title}.pdf")

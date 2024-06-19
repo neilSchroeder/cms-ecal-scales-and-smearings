@@ -14,6 +14,7 @@ import pandas as pd
 #project functions
 from python.helpers.helper_pyval import (
     extract_files,
+    check_args,
     # get_dataframe,
 )
 from python.utilities.data_loader import get_dataframe
@@ -71,13 +72,13 @@ def main():
             "--data-title",
             help="title used in plots for the data",
             dest="data_title",
-            default=None,
+            default="Data",
             )
     parser.add_argument(
             "--mc-title",
             help="title used in plots for the mc",
             dest="mc_title",
-            default=None,
+            default="MC",
             )
     parser.add_argument(
             "--lumi-label",
@@ -119,12 +120,19 @@ def main():
             action="store_true",
     )
     parser.add_argument(
-            "--debug",
-            default=False,
-            action="store_true",
-            dest="_kDebug",
-            help="turn on debug mode",
-        )
+        "--plot-fit",
+        help="Plot the fits, don't just pull numbers",
+        dest="_kPlotFit",
+        default=False,
+        action="store_true"
+    )
+    parser.add_argument(
+        "--debug",
+        default=False,
+        action="store_true",
+        dest="_kDebug",
+        help="turn on debug mode",
+    )
 
     args = parser.parse_args()
 
@@ -138,6 +146,8 @@ def main():
     print(40*"#")
     print(40*"#")
 
+    check_args(args)
+
     #open input file and prep our variables and such
     dict_config = extract_files(args.input_file) 
 
@@ -150,7 +160,9 @@ def main():
                                 debug = args._kDebug)
         if len(dict_config[pvc.KEY_SC]) > 0:
             print("[INFO] scaling data")
+            print(f"events before scaling: {len(df_data)}")
             df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
+            print(f"events after scaling: {len(df_data)}")
 
     #load and handle mc next
     if len(dict_config[pvc.KEY_MC]) > 0:
@@ -187,6 +199,7 @@ def main():
                 bins=args.bins,
                 tag=args.output_file,
                 _kFit=args._kFit,
+                _kPlotFit=args._kPlotFit,
                 )
     else:
         evaluate_systematics(df_data, df_mc, args.output_file)

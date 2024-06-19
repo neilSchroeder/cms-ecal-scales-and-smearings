@@ -2,17 +2,26 @@ import pandas as pd
 import numpy as np
 
 from python.classes.config_class import SSConfig
-from python.classes.constant_classes import PyValConstants as pvc
+from python.classes.constant_classes import (
+    PyValConstants as pvc,
+    PlottingConstants as pc,
+)
 from python.classes.constant_classes import DataConstants as dc
-import python.plotters.plots as plots
+from python.plotters.plots import(
+    plot_style_bw_cb_fit,
+    plot_style_paper,
+    plot_style_validation_mc,
+)
+
 from python.utilities.data_loader import custom_cuts
 import seaborn as sns
 
 config = SSConfig()
-pvc.plotting_functions = {
-        'paper': plots.plot_style_paper,
-        'crossCheckMC': plots.plot_style_validation_mc
-    }
+pc.plotting_functions = {
+    'crossCheckMC': plot_style_validation_mc,
+    'fit': plot_style_bw_cb_fit,
+    'paper': plot_style_paper,
+}
 
 def get_tuple(this_string):
     """
@@ -30,7 +39,7 @@ def get_tuple(this_string):
     this_string = this_string.split(",")
     return (float(this_string[0]),float(this_string[1]))
 
-def get_var(df, info, _isData=True):
+def get_var(df, info, _isData=True, title=None):
     """
     Gets the variable to plot from the dataframe
     ----------
@@ -77,7 +86,8 @@ def get_var(df, info, _isData=True):
         # check if systematics available
         
         if _isData:
-            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_data.csv", sep='\t', index=True)
+            df_title = "_" + title if title else ""
+            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_data{df_title}.csv", sep='\t', index=True, float_format='%.4f')
             if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
                 # there's no systematics, so just return the data
                 return np.array(df[var_key].values)
@@ -86,7 +96,8 @@ def get_var(df, info, _isData=True):
                     np.array(df_with_cuts[pvc.KEY_INVMASS_UP].values),
                     np.array(df_with_cuts[pvc.KEY_INVMASS_DOWN].values)]
         else:
-            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_mc.csv", sep='\t', index=True)
+            df_title = "_" + title if title else ""
+            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_mc{df_title}.csv", sep='\t', index=True, float_format='%.4f')
         # otherwise return mc
         return [np.array(df_with_cuts[var_key].values),
                 np.array(df_with_cuts[pvc.KEY_PTY].values)]
@@ -109,24 +120,28 @@ def plot(data, mc, cats, **options):
 
     # get constants
     df_cats = pd.read_csv(cats, sep='\t', comment='#')
+    plot_consts = pc()
     # copy categories into a new dataframe
     df_results = df_cats.copy()
     # add a column for the results
     df_results[pvc.i_plot_results] = None
 
     # loop over cats
-    plotting_class = pvc()
     results = []
     for i,row in df_cats.iterrows():
         print(row[pvc.i_plot_name])
-        val = plotting_class.get_plotting_function(row[pvc.i_plot_style])(  # gets the plotting function
-            get_var(data, row[pvc.i_plot_var::]),  # gets events from data to plot
-            get_var(mc, row[pvc.i_plot_var::], _isData=False),  # gets events from mc to plot
-            row[pvc.i_plot_name],  # plot title
-            **options,
-            syst= (row[pvc.i_plot_var] == dc.INVMASS and 'invmass_up' in data.columns and 'invmass_down' in data.columns),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
-            #no_ratio=True
-            )
+        # determine what plot style and plotting function to use
+        plotting_class = plot_consts.get_plotting_function(row[pvc.i_plot_style])
+        # run the plotting function
+        val = plotting_class(
+                get_var(data, row[pvc.i_plot_var::], title=row[pvc.i_plot_name]),  # gets events from data to plot
+                get_var(mc, row[pvc.i_plot_var::], _isData=False, title=row[pvc.i_plot_name]),  # gets events from mc to plot
+                row[pvc.i_plot_name],  # plot title
+                **options,
+                syst= (row[pvc.i_plot_var] == dc.INVMASS and 'invmass_up' in data.columns and 'invmass_down' in data.columns),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
+                #no_ratio=True
+        )
+
         df_results.loc[i, pvc.i_plot_results] = val
 
     # save the results
