@@ -1,0 +1,46 @@
+from collections import namedtuple
+PlotStyle = namedtuple(
+            'PlotStyle',
+            [
+                'style',
+                'binning',
+                'y_scale',
+                'fig',
+                'subplot',
+                'legend',
+                'colors',
+                'line_styles',
+                'labels',
+                'error_bar_style',
+                'sci_notation_offset',
+                'annotations',
+            ]
+    )
+
+TITLE_ANNOTATIONS = {
+    "invMass_Barrel-Barrel": "Barrel-Barrel",
+    "invMass_Barrel-Barrel_lowR9": "Barrel-Barrel\nHigh Brem",
+    "invMass_Barrel-Barrel_highR9": "Barrel-Barrel\nLow Brem",
+    "invMass_Barrel-Endcap": "Barrel-Endcap",
+    "invMass_Barrel-Endcap_lowR9": "Barrel-Endcap\nHigh Brem",
+    "invMass_Barrel-Endcap_highR9": "Barrel-Endcap\nLow Brem",
+    "invMass_Endcap-Endcap": "Endcap-Endcap",
+    "invMass_Endcap-Endcap_lowR9": "Endcap-Endcap\nHigh Brem",
+    "invMass_Endcap-Endcap_highR9": "Endcap-Endcap\nLow Brem",
+    "invMass_lead_Pt-32-40": r"32 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 40 GeV",
+    "invMass_lead_Pt-40-55": r"40 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 55 GeV",
+    "invMass_lead_Pt-55-65": r"55 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 65 GeV",
+    "invMass_lead_Pt-65-90": r"65 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 90 GeV",
+    "invMass_lead_Pt-90-Inf": r"90 GeV $ < \mathbf{p_{T, lead}^{e}}$",
+    "invMass_diag_Pt-32-40": r"32 GeV $ < \mathbf{p_{T}^{e}} < $ 40 GeV",
+    "invMass_diag_Pt-40-55": r"40 GeV $ < \mathbf{p_{T}^{e}} < $ 55 GeV",
+    "invMass_diag_Pt-55-65": r"55 GeV $ < \mathbf{p_{T}^{e}} < $ 65 GeV",
+    "invMass_diag_Pt-65-90": r"65 GeV $ < \mathbf{p_{T}^{e}} < $ 90 GeV",
+    "invMass_diag_Pt-90-Inf": r"90 GeV $ < \mathbf{p_{T}^{e}} $",
+    "invMass_eta0to1-RSTp96-ene50to65": r"$0 < |\eta^{e}| < 1$\\ High Brem\\ $50 < E < 65$ GeV",
+    "invMass_eta0to1-RSTp96-eneBT65": r"$0 < |\eta^{e}| < 1$\\H igh Brem\\ $65 < E$",
+    "invMass_eta2to2p5-RBTp96-ene20to39": r"$2 < |\eta^{e}| < 2.5$\\ Low Brem\\ $20 < E < 39$ GeV",
+    "invMass_eta2to2p5-RBTp96-ene39to50": r"$2 < |\eta^{e}| < 2.5$\\ Low Brem\\ $39 < E < 50$ GeV",
+    "invMass_eta2to2p5-RBTp96-ene50to65": r"$2 < |\eta^{e}| < 2.5$\\ Low Brem\\ $50 < E < 65$ GeV",
+    "invMass_eta2to2p5-RBTp96-eneBT65": r"$2 < |\eta^{e}| < 2.5\\ Low Brem\\ $65 < E$",
+}

@@ -78,7 +78,10 @@ def standard_cuts(df):
     |eta| < 2.5 and !(1.4442 < |eta| < 1.566)
     """
     #masks
+    print(f"number of events before cuts: {len(df)}")
     mask = np.ones(len(df), dtype=bool)
+    df[dc.ETA_LEAD] = np.abs(df[dc.ETA_LEAD])
+    df[dc.ETA_SUB] = np.abs(df[dc.ETA_SUB])
     transition_mask_lead = ~df[dc.ETA_LEAD].between(dc.MAX_EB,dc.MIN_EE)
     transition_mask_sub = ~df[dc.ETA_SUB].between(dc.MAX_EB,dc.MIN_EE)
     tracker_mask_lead = ~df[dc.ETA_LEAD].between(dc.MAX_EE, dc.TRACK_MAX)
@@ -86,6 +89,7 @@ def standard_cuts(df):
     invmass_mask = df[dc.INVMASS].between(dc.invmass_min, dc.invmass_max)
 
     mask = transition_mask_lead&transition_mask_sub&tracker_mask_lead&tracker_mask_sub&invmass_mask
+    print(f"number of events after cuts: {sum(mask)}")
 
     return df[mask]
 
@@ -117,17 +121,19 @@ def custom_cuts(
         if isinstance(eta_cuts[0], tuple):
             # this means cuts on both leading and SUBing electrons
             if eta_cuts[0][0] != -1:
-                mask &= (df[dc.ETA_LEAD] > eta_cuts[0][0])
+                mask &= (np.abs(df[dc.ETA_LEAD].values) >= eta_cuts[0][0])
             if eta_cuts[0][1] != -1:
-                mask &= (df[dc.ETA_LEAD] < eta_cuts[0][1])
+                mask &= (np.abs(df[dc.ETA_LEAD].values) <= eta_cuts[0][1])
             if eta_cuts[1][0] != -1:
-                mask &= (df[dc.ETA_SUB] > eta_cuts[1][0])
+                mask &= (np.abs(df[dc.ETA_SUB].values) >= eta_cuts[1][0])
             if eta_cuts[1][1] != -1:
-                mask &= (df[dc.ETA_SUB] < eta_cuts[1][1])
+                mask &= (np.abs(df[dc.ETA_SUB].values) <= eta_cuts[1][1])
         else:
             # this means one set of cuts for both leading and SUBing electrons
             mask = mask & ((df[dc.ETA_LEAD] > eta_cuts[0]) & (df[dc.ETA_LEAD] < eta_cuts[1]) | (df[dc.ETA_LEAD] > eta_cuts[2]) & (df[dc.ETA_LEAD] < eta_cuts[3]))
             mask = mask & ((df[dc.ETA_SUB] > eta_cuts[0]) & (df[dc.ETA_SUB] < eta_cuts[1]) | (df[dc.ETA_SUB] > eta_cuts[2]) & (df[dc.ETA_SUB] < eta_cuts[3]))
+    
+    print(sum(mask))
 
     if inv_mass_cuts:
         mask = mask & (df[dc.INVMASS] > inv_mass_cuts[0]) & (df[dc.INVMASS] < inv_mass_cuts[1])
@@ -153,6 +159,8 @@ def custom_cuts(
             print(n_events - sum(mask & (et_lead > et_cuts[0]) & (et_sub > et_cuts[1])))
             mask = mask & (et_lead > et_cuts[0]) & (et_sub > et_cuts[1])
 
+    print(sum(mask))
+
     if r9_cuts:
         if isinstance(r9_cuts[0], tuple):
             # this means cuts on both leading and SUBing electrons
@@ -168,6 +176,8 @@ def custom_cuts(
         else:
             # otherwise you're just providing a minimum value for both electrons
             mask = mask & (df[dc.R9_LEAD] > r9_cuts[0]) & (df[dc.R9_SUB] > r9_cuts[1])
+
+    print(sum(mask))
 
     if working_point is not None:
         wp_id = dc.TIGHT_ID if working_point == "tight" else dc.MEDIUM_ID

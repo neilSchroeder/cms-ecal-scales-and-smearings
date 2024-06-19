@@ -1,5 +1,8 @@
 import numpy as np
-from collections import namedtuple
+
+from python.plotters.plot_styles.paper_style import paper_style
+from python.plotters.plot_styles.bw_cb_fit_style import bw_cb_fit_style
+
 
 class PyValConstants():
     """A useful list of contants instead of defining them in every function"""
@@ -46,16 +49,6 @@ class PyValConstants():
     i_plot_bounds_et_lead = 7
     i_plot_bounds_et_sub = 8
     i_plot_results = 9
-    
-    plotting_functions = {}
-
-    def get_plotting_function(self, style):
-        if style in self.plotting_functions.keys():
-            return self.plotting_functions[style]
-        else:
-            print(f'[ERROR] style {style} does not have a corresponding plotting function')
-            print(f'[ERROR] please either define it or check your config file')
-            return None
         
 
 class DataConstants():
@@ -251,108 +244,15 @@ class PlottingConstants():
     RATIO_MIN = 0.5
     RATIO_MAX = 1.5
 
-    PlotStyle = namedtuple(
-            'PlotStyle',
-            [
-                'style',
-                'binning',
-                'y_scale',
-                'fig',
-                'subplot',
-                'legend',
-                'colors',
-                'labels',
-                'error_bar_style',
-                'sci_notation_offset',
-                'annotations',
-            ]
+    plotting_functions = {}
 
-    )
+    def get_plotting_function(self, style):
+        if style in self.plotting_functions.keys():
+            return self.plotting_functions[style]
+        else:
+            print(f'[ERROR] style {style} does not have a corresponding plotting function')
+            print(f'[ERROR] please either define it or check your config file')
+            return None
 
-    paper_style = PlotStyle(
-            style='paperStyle_',
-            binning='auto',
-            y_scale=1.16,
-            fig = {
-                'size': (8,8),
-                'subplot_ratio': [7,3],
-                'sharex': True,
-            },
-            subplot = {
-                'left': 0.08,
-                'right': 0.97,
-                'bottom': 0.07,
-                'top': 0.96,
-                'hspace': 0.03,
-            },
-            legend = {
-                'loc': 'upper right',
-                'fontsize': 10,
-            },
-            colors = {
-                'data': 'black',
-                'mc': 'cornflowerblue',
-                'syst': 'red',
-            },
-            labels = {
-                'x_axis': {
-                    'label': 'M$_{ee}$ [GeV]',
-                    'fontsize': 14,
-                    'ha': 'right',
-                },
-                'data': 'Data',
-                'mc': 'MC',
-                'syst': 'MC stat. $\oplus$ syst. unc.',
-                'ratio': 'Data / MC',
-            },
-            error_bar_style='steps-mid',
-            sci_notation_offset=(-0.065, 0.5),
-            annotations = {
-                'lumi': {
-                    'annot': r'XX.X fb$^{-1}$ (13 TeV) 20XX',
-                    'xy': (1, 1.),
-                    'xycoords': 'axes fraction',
-                    'ha': 'right',
-                    'va': 'bottom',
-                    'fontsize': 14,
-                },
-                'cms_tag': {
-                    'annot': r'$\textbf{CMS}$ $\textit{Preliminary}$',
-                    'xy': (0, 1.),
-                    'xycoords': 'axes fraction',
-                    'ha': 'left',
-                    'va': 'bottom',
-                    'fontsize': 14,
-                },
-                'plot_title': {
-                    'annot': {
-                        "invMass_Barrel-Barrel": "Barrel-Barrel",
-                        "invMass_Barrel-Barrel_lowR9": "Barrel-Barrel\nHigh Brem",
-                        "invMass_Barrel-Barrel_highR9": "Barrel-Barrel\nLow Brem",
-                        "invMass_Barrel-Endcap": "Barrel-Endcap",
-                        "invMass_Barrel-Endcap_lowR9": "Barrel-Endcap\nHigh Brem",
-                        "invMass_Barrel-Endcap_highR9": "Barrel-Endcap\nLow Brem",
-                        "invMass_Endcap-Endcap": "Endcap-Endcap",
-                        "invMass_Endcap-Endcap_lowR9": "Endcap-Endcap\nHigh Brem",
-                        "invMass_Endcap-Endcap_highR9": "Endcap-Endcap\nLow Brem",
-                        "invMass_lead_Pt-32-40": r"32 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 40 GeV",
-                        "invMass_lead_Pt-40-55": r"40 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 55 GeV",
-                        "invMass_lead_Pt-55-65": r"55 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 65 GeV",
-                        "invMass_lead_Pt-65-90": r"65 GeV $ < \mathbf{p_{T, lead}^{e}} < $ 90 GeV",
-                        "invMass_lead_Pt-90-Inf": r"90 GeV $ < \mathbf{p_{T, lead}^{e}}$",
-                        "invMass_diag_Pt-32-40": r"32 GeV $ < \mathbf{p_{T}^{e}} < $ 40 GeV",
-                        "invMass_diag_Pt-40-55": r"40 GeV $ < \mathbf{p_{T}^{e}} < $ 55 GeV",
-                        "invMass_diag_Pt-55-65": r"55 GeV $ < \mathbf{p_{T}^{e}} < $ 65 GeV",
-                        "invMass_diag_Pt-65-90": r"65 GeV $ < \mathbf{p_{T}^{e}} < $ 90 GeV",
-                        "invMass_diag_Pt-90-Inf": r"90 GeV $ < \mathbf{p_{T}^{e}} $",
-                    },
-                    'xy': (0.1, 0.9),
-                    'xycoords': 'axes fraction',
-                    'ha': 'left',
-                    'va': 'top',
-                    'fontsize': 18,
-                    'weight': 'bold',
-                },
-
-            }
-    )
+    PAPER_STYLE = paper_style
+    BW_CB_FIT_STYLE = bw_cb_fit_style
