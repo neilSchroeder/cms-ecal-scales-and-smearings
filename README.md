@@ -60,9 +60,17 @@ These results show UL17 data and MC with RunFineEtaR9Et scales and EtaR9Et smear
 
 * Time permitting, or for whoever takes over development, multiprocessing the `zcat.update()` calls would likely speed things up.
 * I think there's a better way to parallelize the application of the scales.
-* Implement `--systematics-study` feature in `pyval`. The idea is to automate estimating the systematic uncertainties.
+* Properly implement `--systematics-study` feature in `pyval`. The idea is to automate estimating the systematic uncertainties.
 * Change run divide feature to include/process lumisection infomation (more granular).
 
+Potential improvements (for a thesis or summer project):
+* Run divide: include lumi information
+* Scanning: 
+    * 1D scans from input scales
+    * Track loss during minimization
+* Loss function exploration
+    * Dynamic learning rate
+    * Smearings loss function: can we make it steeper near the minimum
 
 ## Features
 
