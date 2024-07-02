@@ -40,7 +40,7 @@ def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
     Args:
         x (np.array): x values
         y (np.array): y values
-        guess_cb (list): guess for the crystal ball parameters
+        guess_cb (list): guess for the crystal ball parameters [alpha, n, mu, sigma]
 	Returns:
 		dictionary: dictionary containing the fit parameters
     """
@@ -75,4 +75,4 @@ def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
     print("reduced chi squared:", chi_sqr)
     print()    
     
-    return {"mu": 91.188+result.x[2], "sigma": result.x[3], "chi_sqr": chi_sqr}
+    return {"mu": 91.188+result.x[2], "sigma": result.x[3], "chi_sqr": chi_sqr, "fit_hist": y_vals, "fit_params": result.x}
