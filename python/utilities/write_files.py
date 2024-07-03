@@ -201,6 +201,7 @@ def writeJsonFromDF(thisDF,outFile):
 
     return
 
+
 def combine(thisStep, lastStep, outFile):
     """
     Combines the scales from the last step with the current step

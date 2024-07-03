@@ -150,3 +150,30 @@ def write_results(args, scales_smears):
         return False
 
     return True
+
+
+def combine_files(args):
+    """
+    Combines the files into one file.
+
+    Args:
+        args (list): the arguments passed to the program
+    Returns:
+        None
+    """
+    
+    # remove word only from the file name
+    out_file = f"{config.DEFAULT_WRITE_FILES_PATH}/{args.output}" if args.output is not None else args.only_step.replace("only", "combined_")
+
+    # verify that the user wants to overwrite the file if it already exists
+    if os.path.exists(out_file):
+        print(f"[WARNING] the output file {out_file} already exists. \n[WARNING] Do you want to overwrite it? (y/n)")
+        if input().lower() != 'y':
+            print("[INFO] exiting program")
+            sys.exit(0)
+
+    write_files.combine( 
+        args.only_step,
+        args.scales, 
+        out_file
+        )
