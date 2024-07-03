@@ -6,6 +6,7 @@ import uproot3 as up
 
 from python.classes.constant_classes import (
     DataConstants as dc,
+    CategoryConstants as cc
 )
 from python.classes.zcat_class import zcat
 
@@ -261,38 +262,38 @@ def extract_cats(
             # thisCat should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
 
             eta_mask = np.ones(len(data), dtype=bool)
-            if cat1[dc.i_eta_min] != dc.empty:
-                eta_mask = data[dc.ETA_LEAD].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max]) \
-                    & data[dc.ETA_SUB].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max])
-                eta_mask = eta_mask | (data[dc.ETA_SUB].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max])\
-                                    &data[dc.ETA_LEAD].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max]))
+            if cat1[cc.i_eta_min] != cc.empty:
+                eta_mask = data[dc.ETA_LEAD].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max]) \
+                    & data[dc.ETA_SUB].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max])
+                eta_mask = eta_mask | (data[dc.ETA_SUB].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max])\
+                                    &data[dc.ETA_LEAD].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max]))
             
             r9_mask = np.ones(len(data), dtype=bool)
-            if cat1[dc.i_r9_min] != dc.empty:
-                r9_mask = data[dc.R9_LEAD].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
-                    &data[dc.R9_SUB].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max])
-                r9_mask = r9_mask | (data[dc.R9_SUB].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
-                                    &data[dc.R9_LEAD].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max]))
+            if cat1[cc.i_r9_min] != cc.empty:
+                r9_mask = data[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                    &data[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
+                r9_mask = r9_mask | (data[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                                    &data[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
             
             et_mask = np.ones(len(data), dtype=bool)
-            if cat1[dc.i_et_min] != dc.empty:
-                et_mask = data[dc.ET_LEAD].between(cat1[dc.i_et_min],cat1[dc.i_et_max])\
-                    &data[dc.ET_SUB].between(cat2[dc.i_et_min],cat2[dc.i_et_max])
-                et_mask = et_mask | (data[dc.ET_SUB].between(cat1[dc.i_et_min],cat1[dc.i_et_max])\
-                                    &data[dc.ET_LEAD].between(cat2[dc.i_et_min],cat2[dc.i_et_max]))
+            if cat1[cc.i_et_min] != cc.empty:
+                et_mask = data[dc.ET_LEAD].between(cat1[cc.i_et_min],cat1[cc.i_et_max])\
+                    &data[dc.ET_SUB].between(cat2[cc.i_et_min],cat2[cc.i_et_max])
+                et_mask = et_mask | (data[dc.ET_SUB].between(cat1[cc.i_et_min],cat1[cc.i_et_max])\
+                                    &data[dc.ET_LEAD].between(cat2[cc.i_et_min],cat2[cc.i_et_max]))
             
             # gain mask should be all true if gain is not specified
             gain_mask = np.ones(len(data), dtype=bool)
-            if cat1[dc.i_gain] != dc.empty:
+            if cat1[cc.i_gain] != cc.empty:
                 # possible gain values are 12, 6, 1
                 # if gain is 12, then gainSeedSC is 0
                 # if gain is 6, then gainSeedSC is 1
                 # if gain is 1, then gainSeedSC is greater than 1
                 gainlow1, gainhigh1, gainlow2, gainhigh2 = 0, 0, 0, 0
-                if cat1[dc.i_gain] == 6: gainlow1, gainhigh1 = 1, 1
-                if cat1[dc.i_gain] == 1: gainlow1, gainhigh1 = 2, 99999
-                if cat2[dc.i_gain] == 6: gainlow2, gainhigh2 = 1, 1
-                if cat2[dc.i_gain] == 1: gainlow2, gainhigh2 = 2, 99999
+                if cat1[cc.i_gain] == 6: gainlow1, gainhigh1 = 1, 1
+                if cat1[cc.i_gain] == 1: gainlow1, gainhigh1 = 2, 99999
+                if cat2[cc.i_gain] == 6: gainlow2, gainhigh2 = 1, 1
+                if cat2[cc.i_gain] == 1: gainlow2, gainhigh2 = 2, 99999
                 gain_mask = data[dc.GAIN_LEAD].between(gainlow1,gainhigh1)\
                     &data[dc.GAIN_SUB].between(gainlow2,gainhigh2)
                 gain_mask = gain_mask | (data[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
@@ -302,33 +303,33 @@ def extract_cats(
             mass_list_data = np.array(df[dc.INVMASS])
 
             eta_mask = np.ones(len(mc), dtype=bool)
-            if cat1[dc.i_eta_min] != dc.empty:
-                eta_mask = mc[dc.ETA_LEAD].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max]) \
-                    & mc[dc.ETA_SUB].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max])
-                eta_mask = eta_mask | (mc[dc.ETA_SUB].between(cat1[dc.i_eta_min],cat1[dc.i_eta_max])\
-                                    &mc[dc.ETA_LEAD].between(cat2[dc.i_eta_min],cat2[dc.i_eta_max]))
+            if cat1[cc.i_eta_min] != cc.empty:
+                eta_mask = mc[dc.ETA_LEAD].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max]) \
+                    & mc[dc.ETA_SUB].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max])
+                eta_mask = eta_mask | (mc[dc.ETA_SUB].between(cat1[cc.i_eta_min],cat1[cc.i_eta_max])\
+                                    &mc[dc.ETA_LEAD].between(cat2[cc.i_eta_min],cat2[cc.i_eta_max]))
             
             r9_mask = np.ones(len(mc), dtype=bool)
-            if cat1[dc.i_r9_min] != dc.empty:
-                r9_mask = mc[dc.R9_LEAD].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
-                    &mc[dc.R9_SUB].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max])
-                r9_mask = r9_mask | (mc[dc.R9_SUB].between(cat1[dc.i_r9_min],cat1[dc.i_r9_max])\
-                                    &mc[dc.R9_LEAD].between(cat2[dc.i_r9_min],cat2[dc.i_r9_max]))
+            if cat1[cc.i_r9_min] != cc.empty:
+                r9_mask = mc[dc.R9_LEAD].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                    &mc[dc.R9_SUB].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max])
+                r9_mask = r9_mask | (mc[dc.R9_SUB].between(cat1[cc.i_r9_min],cat1[cc.i_r9_max])\
+                                    &mc[dc.R9_LEAD].between(cat2[cc.i_r9_min],cat2[cc.i_r9_max]))
             
             et_mask = np.ones(len(mc), dtype=bool)
-            if cat1[dc.i_et_min] != dc.empty:
-                et_mask = mc[dc.ET_LEAD].between(cat1[dc.i_et_min],cat1[dc.i_et_max])\
-                    &mc[dc.ET_SUB].between(cat2[dc.i_et_min],cat2[dc.i_et_max])
-                et_mask = et_mask | (mc[dc.ET_SUB].between(cat1[dc.i_et_min],cat1[dc.i_et_max])\
-                                    &mc[dc.ET_LEAD].between(cat2[dc.i_et_min],cat2[dc.i_et_max]))
+            if cat1[cc.i_et_min] != cc.empty:
+                et_mask = mc[dc.ET_LEAD].between(cat1[cc.i_et_min],cat1[cc.i_et_max])\
+                    &mc[dc.ET_SUB].between(cat2[cc.i_et_min],cat2[cc.i_et_max])
+                et_mask = et_mask | (mc[dc.ET_SUB].between(cat1[cc.i_et_min],cat1[cc.i_et_max])\
+                                    &mc[dc.ET_LEAD].between(cat2[cc.i_et_min],cat2[cc.i_et_max]))
 
             gain_mask = np.ones(len(mc), dtype=bool)
-            if cat1[dc.i_gain] != dc.empty:
+            if cat1[cc.i_gain] != cc.empty:
                 gainlow1, gainhigh1, gainlow2, gainhigh2 = 0, 0, 0, 0
-                if cat1[dc.i_gain] == 6: gainlow1, gainhigh1 = 1, 1
-                if cat1[dc.i_gain] == 1: gainlow1, gainhigh1 = 2, 99999
-                if cat2[dc.i_gain] == 6: gainlow2, gainhigh2 = 1, 1
-                if cat2[dc.i_gain] == 1: gainlow2, gainhigh2 = 2, 99999
+                if cat1[cc.i_gain] == 6: gainlow1, gainhigh1 = 1, 1
+                if cat1[cc.i_gain] == 1: gainlow1, gainhigh1 = 2, 99999
+                if cat2[cc.i_gain] == 6: gainlow2, gainhigh2 = 1, 1
+                if cat2[cc.i_gain] == 1: gainlow2, gainhigh2 = 2, 99999
                 gain_mask = mc[dc.GAIN_LEAD].between(gainlow1,gainhigh1)\
                     &mc[dc.GAIN_SUB].between(gainlow2,gainhigh2)
                 gain_mask = gain_mask | (mc[dc.GAIN_SUB].between(gainlow1,gainhigh1)\
@@ -378,29 +379,29 @@ def get_smearing_index(cats: pd.DataFrame, cat_index: int) -> int:
         (int): index of the smearing category that corresponds to the given category index
     """ 
 
-    eta_min = cats.iloc[int(cat_index),dc.i_eta_min]
-    eta_max = cats.iloc[int(cat_index),dc.i_eta_max]
-    r9_min = cats.iloc[int(cat_index),dc.i_r9_min]
-    r9_max = cats.iloc[int(cat_index),dc.i_r9_max]
-    et_min = cats.iloc[int(cat_index),dc.i_et_min]
-    et_max = cats.iloc[int(cat_index),dc.i_et_max]
+    eta_min = cats.iloc[int(cat_index),cc.i_eta_min]
+    eta_max = cats.iloc[int(cat_index),cc.i_eta_max]
+    r9_min = cats.iloc[int(cat_index),cc.i_r9_min]
+    r9_max = cats.iloc[int(cat_index),cc.i_r9_max]
+    et_min = cats.iloc[int(cat_index),cc.i_et_min]
+    et_max = cats.iloc[int(cat_index),cc.i_et_max]
 
-    truth_type = cats.loc[:,dc.i_type] == 'smear'
+    truth_type = cats.loc[:,cc.i_type] == 'smear'
     truth_eta_min = np.array([True for x in truth_type])
     truth_eta_max = np.array([True for x in truth_type])
     truth_r9_min = np.array([True for x in truth_type])
     truth_r9_max = np.array([True for x in truth_type])
     truth_et_min = np.array([True for x in truth_type])
     truth_et_max = np.array([True for x in truth_type])
-    if eta_min != dc.empty and eta_max != dc.empty:
-        truth_eta_min = cats.loc[:,dc.i_eta_min] <= eta_min
-        truth_eta_max = cats.loc[:,dc.i_eta_max] >= eta_max
-    if r9_min != dc.empty and r9_max != - 1:
-        truth_r9_min = cats.loc[:,dc.i_r9_min] <= r9_min
-        truth_r9_max = cats.loc[:,dc.i_r9_max] >= r9_max
-    if et_min != dc.empty and et_max != dc.empty:
-        truth_et_min = cats.loc[:,dc.i_et_min] <= et_min
-        truth_et_max = cats.loc[:,dc.i_et_max] >= et_max
+    if eta_min != cc.empty and eta_max != cc.empty:
+        truth_eta_min = cats.loc[:,cc.i_eta_min] <= eta_min
+        truth_eta_max = cats.loc[:,cc.i_eta_max] >= eta_max
+    if r9_min != cc.empty and r9_max != - 1:
+        truth_r9_min = cats.loc[:,cc.i_r9_min] <= r9_min
+        truth_r9_max = cats.loc[:,cc.i_r9_max] >= r9_max
+    if et_min != cc.empty and et_max != cc.empty:
+        truth_et_min = cats.loc[:,cc.i_et_min] <= et_min
+        truth_et_max = cats.loc[:,cc.i_et_max] >= et_max
 
     truth = truth_type&truth_eta_min&truth_eta_max&truth_r9_min&truth_r9_max&truth_et_min&truth_et_max
     return cats.loc[truth].index[0]

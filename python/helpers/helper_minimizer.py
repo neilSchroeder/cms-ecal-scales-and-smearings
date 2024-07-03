@@ -223,7 +223,7 @@ def set_bounds(cats, **options):
         bounds = [(0.99,1.01) for i in range(options['num_scales'])]
         if cats.iloc[1,dc.i_r9_min] != dc.empty or cats.iloc[1,dc.i_gain] != dc.empty:
             bounds=[(0.95,1.05) for i in range(options['num_scales'])]
-    elif options['_kTestMethodAdcuracy']:
+    elif options['_kTestMethodAccuracy']:
         bounds = [(0.96,1.04) for i in range(options['num_scales'])]
         bounds += [(0., 0.05) for i in range(options['num_smears'])]
     elif options['_kFixScales']:
