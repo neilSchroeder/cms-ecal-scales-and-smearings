@@ -56,6 +56,7 @@ class DataConstants():
 
     # target mass (for time stability)
     TARGET_MASS = 91.188
+    TREE_NAME = "selected"
 
     # pruning constants
     KEEP_COLS = ['R9Ele', 'energy_ECAL_ele', 'etaEle', 'phiEle', 'gainSeedSC', 'invMass_ECAL_ele', 'runNumber', 'eleID']
