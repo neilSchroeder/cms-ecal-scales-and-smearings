@@ -13,6 +13,8 @@ from python.classes.constant_classes import (
     PyValConstants as pvc
 )
 
+import python.utilities.data_loader as data_loader
+
 
 def apply(arg):
     """
@@ -224,4 +226,9 @@ def scale(data, scales):
     executor.shutdown()
     print(f"{info} done applying scales")
 
-    return ret
+    return data_loader.custom_cuts(
+        ret,
+        inv_mass_cuts=(80, 100),
+        eta_cuts=(0, 1.4442, 1.566, 2.5),
+        et_cuts=((32, 14000), (20, 14000)),        
+    )
