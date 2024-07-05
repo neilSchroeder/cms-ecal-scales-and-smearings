@@ -251,11 +251,11 @@ def main():
         print(f"[INFO] scale_data took {t2-t1} seconds")
         print(f"[INFO] scale_data_test took {t3-t2} seconds")
         # make sure that the two methods are consistent
-        if not data_old.equals(data):
+        if not data_old.equals(data_new):
             print("[ERROR] scale_data and scale_data_test are not consistent")
             print("[ERROR] please review the scales file and try again")
             # find where the two dataframes differ
-            diff = data_old.compare(data)
+            diff = data_old.compare(data_new)
             print(diff)
             return
     else:
