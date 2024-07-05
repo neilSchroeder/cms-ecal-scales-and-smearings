@@ -30,7 +30,7 @@ def prepare_scales_lookup(scales_df):
     #TODO implement gain functionality
     
     # Create lookup array
-    lookup = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), len(gain_edges)-1, np.nan)
+    lookup = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
     for _, row in scales_df.iterrows():
         run_idx = np.searchsorted(run_edges, row['min_run'])
         eta_idx = np.searchsorted(eta_edges, row['min_eta'])
