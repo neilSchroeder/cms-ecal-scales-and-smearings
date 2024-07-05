@@ -225,6 +225,11 @@ class DataConstants():
 class CategoryConstants():
     """Constants for the categories files."""
 
+    # category event cuts
+    MIN_EVENTS_DATA = 10
+    MIN_EVENTS_MC_DIAG = 1000
+    MIN_EVENTS_MC_OFFDIAG = 2000
+
     # categories should have the form: type etaMin etaMax r9Min r9Max gain etMin etMax
     i_type = 0
     i_eta_min = 1

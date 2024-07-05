@@ -110,9 +110,10 @@ def minimize(data, mc, cats_df, args):
 
     #extract the categories
     __ZCATS__ = data_loader.extract_cats(data, mc, cats_df, 
-                                              num_scales=__num_scales__, num_smears=__num_smears__, 
-                                              **args
-                                              )
+                                            num_scales=__num_scales__, num_smears=__num_smears__, 
+                                            **args
+                                        )
+    __ZCATS__ = [cat for cat in __ZCATS__ if cat.valid] # remove any initially bad categories
 
     #once categories are extracted, data and mc can be released to make more room.
     del data
@@ -153,18 +154,18 @@ def minimize(data, mc, cats_df, args):
 
     #set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
-    __GUESS__ = [0 for x in guess]
-    helper_minimizer.target_function(guess, __GUESS__,__ZCATS__, __num_scales__, __num_smears__) #initializes the categories
+    empty_guess = [0 for x in guess]
+    loss_function, reset_initial_guess = helper_minimizer.target_function_wrapper(empty_guess, __ZCATS__)
 
     #if we're plotting, just plot and return, don't run a minimization
     if _kPlot:
-        helper_minimizer.target_function(guess, __GUESS__, __ZCATS__, __num_scales__, __num_smears__)
+        loss_function(guess, empty_guess, __ZCATS__, __num_scales__, __num_smears__)
         plotter.plot_cats(plot_dir, __ZCATS__, cats_df)
         return [], []
 
     #It is sometimes necessary to demonstrate a likelihood scan. 
     if _kScanNLL:
-        helper_minimizer.target_function(guess, __GUESS__, __ZCATS__, __num_scales__, __num_smears__, verbose=True)
+        loss_function(guess, empty_guess, __ZCATS__, __num_scales__, __num_smears__, verbose=True)
         plotter.plot_1Dscan(plot_dir, scales, __ZCATS__)
         return [], []
 
@@ -200,7 +201,7 @@ def minimize(data, mc, cats_df, args):
         guess = helper_minimizer.scan_nll(
                                         guess,
                                         zcats=__ZCATS__,
-                                        __GUESS__=__GUESS__,
+                                        __GUESS__=empty_guess,
                                         cats=cats_df,
                                         num_smears=__num_smears__,
                                         num_scales=__num_scales__,
@@ -208,17 +209,17 @@ def minimize(data, mc, cats_df, args):
                                     )
 
     print("[INFO][python/nll] the initial guess is {} with nll {}".format(guess, 
-        helper_minimizer.target_function(guess, __GUESS__,__ZCATS__,__num_scales__, __num_smears__)))
+        loss_function(guess, empty_guess,__ZCATS__,__num_scales__, __num_smears__)))
     min_step_dict = {}
     if min_step is not None:
         min_step_dict = {"eps":float(min_step)}
     else:
-        min_step_dict = {"eps":0.00001}
+        min_step_dict = {"eps":0.00001} # TODO: figure out how to make this dynamic
 
     #minimize
-    optimum = minz(helper_minimizer.target_function,
+    optimum = minz(loss_function,
                     np.array(guess), 
-                    args=(__GUESS__,__ZCATS__,__num_scales__, __num_smears__),
+                    args=(empty_guess,__ZCATS__,__num_scales__, __num_smears__),
                     method=dc.MINIMIZATION_STRATEGY, # might be interesting to try Nelder-Mead
                     bounds=bounds,
                     options=min_step_dict) 
