@@ -32,7 +32,8 @@ def prepare_scales_lookup(scales_df):
         gain_edges = np.array([0, 1, 6, 12])
     
     # Create lookup array
-    lookup = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
+    lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
+    lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
 
     for _, row in scales_df.iterrows():
         run_idx = np.searchsorted(run_edges, row[dc.i_run_min])
@@ -40,11 +41,12 @@ def prepare_scales_lookup(scales_df):
         r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
         et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
         gain_idx = np.searchsorted(gain_edges, row[dc.i_gain])
-        lookup[run_idx, eta_idx, r9_idx, et_idx, gain_idx] = (row[dc.i_scale], row[dc.i_err])
+        lookup_scales[run_idx, eta_idx, r9_idx, et_idx, gain_idx] = row[dc.i_scale]
+        lookup_errs[run_idx, eta_idx, r9_idx, et_idx, gain_idx] = row[dc.i_err]
     
-    return run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup
+    return run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup_scales, lookup_errs
 
-def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup):
+def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup_scales, lookup_errs):
     # Assume events_df has columns 'x' and 'y'
     run_indices = np.digitize(data['run'], run_edges) - 1
     eta_indices = np.digitize(data['eta'], eta_edges) - 1
@@ -60,13 +62,15 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges
     gain_indices = np.clip(gain_indices, 0, len(gain_edges)-2)
 
     # Apply scales
-    scales = lookup[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
+    scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
+    errs = lookup_errs[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
     
     # Handle any events that fall outside the correction bins
     mask = np.isnan(scales)
     scales[mask] = 1.0  # or any other default value
+    errs[mask] = 0.0  # or any other default value
     
-    return scales
+    return scales, errs
 
 
 def scale(data, scales):
@@ -114,28 +118,28 @@ def scale(data, scales):
     sublead_data.loc[gain1, 'gain'] = 1
 
     # apply corrections
-    lead_data['scale'] = apply_corrections(lead_data, *prepare_scales_lookup(scales_df))
-    sublead_data['scale'] = apply_corrections(sublead_data, *prepare_scales_lookup(scales_df))
+    lead_data['scale'], lead_data['err'] = apply_corrections(lead_data, *prepare_scales_lookup(scales_df))
+    sublead_data['scale'], sublead_data['err'] = apply_corrections(sublead_data, *prepare_scales_lookup(scales_df))
 
     # calculate new energies, errors, and invmasses
     # lead_data['scale'] returns a tuple of (scale, err)
-    data[dc.E_LEAD] = data[dc.E_LEAD] * lead_data['scale'][:,0]
-    data[dc.E_SUB] = data[dc.E_SUB] * sublead_data['scale'][:,0]
+    data[dc.E_LEAD] = data[dc.E_LEAD] * lead_data['scale']
+    data[dc.E_SUB] = data[dc.E_SUB] * sublead_data['scale']
     invmass = data[dc.INVMASS].values.copy()
     data[pvc.KEY_INVMASS_UP] = invmass * np.sqrt(
         np.multiply(
-            np.add(lead_data['scale'][:,0], lead_data['scale'][:,1]),
-            np.add(sublead_data['scale'][:,0], sublead_data['scale'][:,1])
+            np.add(lead_data['scale'], lead_data['err']),
+            np.add(sublead_data['scale'], sublead_data['err'])
         )
     )
     data[pvc.KEY_INVMASS_DOWN] = invmass * np.sqrt(
         np.multiply(
-            np.subtract(lead_data['scale'][:,0], lead_data['scale'][:,1]),
-            np.add(sublead_data['scale'][:,0], sublead_data['scale'][:,1])
+            np.subtract(lead_data['scale'], lead_data['err']),
+            np.subtract(sublead_data['scale'], sublead_data['err'])
         )
     )
     data[dc.INVMASS] = invmass * np.sqrt(
-        np.multiply(lead_data['scale'][:,0], sublead_data['scale'][:,0])
+        np.multiply(lead_data['scale'], sublead_data['scale'])
     )
 
     return data_loader.custom_cuts(
