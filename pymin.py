@@ -242,8 +242,9 @@ def main():
     # scale the data
     if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
+        
         t1 = time.time()
-        data = scale_data_test.scale(data, args.scales)
+        data_new = scale_data_test.scale(data, args.scales)
         t2 = time.time()
         data_old = scale_data.scale(data, args.scales)
         t3 = time.time()
