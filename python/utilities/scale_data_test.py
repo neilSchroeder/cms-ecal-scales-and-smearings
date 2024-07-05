@@ -32,12 +32,12 @@ def prepare_scales_lookup(scales_df):
     # Create lookup array
     lookup = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
     for _, row in scales_df.iterrows():
-        run_idx = np.searchsorted(run_edges, row['min_run'])
-        eta_idx = np.searchsorted(eta_edges, row['min_eta'])
-        r9_idx = np.searchsorted(r9_edges, row['min_r9'])
-        et_idx = np.searchsorted(et_edges, row['min_et'])
-        gain_idx = np.searchsorted(gain_edges, row['gain'])
-        lookup[run_idx, eta_idx, r9_idx, et_idx, gain_idx] = (row['scale'], row['err'])
+        run_idx = np.searchsorted(run_edges, row[dc.i_run_min])
+        eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
+        r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
+        et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
+        gain_idx = np.searchsorted(gain_edges, row[dc.i_gain])
+        lookup[run_idx, eta_idx, r9_idx, et_idx, gain_idx] = (row[dc.i_scale], row[dc.i_err])
     
     return run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup
 
