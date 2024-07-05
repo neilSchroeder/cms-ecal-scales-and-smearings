@@ -63,6 +63,7 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges
 
     # Apply scales
     scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
+    print(scales)
     errs = lookup_errs[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
     
     # Handle any events that fall outside the correction bins
