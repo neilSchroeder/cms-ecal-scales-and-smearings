@@ -243,9 +243,9 @@ def main():
     if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
         t1 = time.time()
-        data_old = scale_data.scale(data, args.scales)
-        t2 = time.time()
         data = scale_data_test.scale(data, args.scales)
+        t2 = time.time()
+        data_old = scale_data.scale(data, args.scales)
         t3 = time.time()
         print(f"[INFO] scale_data took {t2-t1} seconds")
         print(f"[INFO] scale_data_test took {t3-t2} seconds")
