@@ -1,6 +1,7 @@
 import gc
 import numpy as np
 import pandas as pd
+import time
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.constant_classes import CategoryConstants as cc
@@ -56,6 +57,33 @@ def deactivate_cats(__ZCATS__, ignore_cats):
                     cat.valid=False
 
 
+def target_function_wrapper(initial_guess, __ZCATS__, *args, **kwargs):
+    """
+    Wrapper for the target function. This is necessary to keep track of the previous guess, to eliminate redundant calculations.
+
+    Args:
+        __GUESS__ (iterable): iterable of floats, representing the initial guess for the scales and smearings
+        __ZCATS__ (list): list of zcat objects, each representing a category
+        **options: keyword arguments, which contain the following:
+            num_scales (int): number of scales to be derived
+            num_smears (int): number of smearings to be derived
+    Returns:
+        target_function (function): target function
+    """
+
+    previous_guess = [initial_guess]
+    def wrapped_target_function(x, *args, **options):
+        (previous, __ZCATS__, __num_scales__, __num_smears__) = args
+        ret = target_function(x, previous_guess[0], __ZCATS__, __num_scales__, __num_smears__, **options)
+        previous_guess[0] = x
+        return ret
+    
+    def reset(x=None):
+        previous_guess[0] = x if x is not None else initial_guess
+
+    return wrapped_target_function, reset
+
+
 def target_function(x, *args, verbose=False, **options):
     """ 
     This is the target function, which returns an event weighted -2*Delta NLL
@@ -73,31 +101,40 @@ def target_function(x, *args, verbose=False, **options):
     """
     
     # unpack args
-    (__GUESS__, __ZCATS__, __num_scales__, __num_smears__) = args
+    (previous, __ZCATS__, __num_scales__, __num_smears__) = args
 
-    updated_scales = [i for i in range(len(x)) if __GUESS__[i] != x[i]]
-    __GUESS__ = x
+    # find where __GUESS__ and x differ
+    # no use updating categories if they don't need to be updated
+    updated_scales = [i for i in range(len(x)) if x[i] != previous[i]]
 
-    for cat in __ZCATS__:
-        if cat.valid:
-            if cat.lead_index in updated_scales or cat.sublead_index in updated_scales or cat.lead_smear_index in updated_scales or cat.sublead_smear_index in updated_scales:
-                if __num_smears__ == 0:
-                    cat.update(x[cat.lead_index],
-                                x[cat.sublead_index])
-                else:
-                    cat.update(x[cat.lead_index],
-                                x[cat.sublead_index],
-                                x[cat.lead_smear_index],
-                                x[cat.sublead_smear_index])
+    # find all the categories that need to be updated
+    mask = np.array([cat.valid and (cat.lead_index in updated_scales or 
+                                    cat.sublead_index in updated_scales or 
+                                    cat.lead_smear_index in updated_scales or 
+                                    cat.sublead_smear_index in updated_scales) 
+                    for cat in __ZCATS__])
+    
+    cats_to_update = np.array(__ZCATS__)[mask]
 
-                if verbose:
-                    print("------------- zcat info -------------")
-                    cat.print()
-                    print("-------------------------------------")
-                    print()
+    # update the categories
+    for cat in cats_to_update:
+        if __num_smears__ == 0:
+            cat.update(x[cat.lead_index],
+                        x[cat.sublead_index])
+        else:
+            cat.update(x[cat.lead_index],
+                        x[cat.sublead_index],
+                        x[cat.lead_smear_index],
+                        x[cat.sublead_smear_index])
 
-    tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
-    ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
+        if verbose:
+            print("------------- zcat info -------------")
+            cat.print()
+            print("-------------------------------------")
+            print()
+
+    tot = sum([cat.weight for cat in cats_to_update])
+    ret = sum([cat.NLL*cat.weight for cat in cats_to_update])
 
 
     if verbose:
@@ -106,6 +143,7 @@ def target_function(x, *args, verbose=False, **options):
         print("diagonal nll vals:", [cat.NLL*cat.weight/tot for cat in __ZCATS__ if cat.lead_index == cat.sublead_index and cat.valid])
         print("using scales:",x)
         print("--------------------------------------")
+        
     return ret/tot if tot != 0 else 9e30
 
 def scan_nll(x, **options):
@@ -135,6 +173,7 @@ def scan_nll(x, **options):
     print("[INFO][python/helper_minimizer/scan_ll] scanning scales")
     weights = [(cat.weight, cat.lead_index) for cat in __ZCATS__ if cat.valid and cat.lead_index == cat.sublead_index]
     weights.sort(key=lambda x: x[0])
+    loss_function, reset_loss_initial_guess = target_function_wrapper(guess, __ZCATS__, **options)
 
     if not options['_kFixScales']:
         while weights: 
@@ -155,7 +194,7 @@ def scan_nll(x, **options):
                     my_guesses.append(guess.copy())
 
                 # evaluate nll for each guess
-                nll_vals = np.array([ target_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
+                nll_vals = np.array([ loss_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
                 mask = [y > 0 for y in nll_vals] # addresses edge cases of scale being too large/small
                 x = x[mask]
                 nll_vals = nll_vals[mask]
@@ -192,7 +231,7 @@ def scan_nll(x, **options):
                     my_guesses.append(guess.copy())
 
                 # evaluate nll for each guess
-                nll_vals = np.array([ target_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
+                nll_vals = np.array([ loss_function(g, __GUESS__, __ZCATS__, options['num_scales'], options['num_smears']) for g in my_guesses])
                 mask = [y > 0 for y in nll_vals] # addresses edge cases of scale being too large/small
                 x = x[mask]
                 nll_vals = nll_vals[mask]
@@ -221,7 +260,7 @@ def set_bounds(cats, **options):
     bounds = []
     if options['_kClosure']:
         bounds = [(0.99,1.01) for i in range(options['num_scales'])]
-        if cats.iloc[1,dc.i_r9_min] != dc.empty or cats.iloc[1,dc.i_gain] != dc.empty:
+        if cats.iloc[1,cc.i_r9_min] != cc.empty or cats.iloc[1,cc.i_gain] != cc.empty:
             bounds=[(0.95,1.05) for i in range(options['num_scales'])]
     elif options['_kTestMethodAccuracy']:
         bounds = [(0.96,1.04) for i in range(options['num_scales'])]
