@@ -2,12 +2,14 @@ import argparse as ap
 import os
 import pandas as pd
 import sys
+import time
 
 import python.helpers.helper_pymin as helper_pymin
 
 import python.utilities.divide_by_run as divide_by_run
 import python.utilities.minimizer as minimizer
 import python.utilities.scale_data as scale_data
+import python.utilities.scale_data_test as scale_data_test
 import python.utilities.smear_mc as smear_mc
 import python.utilities.pruner as pruner
 import python.utilities.time_stability as time_stability
@@ -240,7 +242,13 @@ def main():
     # scale the data
     if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
-        data = scale_data.scale(data, args.scales)
+        t1 = time.time()
+        data_old = scale_data.scale(data, args.scales)
+        t2 = time.time()
+        data = scale_data_test.scale(data, args.scales)
+        t3 = time.time()
+        print(f"[INFO] scale_data took {t2-t1} seconds")
+        print(f"[INFO] scale_data_test took {t3-t2} seconds")
     else:
         print(f"[INFO] no scales file provided, skipping data scaling")
 

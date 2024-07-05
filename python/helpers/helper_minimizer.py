@@ -117,21 +117,18 @@ def target_function(x, *args, verbose=False, **options):
     cats_to_update = np.array(__ZCATS__)[mask]
 
     # update the categories
-    for cat in cats_to_update:
-        if __num_smears__ == 0:
-            cat.update(x[cat.lead_index],
-                        x[cat.sublead_index])
-        else:
-            cat.update(x[cat.lead_index],
-                        x[cat.sublead_index],
-                        x[cat.lead_smear_index],
-                        x[cat.sublead_smear_index])
+    [
+        cat.update(x[cat.lead_index], x[cat.sublead_index]) 
+        if __num_smears__ == 0 
+        else cat.update(x[cat.lead_index], x[cat.sublead_index], x[cat.lead_smear_index], x[cat.sublead_smear_index])
+        for cat in cats_to_update
+    ]
 
-        if verbose:
-            print("------------- zcat info -------------")
-            cat.print()
-            print("-------------------------------------")
-            print()
+    if verbose:
+        print("------------- zcat info -------------")
+        [cat.print() for cat in cats_to_update]
+        print("-------------------------------------")
+        print()
 
     tot = sum([cat.weight for cat in cats_to_update])
     ret = sum([cat.NLL*cat.weight for cat in cats_to_update])
