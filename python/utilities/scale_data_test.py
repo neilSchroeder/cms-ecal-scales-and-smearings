@@ -67,7 +67,9 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges
     
     # Handle any events that fall outside the correction bins
     mask = np.isnan(scales)
-    scales[mask] = 1.0  # or any other default value
+    print(f"[INFO][scale_data.py] {mask.sum()} events fall outside the correction bins")
+    print(data[mask].describe())
+    scales[mask] = -1.0  # or any other default value
     errs[mask] = 0.0  # or any other default value
     
     return scales, errs
