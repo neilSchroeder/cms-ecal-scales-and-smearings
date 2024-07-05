@@ -27,10 +27,13 @@ def prepare_scales_lookup(scales_df):
     et_edges = np.unique(np.concatenate([scales_df[dc.i_et_min], scales_df[dc.i_et_max]]))
     gain_edges = np.unique(scales_df[dc.i_gain])
 
-    #TODO implement gain functionality
+    # check if gain_edges is length 1
+    if len(gain_edges) == 1:
+        gain_edges = np.array([0, 1, 6, 12])
     
     # Create lookup array
     lookup = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
+
     for _, row in scales_df.iterrows():
         run_idx = np.searchsorted(run_edges, row[dc.i_run_min])
         eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
