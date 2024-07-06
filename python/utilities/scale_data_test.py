@@ -32,7 +32,7 @@ def prepare_scales_lookup(scales_df):
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
 
     for _, row in scales_df.iterrows():
-        run_idx = np.searchsorted(run_edges, row[dc.i_run_min])
+        run_idx = np.digitize(row[dc.i_run_min], run_edges) - 1
         eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
         r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
         et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
