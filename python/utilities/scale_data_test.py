@@ -76,10 +76,10 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
     i = 0
     for idx, row in data[mask].iterrows():
         print(f"[INFO][scale_data.py] Event {idx} falls outside the correction bins")
-        print(row['run'], run_indices[i])
-        print(row['eta'], eta_indices[i])
-        print(row['r9'], r9_indices[i])
-        print(row['et'], et_indices[i])
+        print(row['run'], run_indices[i], run_edges[run_indices[i]], run_edges[run_indices[i]+1])
+        print(row['eta'], eta_indices[i], eta_edges[eta_indices[i]], eta_edges[eta_indices[i]+1])
+        print(row['r9'], r9_indices[i], r9_edges[r9_indices[i]], r9_edges[r9_indices[i]+1])
+        print(row['et'], et_indices[i], et_edges[et_indices[i]], et_edges[et_indices[i]+1])
         print("=====================================")
         i += 1
     print(f"[INFO][scale_data.py] {mask.sum()} events fall outside the correction bins")
