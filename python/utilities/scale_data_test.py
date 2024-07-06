@@ -50,10 +50,6 @@ def prepare_scales_lookup(scales_df):
                 lookup_scales[run_id, eta_id, r9, et] = row[dc.i_scale]
                 lookup_errs[run_id, eta_id, r9, et] = row[dc.i_err]
 
-    # Print the number of NaN values
-    nan_count = np.isnan(lookup_scales).sum()
-    print(f"Number of NaN values in lookup_scales: {nan_count}")
-
     return run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs
 
 
@@ -75,7 +71,6 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
 
     # Apply scales
     scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices]
-    print(scales)
     errs = lookup_errs[run_indices, eta_indices, r9_indices, et_indices]
     
     # Handle any events that fall outside the correction bins
@@ -88,7 +83,6 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
 
     print(f"[WARNING][scale_data.py] {mask.sum()} events fall outside the correction bins, please check scales file for completeness.")
     print(f"[WARNING][scale_data.py] Run `python pytyhon/tools/scales_validator.py -s <scales_file>` to check coverage.")
-    print(data[mask].describe())
     scales[mask] = 1.0  # or any other default value
     errs[mask] = 0.0  # or any other default value
     
@@ -140,8 +134,10 @@ def scale(data, scales):
     sublead_data.loc[gain1, 'gain'] = 1
 
     # apply corrections
-    lead_data['scale'], lead_data['err'] = apply_corrections(lead_data, *prepare_scales_lookup(scales_df))
-    sublead_data['scale'], sublead_data['err'] = apply_corrections(sublead_data, *prepare_scales_lookup(scales_df))
+    print(f"{info} Applying corrections to lead_data and sublead_data")
+    args = prepare_scales_lookup(scales_df)
+    lead_data['scale'], lead_data['err'] = apply_corrections(lead_data, *args)
+    sublead_data['scale'], sublead_data['err'] = apply_corrections(sublead_data, *args)
 
     # calculate new energies, errors, and invmasses
     # lead_data['scale'] returns a tuple of (scale, err)
