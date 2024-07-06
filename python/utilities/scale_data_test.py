@@ -75,13 +75,17 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
     # Handle any events that fall outside the correction bins
     mask = np.isnan(scales)
     i = 0
+    data['run_index'] = run_indices
+    data['eta_index'] = eta_indices
+    data['r9_index'] = r9_indices
+    data['et_index'] = et_indices
 
     for idx, row in data[mask].iterrows():
         print(f"[INFO][scale_data.py] Event {idx} falls outside the correction bins")
-        print(row['run'], run_indices[i], run_edges[run_indices[i]], run_edges[run_indices[i]+1])
-        print(row['eta'], eta_indices[i], eta_edges[eta_indices[i]], eta_edges[eta_indices[i]+1])
-        print(row['r9'], r9_indices[i], r9_edges[r9_indices[i]], r9_edges[r9_indices[i]+1])
-        print(row['et'], et_indices[i], et_edges[et_indices[i]], et_edges[et_indices[i]+1])
+        print(row['run'], row['run_index'], run_edges[row['run_index']], run_edges[row['run_index']+1])
+        print(row['eta'], row['eta_index'], eta_edges[row['eta_index']], eta_edges[row['eta_index']+1])
+        print(row['r9'], row['r9_index'], r9_edges[row['r9_index']], r9_edges[row['r9_index']+1])
+        print(row['et'], row['et_index'], et_edges[row['et_index']], et_edges[row['et_index']+1])
         print("=====================================")
         i += 1
     print(f"[INFO][scale_data.py] {mask.sum()} events fall outside the correction bins")
