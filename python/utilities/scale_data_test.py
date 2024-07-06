@@ -25,12 +25,8 @@ def prepare_scales_lookup(scales_df):
     eta_edges = np.unique(np.concatenate([scales_df[dc.i_eta_min], scales_df[dc.i_eta_max]]))
     r9_edges = np.unique(np.concatenate([scales_df[dc.i_r9_min], scales_df[dc.i_r9_max]]))
     et_edges = np.unique(np.concatenate([scales_df[dc.i_et_min], scales_df[dc.i_et_max]]))
-    gain_edges = np.unique(scales_df[dc.i_gain])
+    gain_edges = np.unique(scales_df[dc.i_gain]) if any(scales_df[dc.i_gain] != 0) else np.array([0, 13])
 
-    # check if gain_edges is length 1
-    if len(gain_edges) == 1:
-        gain_edges = np.array([0, 12])
-    
     # Create lookup array
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
@@ -49,12 +45,6 @@ def prepare_scales_lookup(scales_df):
 def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup_scales, lookup_errs):
     # Assume events_df has columns 'x' and 'y'
     # print every variable:
-    print(f"[INFO][scale_data.py] run_edges: {run_edges}")
-    print(f"[INFO][scale_data.py] eta_edges: {eta_edges}")
-    print(f"[INFO][scale_data.py] r9_edges: {r9_edges}")
-    print(f"[INFO][scale_data.py] et_edges: {et_edges}")
-    print(f"[INFO][scale_data.py] gain_edges: {gain_edges}")
-    print(f"[INFO][scale_data.py] data: {data}")
     run_indices = np.digitize(data['run'], run_edges) - 1
     eta_indices = np.digitize(data['eta'], eta_edges) - 1
     r9_indices = np.digitize(data['r9'], r9_edges) - 1
@@ -66,13 +56,7 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges
     eta_indices = np.clip(eta_indices, 0, len(eta_edges)-2)
     r9_indices = np.clip(r9_indices, 0, len(r9_edges)-2)
     et_indices = np.clip(et_indices, 0, len(et_edges)-2)
-    gain_indices = np.clip(gain_indices, 0, len(gain_edges)-2)
-
-    print(f"[INFO][scale_data.py] run_indices: {run_indices}")
-    print(f"[INFO][scale_data.py] eta_indices: {eta_indices}")
-    print(f"[INFO][scale_data.py] r9_indices: {r9_indices}")
-    print(f"[INFO][scale_data.py] et_indices: {et_indices}")
-    print(f"[INFO][scale_data.py] gain_indices: {gain_indices}")
+    gain_indices = np.clip(gain_indices, 0, len(gain_edges)-2) if len(gain_edges) > 1 else np.zeros_like(gain_indices)
 
     # Apply scales
     scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
