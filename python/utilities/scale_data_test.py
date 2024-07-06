@@ -64,6 +64,8 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
     r9_indices = np.clip(r9_indices, 0, len(r9_edges)-2)
     et_indices = np.clip(et_indices, 0, len(et_edges)-2)
 
+    #iterate over data
+
     # Apply scales
     scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices]
     print(scales)
@@ -71,6 +73,17 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
     
     # Handle any events that fall outside the correction bins
     mask = np.isnan(scales)
+    run_indices = run_indices[mask]
+    eta_indices = eta_indices[mask]
+    r9_indices = r9_indices[mask]
+    et_indices = et_indices[mask]
+    for idx, row in data[mask].iterrows():
+        print(f"[INFO][scale_data.py] Event {idx} falls outside the correction bins")
+        print(row['run'], run_indices[idx])
+        print(row['eta'], eta_indices[idx])
+        print(row['r9'], r9_indices[idx])
+        print(row['et'], et_indices[idx])
+        print("=====================================")
     print(f"[INFO][scale_data.py] {mask.sum()} events fall outside the correction bins")
     print(data[mask].describe())
     scales[mask] = -1.0  # or any other default value
