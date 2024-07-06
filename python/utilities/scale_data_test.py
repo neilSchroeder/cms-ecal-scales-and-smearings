@@ -59,7 +59,7 @@ def prepare_scales_lookup(scales_df):
 def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs):
     # Assume events_df has columns 'x' and 'y'
     # print every variable:
-    run_indices = np.digitize(data['run'], run_edges) - 2
+    run_indices = np.digitize(data['run'], run_edges) - 1
     eta_indices = np.digitize(data['eta'], eta_edges) - 1
     r9_indices = np.digitize(data['r9'], r9_edges) - 1
     et_indices = np.digitize(data['et'], et_edges) - 1
