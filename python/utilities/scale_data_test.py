@@ -24,12 +24,11 @@ def prepare_scales_lookup(scales_df):
     run_edges = np.unique(np.concatenate([scales_df[dc.i_run_min], scales_df[dc.i_run_max]]))
     eta_edges = np.unique(np.concatenate([scales_df[dc.i_eta_min], scales_df[dc.i_eta_max]]))
     r9_edges = np.unique(np.concatenate([scales_df[dc.i_r9_min], scales_df[dc.i_r9_max]]))
-    et_edges = np.unique(np.concatenate([scales_df[dc.i_et_min], scales_df[dc.i_et_max]]))
-    gain_edges = np.unique(scales_df[dc.i_gain]) if any(scales_df[dc.i_gain] != 0) else np.array([0, 13])
+    et_edges = np.unique(np.concatenate([scales_df[dc.i_et_min], scales_df[dc.i_et_max]])) if all(scales_df[dc.i_gain] == 0) else np.array([0, 1, 6, 12])
 
     # Create lookup array
-    lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
-    lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
+    lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
+    lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
 
     for _, row in scales_df.iterrows():
         run_idx = np.searchsorted(run_edges, row[dc.i_run_min])
