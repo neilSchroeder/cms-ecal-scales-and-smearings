@@ -26,6 +26,10 @@ def prepare_scales_lookup(scales_df):
     r9_edges = np.unique(scales_df[[dc.i_r9_min, dc.i_r9_max]].values)
     et_edges = np.unique(scales_df[[dc.i_et_min, dc.i_et_max]].values) if all(scales_df[dc.i_gain] == 0) else np.array([0.5, 5.5, 6.5, 12.5])
 
+    print(eta_edges)
+    print(r9_edges)
+    print(et_edges)
+
     # Create lookup array
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
