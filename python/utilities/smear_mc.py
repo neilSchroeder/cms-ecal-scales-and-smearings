@@ -4,6 +4,7 @@ import time
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.constant_classes import CategoryConstants as cc
+from python.utilities.data_loader import custom_cuts
 
 def smear(mc,smearings):
     """
@@ -81,4 +82,9 @@ def smear(mc,smearings):
 
     mc.drop(["et_lead", "et_sub"], axis=1, inplace=True)
 
-    return mc
+    return custom_cuts(
+        mc,
+        inv_mass_cuts=(80, 100),
+        eta_cuts=(0, 1.4442, 1.566, 2.5),
+        et_cuts=((32, 14000), (20, 14000)),
+    )

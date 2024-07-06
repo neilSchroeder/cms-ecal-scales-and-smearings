@@ -242,34 +242,7 @@ def main():
     # scale the data
     if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
-        
-        t1 = time.time()
-        data_new = scale_data_test.scale(data, args.scales)
-        t2 = time.time()
-        data_old = scale_data.scale(data, args.scales)
-        t3 = time.time()
-        import numpy as np
-        from python.classes.constant_classes import DataConstants as dc
-        et_ratio_lead = np.divide(data_new[dc.E_LEAD].values, data_old[dc.E_LEAD].values)
-        et_ratio_sub = np.divide(data_new[dc.E_SUB].values, data_old[dc.E_SUB].values)
-        print(et_ratio_lead)
-        print(et_ratio_sub)
-        lead_mask = et_ratio_lead != 1
-        sublead_mask = et_ratio_sub != 1
-        print(f"[INFO] there are {lead_mask.sum()} events with different lead et")
-        print(f"[INFO] there are {sublead_mask.sum()} events with different sublead et")
-        print(data_new[lead_mask].describe())
-        print(data_old[lead_mask].describe())
-        print(data_new[sublead_mask].describe())
-        print(data_old[sublead_mask].describe())
-        print(f"[INFO] scale_data took {t2-t1} seconds")
-        print(f"[INFO] scale_data_test took {t3-t2} seconds")
-        # make sure that the two methods are consistent
-        if not data_old.equals(data_new):
-            print("[ERROR] scale_data and scale_data_test are not consistent")
-            print("[ERROR] please review the scales file and try again")
-            # find where the union
-            
+        data= scale_data_test.scale(data, args.scales)
     else:
         print(f"[INFO] no scales file provided, skipping data scaling")
 
