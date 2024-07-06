@@ -54,8 +54,6 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges
     print(f"[INFO][scale_data.py] r9_edges: {r9_edges}")
     print(f"[INFO][scale_data.py] et_edges: {et_edges}")
     print(f"[INFO][scale_data.py] gain_edges: {gain_edges}")
-    print(f"[INFO][scale_data.py] lookup_scales: {lookup_scales}")
-    print(f"[INFO][scale_data.py] lookup_errs: {lookup_errs}")
     print(f"[INFO][scale_data.py] data: {data}")
     run_indices = np.digitize(data['run'], run_edges) - 1
     eta_indices = np.digitize(data['eta'], eta_edges) - 1
@@ -69,6 +67,12 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges
     r9_indices = np.clip(r9_indices, 0, len(r9_edges)-2)
     et_indices = np.clip(et_indices, 0, len(et_edges)-2)
     gain_indices = np.clip(gain_indices, 0, len(gain_edges)-2)
+
+    print(f"[INFO][scale_data.py] run_indices: {run_indices}")
+    print(f"[INFO][scale_data.py] eta_indices: {eta_indices}")
+    print(f"[INFO][scale_data.py] r9_indices: {r9_indices}")
+    print(f"[INFO][scale_data.py] et_indices: {et_indices}")
+    print(f"[INFO][scale_data.py] gain_indices: {gain_indices}")
 
     # Apply scales
     scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
