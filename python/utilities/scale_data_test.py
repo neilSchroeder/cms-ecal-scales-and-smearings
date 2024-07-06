@@ -36,8 +36,15 @@ def prepare_scales_lookup(scales_df):
         eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
         r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
         et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
-        lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
-        lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
+        try:
+            lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
+            lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
+        except IndexError:
+            print(run_idx, row[dc.i_run_min])
+            print(eta_idx, row[dc.i_eta_min])
+            print(r9_idx, row[dc.i_r9_min])
+            print(et_idx, row[dc.i_et_min])
+
 
     print(lookup_scales)
     
