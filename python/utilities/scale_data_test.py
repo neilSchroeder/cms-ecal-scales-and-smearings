@@ -31,23 +31,24 @@ def prepare_scales_lookup(scales_df):
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
 
     for _, row in scales_df.iterrows():
-        run_idx = np.digitize(row[dc.i_run_min], run_edges) - 1
-        eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
-        r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
-        et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
-        try:
-            lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
-            lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
-        except IndexError:
-            print(run_idx, row[dc.i_run_min])
-            print(eta_idx, row[dc.i_eta_min])
-            print(r9_idx, row[dc.i_r9_min])
-            print(et_idx, row[dc.i_et_min])
-            raise
+        run_idx = np.searchsorted(run_edges, row[dc.i_run_min], side='right') - 1
+        eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min], side='right') - 1
+        r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min], side='right') - 1
+        et_idx = np.searchsorted(et_edges, row[dc.i_et_min], side='right') - 1
 
+        # Ensure indices are within bounds
+        run_idx = min(run_idx, len(run_edges) - 2)
+        eta_idx = min(eta_idx, len(eta_edges) - 2)
+        r9_idx = min(r9_idx, len(r9_edges) - 2)
+        et_idx = min(et_idx, len(et_edges) - 2)
 
-    print(lookup_scales)
-    
+        lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
+        lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
+
+    # Print the number of NaN values
+    nan_count = np.isnan(lookup_scales).sum()
+    print(f"Number of NaN values in lookup_scales: {nan_count}")
+
     return run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs
 
 def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs):
@@ -74,6 +75,7 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
     # Handle any events that fall outside the correction bins
     mask = np.isnan(scales)
     i = 0
+
     for idx, row in data[mask].iterrows():
         print(f"[INFO][scale_data.py] Event {idx} falls outside the correction bins")
         print(row['run'], run_indices[i], run_edges[run_indices[i]], run_edges[run_indices[i]+1])
