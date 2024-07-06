@@ -36,6 +36,11 @@ def prepare_scales_lookup(scales_df):
         r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min], side='right') - 1
         et_idx = np.searchsorted(et_edges, row[dc.i_et_min], side='right') - 1
 
+        if any([run_idx < 0, eta_idx < 0, r9_idx < 0, et_idx < 0]):
+            print(f"[ERROR][scale_data.py] Negative index found: {run_idx}, {eta_idx}, {r9_idx}, {et_idx}")
+            print(row)
+            continue
+
         # Ensure indices are within bounds
         run_idx = min(run_idx, len(run_edges) - 2)
         eta_idx = min(eta_idx, len(eta_edges) - 2)
