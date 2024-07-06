@@ -104,6 +104,8 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
         print(lookup_scales[int(row['run_index']), int(row['eta_index']), int(row['r9_index']), int(row['et_index'])])
         print("=====================================")
         i += 1
+        if i > 10:
+            break
     print(f"[INFO][scale_data.py] {mask.sum()} events fall outside the correction bins")
     print(data[mask].describe())
     scales[mask] = -1.0  # or any other default value
