@@ -40,23 +40,19 @@ def prepare_scales_lookup(scales_df):
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
 
-    run_ids = np.digitize(scales_df[dc.i_run_min], run_edges) - 1
-    eta_ids = np.digitize(scales_df[dc.i_eta_min]+1e-6, eta_edges) - 1
-    r9_ids = np.digitize(scales_df[dc.i_r9_min]+1e-6, r9_edges) - 1
-    et_ids = np.digitize(scales_df[dc.i_et_min]+1e-6, et_edges) - 1
-
-    # Print the digitized indices
-    print("Run IDs:", run_ids)
-    print("Eta IDs:", eta_ids)
-    print("R9 IDs:", r9_ids)
-    print("ET IDs:", et_ids)
-
-    lookup_scales[run_ids, eta_ids, r9_ids, et_ids] = scales_df[dc.i_scale]
-    lookup_errs[run_ids, eta_ids, r9_ids, et_ids] = scales_df[dc.i_err]
-
-    # Print sections of the lookup arrays to verify assignment
-    print("Lookup Scales (sample):", lookup_scales[:2, :2, :2, :2])
-    print("Lookup Errors (sample):", lookup_errs[:2, :2, :2, :2])
+    for idx, row in scales_df.iterrows():
+        run_id = np.digitize(row[dc.i_run_min], run_edges) - 1
+        eta_id = np.digitize(row[dc.i_eta_min]+1e-6, eta_edges) - 1
+        r9_id = np.digitize(row[dc.i_r9_min]+1e-6, r9_edges) - 1
+        if np.digitize(row[dc.i_r9_max]-1e-6, r9_edges) - 1  != r9_id:
+            r9_id = [x for x in range(r9_id, np.digitize(row[dc.i_r9_max]-1e-6, r9_edges), 1)]
+        et_id = np.digitize(row[dc.i_et_min], et_edges) - 1
+        if np.digitize(row[dc.i_et_max], et_edges) - 1 != et_id:
+            et_id = [x for x in range(et_id, np.digitize(row[dc.i_et_max], et_edges), 1)]
+        for r9 in r9_id:
+            for et in et_id:
+                lookup_scales[run_id, eta_id, r9, et] = row[dc.i_scale]
+                lookup_errs[run_id, eta_id, r9, et] = row[dc.i_err]
 
     # Print the number of NaN values
     nan_count = np.isnan(lookup_scales).sum()
