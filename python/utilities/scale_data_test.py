@@ -95,21 +95,10 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
     data['r9_index'] = r9_indices
     data['et_index'] = et_indices
 
-    for idx, row in data[mask].iterrows():
-        print(f"[INFO][scale_data.py] Event {idx} falls outside the correction bins")
-        print(row)
-        print(row['run'], row['run_index'], run_edges[int(row['run_index'])], run_edges[int(row['run_index'])+1])
-        print(row['eta'], row['eta_index'], eta_edges[int(row['eta_index'])], eta_edges[int(row['eta_index'])+1])
-        print(row['r9'], row['r9_index'], r9_edges[int(row['r9_index'])], r9_edges[int(row['r9_index'])+1])
-        print(row['et'], row['et_index'], et_edges[int(row['et_index'])], et_edges[int(row['et_index'])+1])
-        print(lookup_scales[int(row['run_index']), int(row['eta_index']), int(row['r9_index']), int(row['et_index'])])
-        print("=====================================")
-        i += 1
-        if i > 10:
-            break
-    print(f"[INFO][scale_data.py] {mask.sum()} events fall outside the correction bins")
+    print(f"[WARNING][scale_data.py] {mask.sum()} events fall outside the correction bins, please check scales file for completeness.")
+    print(f"[WARNING][scale_data.py] Run `python pytyhon/tools/scales_validator.py -s <scales_file>` to check coverage.")
     print(data[mask].describe())
-    scales[mask] = -1.0  # or any other default value
+    scales[mask] = 1.0  # or any other default value
     errs[mask] = 0.0  # or any other default value
     
     return scales, errs
