@@ -46,9 +46,9 @@ def prepare_scales_lookup(scales_df):
         r9_id = [np.digitize(row[dc.i_r9_min]+1e-6, r9_edges) - 1]
         if np.digitize(row[dc.i_r9_max]-1e-6, r9_edges) - 1  != r9_id:
             r9_id = [x for x in range(r9_id[0], np.digitize(row[dc.i_r9_max]-1e-6, r9_edges), 1)]
-        et_id = [np.digitize(row[dc.i_et_min], et_edges) - 1]
+        et_id = [np.digitize(row[dc.i_et_min]+1e-6, et_edges) - 1]
         if np.digitize(row[dc.i_et_max], et_edges) - 1 != et_id:
-            et_id = [x for x in range(et_id[0], np.digitize(row[dc.i_et_max], et_edges), 1)]
+            et_id = [x for x in range(et_id[0], np.digitize(row[dc.i_et_max]-1e-6, et_edges), 1)]
 
         print(run_id, row[dc.i_run_min], row[dc.i_run_max], run_edges[run_id], run_edges[run_id+1])
         print(eta_id, row[dc.i_eta_min], row[dc.i_eta_max], eta_edges[eta_id], eta_edges[eta_id+1])
