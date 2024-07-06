@@ -30,25 +30,13 @@ def prepare_scales_lookup(scales_df):
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
 
-    for _, row in scales_df.iterrows():
-        run_idx = np.searchsorted(run_edges, row[dc.i_run_min], side='right') - 1
-        eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min], side='right') - 1
-        r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min], side='right') - 1
-        et_idx = np.searchsorted(et_edges, row[dc.i_et_min], side='right') - 1
+    run_ids = np.digitize(scales_df[dc.i_run_min], run_edges) - 1
+    eta_ids = np.digitize(scales_df[dc.i_eta_min]+1e6, eta_edges) - 1
+    r9_ids = np.digitize(scales_df[dc.i_r9_min]+1e6, r9_edges) - 1
+    et_ids = np.digitize(scales_df[dc.i_et_min]+1e6, et_edges) - 1
 
-        if any([run_idx < 0, eta_idx < 0, r9_idx < 0, et_idx < 0]):
-            print(f"[ERROR][scale_data.py] Negative index found: {run_idx}, {eta_idx}, {r9_idx}, {et_idx}")
-            print(row)
-            continue
-
-        # Ensure indices are within bounds
-        run_idx = min(run_idx, len(run_edges) - 2)
-        eta_idx = min(eta_idx, len(eta_edges) - 2)
-        r9_idx = min(r9_idx, len(r9_edges) - 2)
-        et_idx = min(et_idx, len(et_edges) - 2)
-
-        lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
-        lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
+    lookup_scales[run_ids, eta_ids, r9_ids, et_ids] = scales_df[dc.i_scale]
+    lookup_errs[run_ids, eta_ids, r9_ids, et_ids] = scales_df[dc.i_err]
 
     # Print the number of NaN values
     nan_count = np.isnan(lookup_scales).sum()
