@@ -30,12 +30,6 @@ def prepare_scales_lookup(scales_df):
     r9_edges = np.unique(scales_df[[dc.i_r9_min, dc.i_r9_max]].values)
     et_edges = np.unique(scales_df[[dc.i_et_min, dc.i_et_max]].values) if all(scales_df[dc.i_gain] == 0) else np.array([0.5, 5.5, 6.5, 12.5])
 
-    # Print the edges to verify their correctness
-    print("Run Edges:", run_edges)
-    print("Eta Edges:", eta_edges)
-    print("R9 Edges:", r9_edges)
-    print("ET Edges:", et_edges)
-
     # Create lookup array
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
@@ -46,14 +40,11 @@ def prepare_scales_lookup(scales_df):
         r9_id = [np.digitize(row[dc.i_r9_min]+1e-6, r9_edges) - 1]
         if np.digitize(row[dc.i_r9_max]-1e-6, r9_edges) - 1  != r9_id:
             r9_id = [x for x in range(r9_id[0], np.digitize(row[dc.i_r9_max]-1e-6, r9_edges), 1)]
+        # TODO: implement gain handling
         et_id = [np.digitize(row[dc.i_et_min]+1e-6, et_edges) - 1]
         if np.digitize(row[dc.i_et_max], et_edges) - 1 != et_id:
             et_id = [x for x in range(et_id[0], np.digitize(row[dc.i_et_max]-1e-6, et_edges), 1)]
 
-        print(run_id, row[dc.i_run_min], run_edges[run_id], run_edges[run_id+1])
-        print(eta_id, row[dc.i_eta_min], eta_edges[eta_id], eta_edges[eta_id+1])
-        print(r9_id, row[dc.i_r9_min], row[dc.i_r9_max], r9_edges[r9_id[0]], r9_edges[r9_id[-1]+1])
-        print(et_id, row[dc.i_et_min], row[dc.i_et_max], et_edges[et_id[0]], et_edges[et_id[-1]+1])
         for r9 in r9_id:
             for et in et_id:
                 lookup_scales[run_id, eta_id, r9, et] = row[dc.i_scale]
