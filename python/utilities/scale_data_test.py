@@ -36,10 +36,18 @@ def prepare_scales_lookup(scales_df):
         eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
         r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
         et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
-        if run_idx == len(run_edges):
-            print(row[dc.i_run_min])
-        lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
-        lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
+        try:
+            lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
+            lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
+        except IndexError:
+            print(f"[ERROR][scale_data.py] Index out of bounds: {run_idx}, {eta_idx}, {r9_idx}, {et_idx}")
+            print(f"[ERROR][scale_data.py] {row[dc.i_scale]}, {row[dc.i_err]}")
+            print(f"[ERROR][scale_data.py] {run_edges}, {eta_edges}, {r9_edges}, {et_edges}")
+            print(f"[ERROR][scale_data.py] {lookup_scales.shape}")
+            print(f"[ERROR][scale_data.py] {lookup_errs.shape}")
+            print(f"[ERROR][scale_data.py] {row}")
+            print(f"[ERROR][scale_data.py] {scales_df}")
+            raise
 
     print(lookup_scales)
     
