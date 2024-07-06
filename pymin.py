@@ -249,8 +249,11 @@ def main():
         data_old = scale_data.scale(data, args.scales)
         t3 = time.time()
         import numpy as np
-        et_ratio_lead = np.divide(data_new['lead_et'].values, data_old['lead_et'].values)
-        et_ratio_sub = np.divide(data_new['sublead_et'].values, data_old['sublead_et'].values)
+        from python.classes.constant_classes import DataConstants as dc
+        et_ratio_lead = np.divide(data_new[dc.E_LEAD].values, data_old[dc.E_LEAD].values)
+        et_ratio_sub = np.divide(data_new[dc.E_SUB].values, data_old[dc.E_SUB].values)
+        print(et_ratio_lead)
+        print(et_ratio_sub)
         lead_mask = et_ratio_lead != 1
         sublead_mask = et_ratio_sub != 1
         print(f"[INFO] there are {lead_mask.sum()} events with different lead et")
