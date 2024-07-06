@@ -21,7 +21,7 @@ def prepare_scales_lookup(scales_df):
     scales_df = scales_df.sort_values([dc.i_run_min, dc.i_eta_min, dc.i_r9_min, dc.i_et_min])
     
     # Create bin edges
-    run_edges = np.unique(np.concatenate([scales_df[dc.i_run_min].values-1e-6, scales_df[dc.i_run_max].values+1e-6]))
+    run_edges = np.unique(np.concatenate([scales_df[dc.i_run_min].values-0.5, scales_df[dc.i_run_max].values+0.5]))
     eta_edges = np.unique(scales_df[[dc.i_eta_min, dc.i_eta_max]].values)
     r9_edges = np.unique(scales_df[[dc.i_r9_min, dc.i_r9_max]].values)
     et_edges = np.unique(scales_df[[dc.i_et_min, dc.i_et_max]].values) if all(scales_df[dc.i_gain] == 0) else np.array([0.5, 5.5, 6.5, 12.5])
@@ -36,18 +36,8 @@ def prepare_scales_lookup(scales_df):
         eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
         r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
         et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
-        try:
-            lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
-            lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
-        except IndexError:
-            print(f"[ERROR][scale_data.py] Index out of bounds: {run_idx}, {eta_idx}, {r9_idx}, {et_idx}")
-            print(f"[ERROR][scale_data.py] {row[dc.i_scale]}, {row[dc.i_err]}")
-            print(f"[ERROR][scale_data.py] {run_edges}, {eta_edges}, {r9_edges}, {et_edges}")
-            print(f"[ERROR][scale_data.py] {lookup_scales.shape}")
-            print(f"[ERROR][scale_data.py] {lookup_errs.shape}")
-            print(f"[ERROR][scale_data.py] {row}")
-            print(f"[ERROR][scale_data.py] {scales_df}")
-            raise
+        lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
+        lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
 
     print(lookup_scales)
     
