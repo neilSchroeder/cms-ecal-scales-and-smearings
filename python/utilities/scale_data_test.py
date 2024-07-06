@@ -29,7 +29,7 @@ def prepare_scales_lookup(scales_df):
 
     # check if gain_edges is length 1
     if len(gain_edges) == 1:
-        gain_edges = np.array([0, 1, 6, 12])
+        gain_edges = np.array([0, 12])
     
     # Create lookup array
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1, len(gain_edges)-1), np.nan)
