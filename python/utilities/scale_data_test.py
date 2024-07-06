@@ -141,6 +141,10 @@ def scale(data, scales):
 
     # calculate new energies, errors, and invmasses
     # lead_data['scale'] returns a tuple of (scale, err)
+    data['lead_scale'] = lead_data['scale']
+    data['lead_err'] = lead_data['err']
+    data['sublead_scale'] = sublead_data['scale']
+    data['sublead_err'] = sublead_data['err']
     data[dc.E_LEAD] = data[dc.E_LEAD] * lead_data['scale']
     data[dc.E_SUB] = data[dc.E_SUB] * sublead_data['scale']
     invmass = data[dc.INVMASS].values.copy()
@@ -159,6 +163,12 @@ def scale(data, scales):
     data[dc.INVMASS] = invmass * np.sqrt(
         np.multiply(lead_data['scale'], sublead_data['scale'])
     )
+
+    # grab one event of every scale value
+    lead_data = lead_data.drop_duplicates(subset=['scale'])
+    sublead_data = sublead_data.drop_duplicates(subset=['scale'])
+    lead_data.to_csv("lead_data.csv")
+    sublead_data.to_csv("sublead_data.csv")
 
     return data_loader.custom_cuts(
                                     data,
