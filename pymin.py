@@ -248,6 +248,17 @@ def main():
         t2 = time.time()
         data_old = scale_data.scale(data, args.scales)
         t3 = time.time()
+        import numpy as np
+        et_ratio_lead = np.divide(data_new['lead_et'].values, data_old['lead_et'].values)
+        et_ratio_sub = np.divide(data_new['sublead_et'].values, data_old['sublead_et'].values)
+        lead_mask = et_ratio_lead != 1
+        sublead_mask = et_ratio_sub != 1
+        print(f"[INFO] there are {lead_mask.sum()} events with different lead et")
+        print(f"[INFO] there are {sublead_mask.sum()} events with different sublead et")
+        print(data_new[lead_mask].describe())
+        print(data_old[lead_mask].describe())
+        print(data_new[sublead_mask].describe())
+        print(data_old[sublead_mask].describe())
         print(f"[INFO] scale_data took {t2-t1} seconds")
         print(f"[INFO] scale_data_test took {t3-t2} seconds")
         # make sure that the two methods are consistent
