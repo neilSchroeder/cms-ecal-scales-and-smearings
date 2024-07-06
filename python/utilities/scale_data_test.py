@@ -41,9 +41,9 @@ def prepare_scales_lookup(scales_df):
     lookup_errs = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
 
     run_ids = np.digitize(scales_df[dc.i_run_min], run_edges) - 1
-    eta_ids = np.digitize(scales_df[dc.i_eta_min]+1e6, eta_edges) - 1
-    r9_ids = np.digitize(scales_df[dc.i_r9_min]+1e6, r9_edges) - 1
-    et_ids = np.digitize(scales_df[dc.i_et_min]+1e6, et_edges) - 1
+    eta_ids = np.digitize(scales_df[dc.i_eta_min]+1e-6, eta_edges) - 1
+    r9_ids = np.digitize(scales_df[dc.i_r9_min]+1e-6, r9_edges) - 1
+    et_ids = np.digitize(scales_df[dc.i_et_min]+1e-6, et_edges) - 1
 
     # Print the digitized indices
     print("Run IDs:", run_ids)
