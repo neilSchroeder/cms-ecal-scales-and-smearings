@@ -11,24 +11,30 @@ def prepare_scales_lookup(scales_df):
 
     Parameters
     ----------
-    corrections_df : pd.DataFrame
+    scales_df : pd.DataFrame
         DataFrame with columns 'min_run', 'max_run', 'min_eta', 'max_eta', 'min_r9', 'max_r9', 'min_et', 'max_et', 'gain', 'scale', 'err'
 
     Returns
     -------
+    tuple : (run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs)
     """
-    # Assume corrections_df has columns 'min_run', 'max_run', 'min_eta', 'max_eta', 'min_r9', 'max_r9', 'min_et', 'max_et', 'scale'
+    # Print the input DataFrame to verify its structure and contents
+    print("Scales DataFrame:")
+    print(scales_df.head())
+
     scales_df = scales_df.sort_values([dc.i_run_min, dc.i_eta_min, dc.i_r9_min, dc.i_et_min])
-    
+
     # Create bin edges
     run_edges = np.unique(np.concatenate([scales_df[dc.i_run_min].values - 0.1, np.array([999999])]))
     eta_edges = np.unique(scales_df[[dc.i_eta_min, dc.i_eta_max]].values)
     r9_edges = np.unique(scales_df[[dc.i_r9_min, dc.i_r9_max]].values)
     et_edges = np.unique(scales_df[[dc.i_et_min, dc.i_et_max]].values) if all(scales_df[dc.i_gain] == 0) else np.array([0.5, 5.5, 6.5, 12.5])
 
-    print(eta_edges)
-    print(r9_edges)
-    print(et_edges)
+    # Print the edges to verify their correctness
+    print("Run Edges:", run_edges)
+    print("Eta Edges:", eta_edges)
+    print("R9 Edges:", r9_edges)
+    print("ET Edges:", et_edges)
 
     # Create lookup array
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
@@ -39,14 +45,25 @@ def prepare_scales_lookup(scales_df):
     r9_ids = np.digitize(scales_df[dc.i_r9_min]+1e6, r9_edges) - 1
     et_ids = np.digitize(scales_df[dc.i_et_min]+1e6, et_edges) - 1
 
+    # Print the digitized indices
+    print("Run IDs:", run_ids)
+    print("Eta IDs:", eta_ids)
+    print("R9 IDs:", r9_ids)
+    print("ET IDs:", et_ids)
+
     lookup_scales[run_ids, eta_ids, r9_ids, et_ids] = scales_df[dc.i_scale]
     lookup_errs[run_ids, eta_ids, r9_ids, et_ids] = scales_df[dc.i_err]
+
+    # Print sections of the lookup arrays to verify assignment
+    print("Lookup Scales (sample):", lookup_scales[:2, :2, :2, :2])
+    print("Lookup Errors (sample):", lookup_errs[:2, :2, :2, :2])
 
     # Print the number of NaN values
     nan_count = np.isnan(lookup_scales).sum()
     print(f"Number of NaN values in lookup_scales: {nan_count}")
 
     return run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs
+
 
 def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs):
     # Assume events_df has columns 'x' and 'y'
