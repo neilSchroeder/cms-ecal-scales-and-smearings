@@ -21,11 +21,10 @@ def prepare_scales_lookup(scales_df):
     scales_df = scales_df.sort_values([dc.i_run_min, dc.i_eta_min, dc.i_r9_min, dc.i_et_min])
     
     # Create bin edges
-    run_edges = np.unique(np.concatenate([scales_df[dc.i_run_min].values-0.5, scales_df[dc.i_run_max].values+0.5]))
+    run_edges = np.unique(scales_df[[dc.i_run_min, dc.i_run_max]].values)
     eta_edges = np.unique(scales_df[[dc.i_eta_min, dc.i_eta_max]].values)
     r9_edges = np.unique(scales_df[[dc.i_r9_min, dc.i_r9_max]].values)
     et_edges = np.unique(scales_df[[dc.i_et_min, dc.i_et_max]].values) if all(scales_df[dc.i_gain] == 0) else np.array([0.5, 5.5, 6.5, 12.5])
-    print(run_edges)
 
     # Create lookup array
     lookup_scales = np.full((len(run_edges)-1, len(eta_edges)-1, len(r9_edges)-1, len(et_edges)-1), np.nan)
@@ -44,6 +43,7 @@ def prepare_scales_lookup(scales_df):
             print(eta_idx, row[dc.i_eta_min])
             print(r9_idx, row[dc.i_r9_min])
             print(et_idx, row[dc.i_et_min])
+            raise
 
 
     print(lookup_scales)
