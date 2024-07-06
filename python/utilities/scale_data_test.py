@@ -35,32 +35,29 @@ def prepare_scales_lookup(scales_df):
         eta_idx = np.searchsorted(eta_edges, row[dc.i_eta_min])
         r9_idx = np.searchsorted(r9_edges, row[dc.i_r9_min])
         et_idx = np.searchsorted(et_edges, row[dc.i_et_min])
-        gain_idx = np.searchsorted(gain_edges, row[dc.i_gain])
-        lookup_scales[run_idx, eta_idx, r9_idx, et_idx, gain_idx] = row[dc.i_scale]
-        lookup_errs[run_idx, eta_idx, r9_idx, et_idx, gain_idx] = row[dc.i_err]
+        lookup_scales[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_scale]
+        lookup_errs[run_idx, eta_idx, r9_idx, et_idx] = row[dc.i_err]
     
-    return run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup_scales, lookup_errs
+    return run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs
 
-def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, gain_edges, lookup_scales, lookup_errs):
+def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs):
     # Assume events_df has columns 'x' and 'y'
     # print every variable:
     run_indices = np.digitize(data['run'], run_edges) - 1
     eta_indices = np.digitize(data['eta'], eta_edges) - 1
     r9_indices = np.digitize(data['r9'], r9_edges) - 1
     et_indices = np.digitize(data['et'], et_edges) - 1
-    gain_indices = np.digitize(data['gain'], gain_edges) - 1
 
     # Clip indices to valid range
     run_indices = np.clip(run_indices, 0, len(run_edges)-2)
     eta_indices = np.clip(eta_indices, 0, len(eta_edges)-2)
     r9_indices = np.clip(r9_indices, 0, len(r9_edges)-2)
     et_indices = np.clip(et_indices, 0, len(et_edges)-2)
-    gain_indices = np.clip(gain_indices, 0, len(gain_edges)-2) if len(gain_edges) > 1 else np.zeros_like(gain_indices)
 
     # Apply scales
-    scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
+    scales = lookup_scales[run_indices, eta_indices, r9_indices, et_indices]
     print(scales)
-    errs = lookup_errs[run_indices, eta_indices, r9_indices, et_indices, gain_indices]
+    errs = lookup_errs[run_indices, eta_indices, r9_indices, et_indices]
     
     # Handle any events that fall outside the correction bins
     mask = np.isnan(scales)
