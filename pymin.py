@@ -254,10 +254,8 @@ def main():
         if not data_old.equals(data_new):
             print("[ERROR] scale_data and scale_data_test are not consistent")
             print("[ERROR] please review the scales file and try again")
-            # find where the two dataframes differ
-            diff = data_old.compare(data_new)
-            print(diff)
-            return
+            # find where the union
+            
     else:
         print(f"[INFO] no scales file provided, skipping data scaling")
 
