@@ -50,10 +50,10 @@ def prepare_scales_lookup(scales_df):
         if np.digitize(row[dc.i_et_max], et_edges) - 1 != et_id:
             et_id = [x for x in range(et_id[0], np.digitize(row[dc.i_et_max]-1e-6, et_edges), 1)]
 
-        print(run_id, row[dc.i_run_min], row[dc.i_run_max], run_edges[run_id], run_edges[run_id+1])
-        print(eta_id, row[dc.i_eta_min], row[dc.i_eta_max], eta_edges[eta_id], eta_edges[eta_id+1])
-        print(r9_id, row[dc.i_r9_min], row[dc.i_r9_max], r9_edges[r9_id], r9_edges[r9_id+1])
-        print(et_id, row[dc.i_et_min], row[dc.i_et_max], et_edges[et_id], et_edges[et_id+1])
+        print(run_id, row[dc.i_run_min], run_edges[run_id], run_edges[run_id+1])
+        print(eta_id, row[dc.i_eta_min], eta_edges[eta_id], eta_edges[eta_id+1])
+        print(r9_id, row[dc.i_r9_min], row[dc.i_r9_max], r9_edges[r9_id[0]], r9_edges[r9_id[-1]+1])
+        print(et_id, row[dc.i_et_min], row[dc.i_et_max], et_edges[et_id[0]], et_edges[et_id[-1]+1])
         for r9 in r9_id:
             for et in et_id:
                 lookup_scales[run_id, eta_id, r9, et] = row[dc.i_scale]
