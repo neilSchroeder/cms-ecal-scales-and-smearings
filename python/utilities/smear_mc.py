@@ -36,6 +36,7 @@ def normal(mean, std, size):
         np.array: array of random numbers from a normal distribution
     ----------
     """
+    np.random.seed(dc.SEED) # otherwise there won't be any consistency
     return np.random.normal(mean, std, size).astype(np.float32)
 
 def smear(mc,smearings):
