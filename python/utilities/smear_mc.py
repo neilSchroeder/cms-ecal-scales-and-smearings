@@ -117,7 +117,6 @@ def smear(mc,smearings):
         mc[dc.E_SUB] = multiply(mc[dc.E_SUB].values, smears_sub)
         mc[dc.INVMASS] = multiply(mc[dc.INVMASS].values, np.sqrt(multiply(smears_lead, smears_sub)))
 
-    mc.drop(["et_lead", "et_sub"], axis=1, inplace=True)
 
     return custom_cuts(
         mc,
