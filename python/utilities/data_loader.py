@@ -119,16 +119,18 @@ def custom_cuts(
     """
     mask = np.ones(len(df), dtype=bool)
     if eta_cuts:
+        df[dc.ETA_LEAD] = np.abs(df[dc.ETA_LEAD])
+        df[dc.ETA_SUB] = np.abs(df[dc.ETA_SUB])
         if isinstance(eta_cuts[0], tuple):
             # this means cuts on both leading and SUBing electrons
             if eta_cuts[0][0] != -1:
-                mask &= (np.abs(df[dc.ETA_LEAD].values) >= eta_cuts[0][0])
+                mask &= (df[dc.ETA_LEAD] >= eta_cuts[0][0])
             if eta_cuts[0][1] != -1:
-                mask &= (np.abs(df[dc.ETA_LEAD].values) <= eta_cuts[0][1])
+                mask &= (df[dc.ETA_LEAD] <= eta_cuts[0][1])
             if eta_cuts[1][0] != -1:
-                mask &= (np.abs(df[dc.ETA_SUB].values) >= eta_cuts[1][0])
+                mask &= (df[dc.ETA_SUB] >= eta_cuts[1][0])
             if eta_cuts[1][1] != -1:
-                mask &= (np.abs(df[dc.ETA_SUB].values) <= eta_cuts[1][1])
+                mask &= (df[dc.ETA_SUB] <= eta_cuts[1][1])
         else:
             # this means one set of cuts for both leading and SUBing electrons
             mask = mask & ((df[dc.ETA_LEAD] > eta_cuts[0]) & (df[dc.ETA_LEAD] < eta_cuts[1]) | (df[dc.ETA_LEAD] > eta_cuts[2]) & (df[dc.ETA_LEAD] < eta_cuts[3]))
