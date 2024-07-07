@@ -1,10 +1,42 @@
 import pandas as pd
+import numba
 import numpy as np
 import time
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.constant_classes import CategoryConstants as cc
 from python.utilities.data_loader import custom_cuts
+
+@numba.njit
+def multiply(arr1, arr2):
+    """
+    Multiplies two arrays element-wise.
+    ----------
+    Args:
+        arr1 (np.array): array 1
+        arr2 (np.array): array 2
+    ----------
+    Returns:
+        np.array: element-wise product of arr1 and arr2
+    ----------
+    """
+    return np.multiply(arr1, arr2).astype(np.float32)
+
+@numba.njit
+def normal(mean, std, size):
+    """
+    Generates an array of random numbers from a normal distribution.
+    ----------
+    Args:
+        mean (float): mean of the distribution
+        std (float): standard deviation of the distribution
+        size (int): size of the array
+    ----------
+    Returns:
+        np.array: array of random numbers from a normal distribution
+    ----------
+    """
+    return np.random.normal(mean, std, size).astype(np.float32)
 
 def smear(mc,smearings):
     """
@@ -24,10 +56,15 @@ def smear(mc,smearings):
     delim_cat = "-"
     delim_var = "_"
 
+    mc_eta_lead = mc[dc.ETA_LEAD].values
+    mc_eta_sub = mc[dc.ETA_SUB].values
+    mc_r9_lead = mc[dc.R9_LEAD].values
+    mc_r9_sub = mc[dc.R9_SUB].values
+    mc_et_lead = np.divide(mc[dc.E_LEAD].values, np.cosh(mc_eta_lead))
+    mc_et_sub = np.divide(mc[dc.E_SUB].values, np.cosh(mc_eta_sub))
+
     smear_df = pd.read_csv(smearings, delimiter='\t', header=None, comment='#')
     tot = len(mc)
-    mc["et_lead"] = np.divide(mc[dc.E_LEAD].values, np.cosh(mc[dc.ETA_LEAD].values))
-    mc["et_sub"] = np.divide(mc[dc.E_SUB].values, np.cosh(mc[dc.ETA_SUB].values))
     #format is category, emain, err_mean, rho, err_rho, phi, err_phi
     for i, row in smear_df.iterrows():
     
@@ -45,15 +82,15 @@ def smear(mc,smearings):
         et_min, et_max = float(et_list[1]), float(et_list[2])
 
         # build masks
-        mask_eta_lead = np.logical_and( eta_min <= mc[dc.ETA_LEAD].values, mc[dc.ETA_LEAD].values < eta_max)
-        mask_eta_sub = np.logical_and( eta_min <= mc[dc.ETA_SUB].values, mc[dc.ETA_SUB].values < eta_max)
-        mask_r9_lead = np.logical_and( r9_min <= mc[dc.R9_LEAD].values, mc[dc.R9_LEAD].values < r9_max)
-        mask_r9_sub = np.logical_and( r9_min <= mc[dc.R9_SUB].values, mc[dc.R9_SUB].values < r9_max)
+        mask_eta_lead = np.logical_and( eta_min <= mc_eta_lead, mc_et_lead < eta_max)
+        mask_eta_sub = np.logical_and( eta_min <= mc_eta_sub, mc_eta_sub < eta_max)
+        mask_r9_lead = np.logical_and( r9_min <= mc_r9_lead, mc_r9_lead < r9_max)
+        mask_r9_sub = np.logical_and( r9_min <= mc_r9_sub, mc_r9_sub < r9_max)
         mask_et_lead = np.ones(len(mask_eta_lead), dtype=bool)
         mask_et_sub = np.ones(len(mask_eta_sub), dtype=bool)
         if not (et_min == dc.MIN_ET and et_max == dc.MAX_ET):
-            mask_et_lead = np.logical_and(et_min <= mc["et_lead"].values, mc["et_lead"].values < et_max)
-            mask_et_sub = np.logical_and(et_min <= mc["et_sub"].values, mc["et_sub"].values < et_max)
+            mask_et_lead = np.logical_and(et_min <= mc_et_lead, mc_et_lead < et_max)
+            mask_et_sub = np.logical_and(et_min <= mc_et_sub, mc_et_sub < et_max)
     
         mask_lead = np.logical_and(mask_eta_lead,np.logical_and(mask_r9_lead,mask_et_lead))
         tot -= np.sum(mask_lead)
@@ -61,24 +98,24 @@ def smear(mc,smearings):
         mask_sub = np.logical_and(mask_eta_sub,np.logical_and(mask_r9_sub,mask_et_sub))
 
         # smear the mc
-        smears_lead = np.multiply(mask_lead, np.random.normal(1, row[3], len(mask_lead)),dtype=np.float32)
-        smears_lead_up = np.multiply(mask_lead, np.random.normal(1, row[3] + row[4], len(mask_lead)),dtype=np.float32)
-        smears_lead_down = np.multiply(mask_lead, np.random.normal(1, np.abs(row[3] - row[4]), len(mask_lead)),dtype=np.float32)
-        smears_sub = np.multiply(mask_sub, np.random.normal(1, row[3], len(mask_sub)),dtype=np.float32)
-        smears_sub_up = np.multiply(mask_sub, np.random.normal(1, row[3] + row[4], len(mask_sub)),dtype=np.float32)
-        smears_sub_down = np.multiply(mask_sub, np.random.normal(1, np.abs(row[3] - row[4]), len(mask_sub)),dtype=np.float32)
+        smears_lead = multiply(mask_lead, normal(1, row[3], len(mask_lead)))
+        # smears_lead_up = multiply(mask_lead, normal(1, row[3] + row[4], len(mask_lead)))
+        # smears_lead_down = multiply(mask_lead, normal(1, np.abs(row[3] - row[4]), len(mask_lead)))
+        smears_sub = multiply(mask_sub, normal(1, row[3], len(mask_sub)))
+        # smears_sub_up = multiply(mask_sub, normal(1, row[3] + row[4], len(mask_sub)))
+        # smears_sub_down = multiply(mask_sub, normal(1, np.abs(row[3] - row[4]), len(mask_sub)))
+
         smears_lead[smears_lead==0] = 1.
-        smears_lead_up[smears_lead_up==0] = 1.
-        smears_lead_down[smears_lead_down==0] = 1.
+        # smears_lead_up[smears_lead_up==0] = 1.
+        # smears_lead_down[smears_lead_down==0] = 1.
         smears_sub[smears_sub==0] = 1.
-        smears_sub_up[smears_sub_up==0] = 1.
-        smears_sub_down[smears_sub_down==0] = 1.
+        # smears_sub_up[smears_sub_up==0] = 1.
+        # smears_sub_down[smears_sub_down==0] = 1.
 
         #get energies and smear them
-        mc[dc.E_LEAD] = np.multiply(mc[dc.E_LEAD].values, smears_lead,dtype=np.float32)
-        mc[dc.E_SUB] = np.multiply(mc[dc.E_SUB].values, smears_sub,dtype=np.float32)
-        mc[dc.INVMASS] = np.multiply(mc[dc.INVMASS].values, np.sqrt(smears_lead),dtype=np.float32)
-        mc[dc.INVMASS] = np.multiply(mc[dc.INVMASS].values, np.sqrt(smears_sub),dtype=np.float32)
+        mc[dc.E_LEAD] = multiply(mc[dc.E_LEAD].values, smears_lead)
+        mc[dc.E_SUB] = multiply(mc[dc.E_SUB].values, smears_sub)
+        mc[dc.INVMASS] = multiply(mc[dc.INVMASS].values, np.sqrt(multiply(smears_lead, smears_sub)))
 
     mc.drop(["et_lead", "et_sub"], axis=1, inplace=True)
 
