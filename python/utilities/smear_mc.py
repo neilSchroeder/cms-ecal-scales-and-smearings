@@ -22,22 +22,6 @@ def multiply(arr1, arr2):
     """
     return np.multiply(arr1, arr2).astype(np.float32)
 
-@numba.njit
-def normal(mean, std, size, seed):
-    """
-    Generates an array of random numbers from a normal distribution.
-    ----------
-    Args:
-        mean (float): mean of the distribution
-        std (float): standard deviation of the distribution
-        size (int): size of the array
-    ----------
-    Returns:
-        np.array: array of random numbers from a normal distribution
-    ----------
-    """
-    return np.random.normal(mean, std, size).astype(np.float32)
-
 def smear(mc,smearings):
     """
     Applies gaussian smearings to the MC
@@ -97,10 +81,10 @@ def smear(mc,smearings):
         mask_sub = np.logical_and(mask_eta_sub,np.logical_and(mask_r9_sub,mask_et_sub))
 
         # smear the mc
-        smears_lead = multiply(mask_lead, np.random.normal(1, row[3], len(mask_lead), dtype=np.float32))
+        smears_lead = multiply(mask_lead, np.random.normal(1, row[3], len(mask_lead)).astype(np.float32))
         # smears_lead_up = multiply(mask_lead, normal(1, row[3] + row[4], len(mask_lead)))
         # smears_lead_down = multiply(mask_lead, normal(1, np.abs(row[3] - row[4]), len(mask_lead)))
-        smears_sub = multiply(mask_sub, np.random.normal(1, row[3], len(mask_sub), dtype=np.float32))
+        smears_sub = multiply(mask_sub, np.random.normal(1, row[3], len(mask_sub)).astype(np.float32))
         # smears_sub_up = multiply(mask_sub, normal(1, row[3] + row[4], len(mask_sub)))
         # smears_sub_down = multiply(mask_sub, normal(1, np.abs(row[3] - row[4]), len(mask_sub)))
 
