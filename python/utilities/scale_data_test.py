@@ -81,8 +81,9 @@ def apply_corrections(data, run_edges, eta_edges, r9_edges, et_edges, lookup_sca
     data['r9_index'] = r9_indices
     data['et_index'] = et_indices
 
-    print(f"[WARNING][scale_data.py] {mask.sum()} events fall outside the correction bins, please check scales file for completeness.")
-    print(f"[WARNING][scale_data.py] Run `python pytyhon/tools/scales_validator.py -s <scales_file>` to check coverage.")
+    if mask.sum() != 0:
+        print(f"[WARNING][scale_data.py] {mask.sum()} events fall outside the correction bins, please check scales file for completeness.")
+        print(f"[WARNING][scale_data.py] Run `python pytyhon/tools/scales_validator.py -s <scales_file>` to check coverage.")
     scales[mask] = 1.0  # or any other default value
     errs[mask] = 0.0  # or any other default value
     
