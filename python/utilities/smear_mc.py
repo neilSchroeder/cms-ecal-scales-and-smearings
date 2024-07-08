@@ -105,5 +105,5 @@ def smear(mc,smearings):
         mc,
         inv_mass_cuts=(80, 100),
         eta_cuts=(0, 1.4442, 1.566, 2.5),
-        # et_cuts=((32, 14000), (20, 14000)),
+        et_cuts=((32, 14000), (20, 14000)),
     )
