@@ -36,7 +36,6 @@ def normal(mean, std, size, seed):
         np.array: array of random numbers from a normal distribution
     ----------
     """
-    np.random.seed(seed) # otherwise there won't be any consistency
     return np.random.normal(mean, std, size).astype(np.float32)
 
 def smear(mc,smearings):
@@ -51,6 +50,7 @@ def smear(mc,smearings):
         mc (pd.DataFrame): dataframe of mc with smeared variables
     ----------
     """ 
+    np.random.seed(dc.SEED) # otherwise there won't be any consistency
     i_cat = 0
     delim_cat = "-"
     delim_var = "_"
@@ -97,10 +97,10 @@ def smear(mc,smearings):
         mask_sub = np.logical_and(mask_eta_sub,np.logical_and(mask_r9_sub,mask_et_sub))
 
         # smear the mc
-        smears_lead = multiply(mask_lead, normal(1, row[3], len(mask_lead), dc.SEED))
+        smears_lead = multiply(mask_lead, np.random.normal(1, row[3], len(mask_lead), dtype=np.float32))
         # smears_lead_up = multiply(mask_lead, normal(1, row[3] + row[4], len(mask_lead)))
         # smears_lead_down = multiply(mask_lead, normal(1, np.abs(row[3] - row[4]), len(mask_lead)))
-        smears_sub = multiply(mask_sub, normal(1, row[3], len(mask_sub), dc.SEED))
+        smears_sub = multiply(mask_sub, np.random.normal(1, row[3], len(mask_sub), dtype=np.float32))
         # smears_sub_up = multiply(mask_sub, normal(1, row[3] + row[4], len(mask_sub)))
         # smears_sub_down = multiply(mask_sub, normal(1, np.abs(row[3] - row[4]), len(mask_sub)))
 
