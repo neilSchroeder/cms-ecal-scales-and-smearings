@@ -18,10 +18,14 @@ def xlogy(x, y):
 @numba.njit
 def apply_smearing(mc, lead_smear, sublead_smear, seed):
     np.random.seed(seed)
-    lead_rand = np.random.normal(0, lead_smear, len(mc))
-    sublead_rand = np.random.normal(0, sublead_smear, len(mc))
+    lead_rand = np.random.normal(1, lead_smear, len(mc))
+    sublead_rand = np.random.normal(1, sublead_smear, len(mc))
     x = np.sqrt((1 + lead_rand) * (1 + sublead_rand))
     return mc * x
+
+@numba.njit
+def apply_scale(data, lead_scale, sublead_scale):
+    return data * np.sqrt(lead_scale * sublead_scale)
 
 @numba.njit
 def compute_nll_chisqr(binned_data, norm_binned_mc, num_bins=80):
@@ -154,25 +158,7 @@ class zcat:
             self.data = self.data*np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32)
         return
 
-    def get_smeared_mc(self, mc, lead_smear, sublead_smear, seed) -> np.array:
-        """
-        Returns the smeared mc.
-
-        Args:
-            mc (np.array): invariant mass of the mc
-            lead_smear (float): smearing for the leading electron
-            sublead_smear (float): smearing for the subleading electron
-            seed (int): seed for the random number generator
-        Returns:
-            np.array: smeared mc
-        """
-        np.random.seed(seed)
-        lead_smear_list = np.array(np.random.normal(1, np.abs(lead_smear), len(mc)), dtype=np.float32) if lead_smear != 0 else np.ones(len(mc), dtype=np.float32)
-        sublead_smear_list = np.array(np.random.normal(1, np.abs(sublead_smear), len(mc)), dtype=np.float32) if sublead_smear != 0 else np.ones(len(mc), dtype=np.float32)
-        return np.multiply(mc, np.sqrt(np.multiply(lead_smear_list,sublead_smear_list, dtype=np.float32), dtype=np.float32), dtype=np.float32)
-
-
-    def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
+    def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0) -> None:
         """
         Update the z category with new scales and smearings.
 
@@ -190,8 +176,7 @@ class zcat:
         lead_scale = 1.0 if lead_scale == 0 else lead_scale
         sublead_scale = 1.0 if sublead_scale == 0 else sublead_scale
 
-        scale_factor = np.sqrt(lead_scale * sublead_scale, dtype=np.float32)
-        temp_data = self.data * scale_factor
+        temp_data = apply_scale(self.data, lead_scale, sublead_scale)
 
         temp_mc = self.mc
         temp_weights = self.weights
