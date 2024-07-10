@@ -18,10 +18,6 @@ def prepare_scales_lookup(scales_df):
     -------
     tuple : (run_edges, eta_edges, r9_edges, et_edges, lookup_scales, lookup_errs)
     """
-    # Print the input DataFrame to verify its structure and contents
-    print("Scales DataFrame:")
-    print(scales_df.head())
-
     scales_df = scales_df.sort_values([dc.i_run_min, dc.i_eta_min, dc.i_r9_min, dc.i_et_min])
 
     # Create bin edges
