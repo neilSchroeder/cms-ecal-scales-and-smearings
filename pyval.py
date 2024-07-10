@@ -165,39 +165,25 @@ def main():
             df_data = scale_data_test.scale(df_data, dict_config[pvc.KEY_SC][0])
             print(f"events after scaling: {len(df_data)}")
 
-    #load and handle mc next
-    # if len(dict_config[pvc.KEY_MC]) > 0:
-    #     print("[INFO] loading mc")
-    #     df_mc = get_dataframe(dict_config[pvc.KEY_MC],
-    #                             apply_cuts='custom',
-    #                             eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
-    #                             debug = args._kDebug)
-    #     if len(dict_config[pvc.KEY_SM]) > 0:
-    #         print("[INFO] smearing mc")
-    #         df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
-    #     if len(dict_config[pvc.KEY_WT]) != 0:
-    #         print("[INFO] reweighting mc")
-    #         df_mc = reweight_pt_y.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
-    #     else:
-    #         if not args.no_reweight:
-    #             #avoid this if you can, just to save time
-    #             print("[INFO] deriving  pt,Y reweighting for mc")
-    #             weight_file = reweight_pt_y.derive_pt_y_weights(df_data, df_mc, args.output_file)
-    #             df_mc = reweight_pt_y.add_pt_y_weights(df_mc, weight_file)
-
-    df_mc = get_dataframe(dict_config[pvc.KEY_DAT],
+    # load and handle mc next
+    if len(dict_config[pvc.KEY_MC]) > 0:
+        print("[INFO] loading mc")
+        df_mc = get_dataframe(dict_config[pvc.KEY_MC],
                                 apply_cuts='custom',
                                 eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
                                 debug = args._kDebug)
-    df_mc = scale_data.scale(df_mc, dict_config[pvc.KEY_SC][0])
-    df_mc = custom_cuts(df_mc,
-                        inv_mass_cuts=(80, 100),
-                        eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
-                        et_cuts=((32, 14000), (20, 14000))
-                        )
-    df_mc['pty_weight'] = np.ones(len(df_mc))
-    
-
+        if len(dict_config[pvc.KEY_SM]) > 0:
+            print("[INFO] smearing mc")
+            df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
+        if len(dict_config[pvc.KEY_WT]) != 0:
+            print("[INFO] reweighting mc")
+            df_mc = reweight_pt_y.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
+        else:
+            if not args.no_reweight:
+                #avoid this if you can, just to save time
+                print("[INFO] deriving  pt,Y reweighting for mc")
+                weight_file = reweight_pt_y.derive_pt_y_weights(df_data, df_mc, args.output_file)
+                df_mc = reweight_pt_y.add_pt_y_weights(df_mc, weight_file)
 
     if args.write_location is not None:
         output_name = "/".join((args.write_location, args.output_file))

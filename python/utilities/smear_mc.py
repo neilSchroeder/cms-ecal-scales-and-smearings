@@ -108,6 +108,9 @@ def smear(mc,smearings):
         mc[dc.E_SUB] = multiply(mc[dc.E_SUB].values, smears_sub)
         mc[dc.INVMASS] = multiply(mc[dc.INVMASS].values, np.sqrt(multiply(smears_lead, smears_sub)))
 
+    if tot != 0:
+        print("[WARNING] Not all events were smeared")
+
 
     return custom_cuts(
         mc,
