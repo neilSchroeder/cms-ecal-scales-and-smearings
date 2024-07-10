@@ -20,7 +20,7 @@ def apply_smearing(mc, lead_smear, sublead_smear, seed):
     np.random.seed(seed)
     lead_rand = np.random.normal(1, lead_smear, len(mc))
     sublead_rand = np.random.normal(1, sublead_smear, len(mc))
-    x = np.sqrt((1 + lead_rand) * (1 + sublead_rand))
+    x = np.sqrt((lead_rand) * (sublead_rand))
     return mc * x
 
 @numba.njit
