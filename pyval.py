@@ -20,7 +20,6 @@ from python.helpers.helper_pyval import (
 from python.utilities.data_loader import get_dataframe, custom_cuts
 import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data_test as scale_data_test
-import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
 from python.utilities.evaluate_systematics import evaluate_systematics
