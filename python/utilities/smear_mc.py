@@ -57,6 +57,7 @@ def smear(mc,smearings):
     smear_df = pd.read_csv(smearings, delimiter='\t', header=None, comment='#')
     tot = len(mc)
     #format is category, emain, err_mean, rho, err_rho, phi, err_phi
+    total_mask_lead = np.zeros(len(mc), dtype=bool)
     for i, row in smear_df.iterrows():
     
         # split cat into parts
@@ -84,6 +85,7 @@ def smear(mc,smearings):
             mask_et_sub = np.logical_and(et_min <= mc_et_sub, mc_et_sub < et_max)
     
         mask_lead = np.logical_and(mask_eta_lead,np.logical_and(mask_r9_lead,mask_et_lead))
+        total_mask_lead = np.logical_or(total_mask_lead, mask_lead)
         tot -= np.sum(mask_lead)
         assert tot >= 0 #will catch you if you're double counting
         mask_sub = np.logical_and(mask_eta_sub,np.logical_and(mask_r9_sub,mask_et_sub))
@@ -108,8 +110,11 @@ def smear(mc,smearings):
         mc[dc.E_SUB] = multiply(mc[dc.E_SUB].values, smears_sub)
         mc[dc.INVMASS] = multiply(mc[dc.INVMASS].values, np.sqrt(multiply(smears_lead, smears_sub)))
 
-    if tot != 0:
+    if np.sum(total_mask_lead) != len(mc):
         print("[WARNING] Not all events were smeared")
+        print(mc[~total_mask_lead].head())
+        print(mc[~total_mask_lead].describe())
+
 
 
     return custom_cuts(
