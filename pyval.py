@@ -166,24 +166,24 @@ def main():
             print(f"events after scaling: {len(df_data)}")
 
     #load and handle mc next
-    if len(dict_config[pvc.KEY_MC]) > 0:
-        print("[INFO] loading mc")
-        df_mc = get_dataframe(dict_config[pvc.KEY_MC],
-                                apply_cuts='custom',
-                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
-                                debug = args._kDebug)
-        if len(dict_config[pvc.KEY_SM]) > 0:
-            print("[INFO] smearing mc")
-            df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
-        if len(dict_config[pvc.KEY_WT]) != 0:
-            print("[INFO] reweighting mc")
-            df_mc = reweight_pt_y.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
-        else:
-            if not args.no_reweight:
-                #avoid this if you can, just to save time
-                print("[INFO] deriving  pt,Y reweighting for mc")
-                weight_file = reweight_pt_y.derive_pt_y_weights(df_data, df_mc, args.output_file)
-                df_mc = reweight_pt_y.add_pt_y_weights(df_mc, weight_file)
+    # if len(dict_config[pvc.KEY_MC]) > 0:
+    #     print("[INFO] loading mc")
+    #     df_mc = get_dataframe(dict_config[pvc.KEY_MC],
+    #                             apply_cuts='custom',
+    #                             eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+    #                             debug = args._kDebug)
+    #     if len(dict_config[pvc.KEY_SM]) > 0:
+    #         print("[INFO] smearing mc")
+    #         df_mc = smear_mc.smear(df_mc, dict_config[pvc.KEY_SM][0])
+    #     if len(dict_config[pvc.KEY_WT]) != 0:
+    #         print("[INFO] reweighting mc")
+    #         df_mc = reweight_pt_y.add_pt_y_weights(df_mc, dict_config[pvc.KEY_WT][0])
+    #     else:
+    #         if not args.no_reweight:
+    #             #avoid this if you can, just to save time
+    #             print("[INFO] deriving  pt,Y reweighting for mc")
+    #             weight_file = reweight_pt_y.derive_pt_y_weights(df_data, df_mc, args.output_file)
+    #             df_mc = reweight_pt_y.add_pt_y_weights(df_mc, weight_file)
 
     df_mc = get_dataframe(dict_config[pvc.KEY_DAT],
                                 apply_cuts='custom',
