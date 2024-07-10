@@ -20,6 +20,7 @@ from python.helpers.helper_pyval import (
 from python.utilities.data_loader import get_dataframe
 import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data_test as scale_data_test
+import python.utilities.scale_data as scale_data
 import python.utilities.smear_mc as smear_mc
 import python.plotters.make_plots as make_plots
 from python.utilities.evaluate_systematics import evaluate_systematics
@@ -183,6 +184,13 @@ def main():
                 print("[INFO] deriving  pt,Y reweighting for mc")
                 weight_file = reweight_pt_y.derive_pt_y_weights(df_data, df_mc, args.output_file)
                 df_mc = reweight_pt_y.add_pt_y_weights(df_mc, weight_file)
+
+    df_mc = get_dataframe(dict_config[pvc.KEY_DAT],
+                                apply_cuts='custom',
+                                eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                                debug = args._kDebug)
+    df_mc = scale_data.scale(df_mc, dict_config[pvc.KEY_SC][0])
+    
 
 
     if args.write_location is not None:

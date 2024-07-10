@@ -22,6 +22,14 @@ def multiply(arr1, arr2):
     """
     return np.multiply(arr1, arr2).astype(np.float32)
 
+@numba.njit
+def apply_smearing(mc, lead_smear, sublead_smear, seed):
+    np.random.seed(seed)
+    lead_rand = np.random.normal(1, lead_smear, len(mc))
+    sublead_rand = np.random.normal(1, sublead_smear, len(mc))
+    x = np.sqrt((lead_rand) * (sublead_rand))
+    return mc * x
+
 def smear(mc,smearings):
     """
     Applies gaussian smearings to the MC
