@@ -190,6 +190,7 @@ def main():
                                 eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
                                 debug = args._kDebug)
     df_mc = scale_data.scale(df_mc, dict_config[pvc.KEY_SC][0])
+    df_mc['pty_weight'] = np.ones(len(df_mc))
     
 
 
