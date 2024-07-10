@@ -74,7 +74,7 @@ def smear(mc,smearings):
         et_min, et_max = float(et_list[1]), float(et_list[2])
 
         # build masks
-        mask_eta_lead = np.logical_and( eta_min <= mc_eta_lead, mc_et_lead < eta_max)
+        mask_eta_lead = np.logical_and( eta_min <= mc_eta_lead, mc_eta_lead < eta_max)
         mask_eta_sub = np.logical_and( eta_min <= mc_eta_sub, mc_eta_sub < eta_max)
         mask_r9_lead = np.logical_and( r9_min <= mc_r9_lead, mc_r9_lead < r9_max)
         mask_r9_sub = np.logical_and( r9_min <= mc_r9_sub, mc_r9_sub < r9_max)
