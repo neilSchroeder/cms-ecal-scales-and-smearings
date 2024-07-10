@@ -85,6 +85,10 @@ def smear(mc,smearings):
             mask_et_sub = np.logical_and(et_min <= mc_et_sub, mc_et_sub < et_max)
     
         mask_lead = np.logical_and(mask_eta_lead,np.logical_and(mask_r9_lead,mask_et_lead))
+        print(eta_min, eta_max, np.sum(mask_eta_lead))
+        print(r9_min, r9_max, np.sum(mask_r9_lead))
+        print(et_min, et_max, np.sum(mask_et_lead))
+        print(np.sum(mask_lead))
         total_mask_lead = np.logical_or(total_mask_lead, mask_lead)
         tot -= np.sum(mask_lead)
         assert tot >= 0 #will catch you if you're double counting
