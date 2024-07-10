@@ -165,12 +165,6 @@ def scale(data, scales):
         np.multiply(lead_data['scale'], sublead_data['scale'])
     )
 
-    # grab one event of every scale value
-    lead_data = lead_data.drop_duplicates(subset=['scale'])
-    sublead_data = sublead_data.drop_duplicates(subset=['scale'])
-    lead_data.to_csv("lead_data.csv")
-    sublead_data.to_csv("sublead_data.csv")
-
     return data_loader.custom_cuts(
                                     data,
                                     inv_mass_cuts=(80, 100),
