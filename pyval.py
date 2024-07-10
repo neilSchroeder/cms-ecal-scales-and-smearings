@@ -17,7 +17,7 @@ from python.helpers.helper_pyval import (
     check_args,
     # get_dataframe,
 )
-from python.utilities.data_loader import get_dataframe
+from python.utilities.data_loader import get_dataframe, custom_cuts
 import python.utilities.reweight_pt_y as reweight_pt_y
 import python.utilities.scale_data_test as scale_data_test
 import python.utilities.scale_data as scale_data
@@ -190,6 +190,11 @@ def main():
                                 eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
                                 debug = args._kDebug)
     df_mc = scale_data.scale(df_mc, dict_config[pvc.KEY_SC][0])
+    df_mc = custom_cuts(df_mc,
+                        inv_mass_cuts=(80, 100),
+                        eta_cuts=(0, dc.MAX_EB, dc.MIN_EE, dc.MAX_EE),
+                        et_cuts=((32, 14000), (20, 14000))
+                        )
     df_mc['pty_weight'] = np.ones(len(df_mc))
     
 
