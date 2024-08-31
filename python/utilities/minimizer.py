@@ -124,7 +124,7 @@ def minimize(data, mc, cats_df, args):
     del mc
 
     # set up boundaries on starting location of scales
-    bounds = helper_minimizer.set_bounds(
+    bounds = set_bounds(
         cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **args
     )
 
