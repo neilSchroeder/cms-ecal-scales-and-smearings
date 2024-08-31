@@ -107,7 +107,7 @@ def minimize(data, mc, cats_df, args):
         __num_smears__ = 0
 
     # check to see if transverse energy columns need to be added
-    data, mc = helper_minimizer.clean_up(data, mc, cats_df)
+    data, mc = data_loader.clean_up(data, mc, cats_df)
 
     print("[INFO][python/nll] extracting lists from category definitions")
 
