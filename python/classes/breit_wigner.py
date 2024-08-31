@@ -1,5 +1,7 @@
 """Class for Relativistic Breit-Wigner distribution."""
+
 import numpy as np
+
 
 class bw:
     """
@@ -7,10 +9,23 @@ class bw:
     """
 
     def getY(self):
-        gamma = np.sqrt(self.mean**2*(self.mean**2+self.width**2))
-        k = 2*np.sqrt(2)*self.mean*self.width*gamma/(np.pi*np.sqrt(self.mean**2+gamma))
-        self.y = k/(np.multiply(np.multiply(self.x,self.x)-self.mean**2,np.multiply(self.x,self.x)-self.mean**2)+self.mean**2 * self.width**2)
-        return self.y/np.sum(self.y)
+        gamma = np.sqrt(self.mean**2 * (self.mean**2 + self.width**2))
+        k = (
+            2
+            * np.sqrt(2)
+            * self.mean
+            * self.width
+            * gamma
+            / (np.pi * np.sqrt(self.mean**2 + gamma))
+        )
+        self.y = k / (
+            np.multiply(
+                np.multiply(self.x, self.x) - self.mean**2,
+                np.multiply(self.x, self.x) - self.mean**2,
+            )
+            + self.mean**2 * self.width**2
+        )
+        return self.y / np.sum(self.y)
 
     def __init__(self, x):
         self.x = np.array(x)

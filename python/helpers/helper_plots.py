@@ -3,9 +3,10 @@ import pandas as pd
 
 from python.classes.constant_classes import DataConstants as dc
 
+
 def get_bin_uncertainties(bins, values, weights):
-    """ 
-    Calculates the uncertainty of weighted bins 
+    """
+    Calculates the uncertainty of weighted bins
     ----------
     Args:
         bins: bin edges
@@ -14,15 +15,16 @@ def get_bin_uncertainties(bins, values, weights):
     ----------
     Returns:
         ret: array of uncertainties
-    ----------    
+    ----------
     """
 
     ret = []
-    for i in range(len(bins)-1):
-        val_mask = np.logical_and(bins[i] <= values, values < bins[i+1])
+    for i in range(len(bins) - 1):
+        val_mask = np.logical_and(bins[i] <= values, values < bins[i + 1])
         ret.append(np.sqrt(np.sum(np.power(weights[val_mask], 2))))
 
     return np.array(ret)
+
 
 def get_systematic_uncertainty(bins, data, data_up, data_down):
     """
@@ -43,11 +45,11 @@ def get_systematic_uncertainty(bins, data, data_up, data_down):
     ----------
     """
 
-    d, d_bins = np.histogram(data, bins=bins, range=[dc.MIN_INVMASS,dc.MAX_INVMASS])
+    d, d_bins = np.histogram(data, bins=bins, range=[dc.MIN_INVMASS, dc.MAX_INVMASS])
     d_up, _ = np.histogram(data_up, bins=d_bins)
-    d_up = d_up*sum(d)/sum(d_up)
+    d_up = d_up * sum(d) / sum(d_up)
     d_down, _ = np.histogram(data_down, bins=d_bins)
-    d_down = d_down*sum(d)/sum(d_down)
+    d_down = d_down * sum(d) / sum(d_down)
 
     diff_up_data = np.abs(np.subtract(d, d_up))
     diff_down_data = np.abs(np.subtract(d, d_down))
@@ -72,7 +74,15 @@ def get_chi2(data, data_err, mc, mc_err):
     ----------
     """
 
-    return np.sum(np.power(np.divide(np.subtract(data, mc), np.sqrt(np.power(data_err, 2) + np.power(mc_err, 2))), 2))
+    return np.sum(
+        np.power(
+            np.divide(
+                np.subtract(data, mc),
+                np.sqrt(np.power(data_err, 2) + np.power(mc_err, 2)),
+            ),
+            2,
+        )
+    )
 
 
 def get_reduced_chi2(data, data_err, mc, mc_err):
@@ -93,4 +103,4 @@ def get_reduced_chi2(data, data_err, mc, mc_err):
     chi2 = get_chi2(data, data_err, mc, mc_err)
     ndf = len(data) - 1
 
-    return chi2/ndf
+    return chi2 / ndf

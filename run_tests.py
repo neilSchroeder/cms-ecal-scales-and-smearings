@@ -17,5 +17,5 @@ def main():
     # test_get_step()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

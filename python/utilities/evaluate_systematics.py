@@ -1,224 +1,269 @@
 """Script to evaluate the systematics of the analysis."""
 
 import numpy as np
+import pandas as pd
+from typing import Dict, List, Tuple, Callable
 
 from python.classes.constant_classes import PyValConstants as pvc
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
+
 global_config = SSConfig()
 
 from python.plotters.fit_bw_cb import fit_bw_cb
-from python.utilities.data_loader import (
-    custom_cuts,
-)
-from python.utilities.write_files import write_systematics
+from python.tools.data_loader import custom_cuts
+from python.tools.write_files import write_systematics
 
 
-def evaluate_systematics(data, mc, outfile):
+def create_histogram(df: pd.DataFrame, cuts: Dict, num_bins: int) -> np.ndarray:
     """
-    Evaluate the systematics of the analysis.
-    
-    The study is performed by varying the R9, Et, and working point ID.
-    The agreement between data and MC is calculated as the ratio of mu_data/mu_mc,
-        where mu is the invariant mass peak obtained by fitting a histogram with
-        a Breit-Wigner convoluted with a Crystal Ball function.
-    The systematic uncertainty from a variation is taken as 
-        1 - (mu_data_variation/mu_mc_variation)/(mu_data_nominal/mu_mc_nominal).
+    Create a histogram from the dataframe based on given cuts.
 
     Args:
-        data (str): path to the data file
-        mc (str): path to the mc file
-        outfile (str): path to the output file
+        df: pandas DataFrame containing the data.
+        cuts: dictionary containing the cuts to be applied to the dataframe.
+        num_bins: integer, number of bins for the histogram.
+
     Returns:
+        histogram: numpy array representing the histogram of the invariant mass.
+
+    Raises:
+        None
+
+    Prints:
         None
     """
-    print(f"[INFO][evaluate_systematics] Evaluating systematics")
-    cuts = dc.SYST_CUTS
-    num_bins = 80
+    return np.histogram(custom_cuts(df, **cuts)[dc.INVMASS].values, bins=num_bins)[0]
 
-    mids = [80.125 + 0.25*i for i in range(80)]
 
-    nominal_hists = {
+def create_histograms(
+    data: pd.DataFrame, mc: pd.DataFrame, cuts: Dict, num_bins: int
+) -> Dict:
+    """
+    Create histograms for all combinations of cuts.
+
+    Args:
+        data: pandas DataFrame containing the data.
+        mc: pandas DataFrame containing the Monte Carlo simulation data.
+        cuts: dictionary containing the cuts for each eta and r9 category.
+        num_bins: integer, number of bins for the histograms.
+
+    Returns:
+        histograms: dictionary containing the histograms for data and MC for each combination of cuts.
+
+    Raises:
+        None
+
+    Prints:
+        None
+    """
+    return {
         eta_key: {
             r9_key: [
-                np.histogram(
-                    custom_cuts(data, **cuts[eta_key][r9_key])[dc.INVMASS].values, bins=num_bins
-                )[0],
-                np.histogram(
-                    custom_cuts(mc, **cuts[eta_key][r9_key])[dc.INVMASS].values, bins=num_bins
-                )[0]
+                create_histogram(data, cuts[eta_key][r9_key], num_bins),
+                create_histogram(mc, cuts[eta_key][r9_key], num_bins),
             ]
             for r9_key in cuts[eta_key]
         }
         for eta_key in cuts.keys()
     }
-    
-    r9_up_hists = {
+
+
+def apply_variation(cuts: Dict, variation_func: Callable) -> Dict:
+    """
+    Apply a variation function to the cuts.
+
+    Args:
+        cuts: dictionary containing the cuts for each eta and r9 category.
+        variation_func: callable function that applies a variation to the cuts.
+
+    Returns:
+        varied_cuts: dictionary containing the varied cuts for each eta and r9 category.
+
+    Raises:
+        None
+
+    Prints:
+        None
+    """
+    return {
         eta_key: {
-            r9_key: [
-                np.histogram(
-                    custom_cuts(
-                        data, 
-                        eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                        r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
-                        et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                    )[dc.INVMASS].values, bins=num_bins
-                )[0],
-                np.histogram(
-                    custom_cuts(
-                        mc,
-                        eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                        r9_cuts = ((0.965, -1), (0.965, -1)) if r9_key == "HighR9" else ((-1, 0.965), (-1, 0.965)),
-                        et_cuts=cuts[eta_key][r9_key]["et_cuts"]
-                    )[dc.INVMASS].values, bins=num_bins
-                )[0]
-            ] 
-            for r9_key in cuts[eta_key]
+            r9_key: variation_func(cuts[eta_key][r9_key]) for r9_key in cuts[eta_key]
         }
         for eta_key in cuts.keys()
     }
-    r9_down_hists = {
-        eta_key: {r9_key: [np.histogram(
-                        custom_cuts(data, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = ((0.955, -1), (0.955, -1)) if r9_key == "HighR9" else ((-1, 0.935), (-1, 0.935)),
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0],
-                        np.histogram(custom_cuts(mc, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = ((0.955, -1), (0.955, -1)) if r9_key == "HighR9" else ((-1, 0.935), (-1, 0.935)),
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0]]
-                    for r9_key in cuts[eta_key]}
-            for eta_key in cuts.keys()
-    }
-    et_up_hists = {
-        eta_key: {r9_key: [np.histogram(
-                        custom_cuts(data, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=(dc.MIN_PT_LEAD+2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0],
-                        np.histogram(
-                        custom_cuts(mc, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=(dc.MIN_PT_LEAD+2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0]] 
-                    for r9_key in cuts[eta_key]}
-            for eta_key in cuts.keys()
-    }
-    et_down_hists = {
-        eta_key: {r9_key: [np.histogram(
-                        custom_cuts(data, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=(dc.MIN_PT_LEAD-2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0],
-                        np.histogram(
-                        custom_cuts(mc, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=(dc.MIN_PT_LEAD-2, dc.MIN_PT_SUB),
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0]]
-                    for r9_key in cuts[eta_key]}
-            for eta_key in cuts.keys()
-    }
-    medium_id_hists = {
-        eta_key: {r9_key: [np.histogram(
-                        custom_cuts(data, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    working_point="medium",
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0],
-                        np.histogram(
-                        custom_cuts(mc, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    working_point="medium",
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0]]
-                    for r9_key in cuts[eta_key]}
-            for eta_key in cuts.keys()
-    }
-    tight_id_hists = {
-        eta_key: {r9_key: [np.histogram(
-                        custom_cuts(data, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    working_point="tight",
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0],
-                        np.histogram(
-                        custom_cuts(mc, 
-                                    eta_cuts = cuts[eta_key][r9_key]["eta_cuts"],
-                                    r9_cuts = cuts[eta_key][r9_key]["r9_cuts"],
-                                    et_cuts=cuts[eta_key][r9_key]["et_cuts"],
-                                    working_point="tight",
-                                    )[dc.INVMASS].values, bins=num_bins
-                        )[0]]
-                    for r9_key in cuts[eta_key]}
-            for eta_key in cuts.keys()
-    }
 
-    # add all hists to a list for easier looping
-    hists = [
-        nominal_hists,
-        r9_down_hists,
-        r9_up_hists,
-        et_down_hists,
-        et_up_hists,
-        medium_id_hists,
-        tight_id_hists
-    ]
 
-    # now we can fit and take a double ratio for each
-    # variation
-    for i, hist in enumerate(hists):
-        for eta_key in hist:
-            for r9_key in hist[eta_key]:
-                print(f"{i= } | {eta_key= } | {r9_key= }")
-                # check for zero weights
-                if sum(hist[eta_key][r9_key][0]) == 0 or sum(hist[eta_key][r9_key][1]) == 0:
-                    print(f"Zero weights for {eta_key} {r9_key}")
-                    print(hist[eta_key][r9_key][0])
-                    print(hist[eta_key][r9_key][1])
-                mean_data = np.average(mids, weights=hist[eta_key][r9_key][0])
-                mean_mc = np.average(mids, weights=hist[eta_key][r9_key][1])
-                sigma_data = np.sqrt(np.average((mids-mean_data)**2, weights=hist[eta_key][r9_key][0]))
-                sigma_mc = np.sqrt(np.average((mids-mean_mc)**2, weights=hist[eta_key][r9_key][1]))
-                data_fit = fit_bw_cb(mids, hist[eta_key][r9_key][0],
-                                                [1.424, 1.86, mean_data-dc.TARGET_MASS, sigma_data]
-                                                )
-                mc_fit = fit_bw_cb(mids, hist[eta_key][r9_key][1],
-                                            [1.424, 1.86, mean_mc-dc.TARGET_MASS, sigma_mc]
-                                            )
-                hist[eta_key][r9_key] = data_fit['mu']/mc_fit['mu']
+def fit_histograms(hists: Dict, mids: List[float]) -> Dict:
+    """
+    Fit histograms and calculate ratios.
 
-    systematics_categories = {
-        "R9": (hists[1], hists[2]),
-        "Et": (hists[3], hists[4]),
-        "ID": (hists[5], hists[6])
-    }
-    nominal_hists = hists.pop(0)
-    systematics = {
+    Args:
+        hists: dictionary containing histograms for data and MC for each combination of eta and r9 cuts.
+        mids: list of float values representing the midpoints of the histogram bins.
+
+    Returns:
+        fit_results: dictionary containing the fit results for data and MC for each combination of eta and r9 cuts.
+
+    Raises:
+        None
+
+    Prints:
+        Information about any eta and r9 combinations with zero weights.
+    """
+    for eta_key in hists:
+        for r9_key in hists[eta_key]:
+            if (
+                sum(hists[eta_key][r9_key][0]) == 0
+                or sum(hists[eta_key][r9_key][1]) == 0
+            ):
+                print(f"Zero weights for {eta_key} {r9_key}")
+                continue
+
+            mean_data = np.average(mids, weights=hists[eta_key][r9_key][0])
+            mean_mc = np.average(mids, weights=hists[eta_key][r9_key][1])
+            sigma_data = np.sqrt(
+                np.average((mids - mean_data) ** 2, weights=hists[eta_key][r9_key][0])
+            )
+            sigma_mc = np.sqrt(
+                np.average((mids - mean_mc) ** 2, weights=hists[eta_key][r9_key][1])
+            )
+
+            data_fit = fit_bw_cb(
+                mids,
+                hists[eta_key][r9_key][0],
+                [1.424, 1.86, mean_data - dc.TARGET_MASS, sigma_data],
+            )
+            mc_fit = fit_bw_cb(
+                mids,
+                hists[eta_key][r9_key][1],
+                [1.424, 1.86, mean_mc - dc.TARGET_MASS, sigma_mc],
+            )
+
+            hists[eta_key][r9_key] = data_fit["mu"] / mc_fit["mu"]
+
+    return hists
+
+
+def calculate_systematics(
+    nominal: Dict, variations: Dict[str, Tuple[Dict, Dict]]
+) -> Dict:
+    """
+    Calculate systematic uncertainties based on nominal and variation histograms.
+
+    Args:
+        nominal: dictionary containing the nominal histograms for data and MC.
+        variations: dictionary where each key is a systematic variation name and each value is a tuple
+                    containing two dictionaries: the first for data histograms and the second for MC histograms.
+
+    Returns:
+        systematics: dictionary containing the calculated systematic uncertainties for each combination of eta and r9 cuts.
+
+    Raises:
+        None
+
+    Prints:
+        None
+    """
+    return {
         eta_key: {
-            r9_key: { 
-                syst_key: 
-                    max([1 - ((systematics_categories[syst_key][0][eta_key][r9_key] / systematics_categories[syst_key][1][eta_key][r9_key]) / (nominal_hists[eta_key][r9_key] / nominal_hists[eta_key][r9_key])) for syst_key in systematics_categories.keys()])
-                    for syst_key in systematics_categories.keys()
-            } for r9_key in cuts[eta_key]
-        } for eta_key in cuts.keys()
+            r9_key: {
+                syst_key: max(
+                    1
+                    - (
+                        (
+                            variations[syst_key][0][eta_key][r9_key]
+                            / variations[syst_key][1][eta_key][r9_key]
+                        )
+                        / (nominal[eta_key][r9_key] / nominal[eta_key][r9_key])
+                    )
+                    for syst_key in variations.keys()
+                )
+                for syst_key in variations.keys()
+            }
+            for r9_key in nominal[eta_key]
+        }
+        for eta_key in nominal.keys()
     }
 
+
+def evaluate_systematics(data: pd.DataFrame, mc: pd.DataFrame, outfile: str) -> None:
+    """
+    Evaluate the systematics of the analysis.
+
+    The study is performed by varying the R9, Et, and working point ID.
+    The agreement between data and MC is calculated as the ratio of mu_data/mu_mc,
+    where mu is the invariant mass peak obtained by fitting a histogram with
+    a Breit-Wigner convoluted with a Crystal Ball function.
+    The systematic uncertainty from a variation is taken as
+    1 - (mu_data_variation/mu_mc_variation)/(mu_data_nominal/mu_mc_nominal).
+
+    Args:
+        data: pandas DataFrame containing the data.
+        mc: pandas DataFrame containing the Monte Carlo simulation data.
+        outfile: string, path to the output file.
+
+    Returns:
+        None
+
+    Raises:
+        None
+
+    Prints:
+        Information about the evaluation process.
+    """
+    print("[INFO][evaluate_systematics] Evaluating systematics")
+    cuts = dc.SYST_CUTS
+    num_bins = 80
+    mids = [80.125 + 0.25 * i for i in range(80)]
+
+    # Create nominal histograms
+    nominal_hists = create_histograms(data, mc, cuts, num_bins)
+
+    # Define variations
+    variations = {
+        "R9_up": lambda c, r9_key: {
+            **c,
+            "r9_cuts": (
+                ((0.965, -1), (0.965, -1))
+                if r9_key == "HighR9"
+                else ((-1, 0.965), (-1, 0.965))
+            ),
+        },
+        "R9_down": lambda c, r9_key: {
+            **c,
+            "r9_cuts": (
+                ((0.955, -1), (0.955, -1))
+                if r9_key == "HighR9"
+                else ((-1, 0.955), (-1, 0.955))
+            ),
+        },
+        "Et_up": lambda c: {**c, "et_cuts": (dc.MIN_PT_LEAD + 2, dc.MIN_PT_SUB)},
+        "Et_down": lambda c: {**c, "et_cuts": (dc.MIN_PT_LEAD - 2, dc.MIN_PT_SUB)},
+        "ID_medium": lambda c: {**c, "working_point": "medium"},
+        "ID_tight": lambda c: {**c, "working_point": "tight"},
+    }
+
+    # Create variation histograms
+    variation_hists = {
+        var_name: create_histograms(data, mc, apply_variation(cuts, var_func), num_bins)
+        for var_name, var_func in variations.items()
+    }
+
+    # Fit histograms
+    nominal_hists = fit_histograms(nominal_hists, mids)
+    variation_hists = {
+        var_name: fit_histograms(var_hists, mids)
+        for var_name, var_hists in variation_hists.items()
+    }
+
+    # Calculate systematics
+    systematics_categories = {
+        "R9": (variation_hists["R9_down"], variation_hists["R9_up"]),
+        "Et": (variation_hists["Et_down"], variation_hists["Et_up"]),
+        "ID": (variation_hists["ID_medium"], variation_hists["ID_tight"]),
+    }
+    systematics = calculate_systematics(nominal_hists, systematics_categories)
+
+    # Write results
     write_systematics(systematics, outfile)

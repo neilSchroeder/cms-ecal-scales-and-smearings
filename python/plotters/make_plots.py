@@ -7,21 +7,22 @@ from python.classes.constant_classes import (
     PlottingConstants as pc,
 )
 from python.classes.constant_classes import DataConstants as dc
-from python.plotters.plots import(
+from python.plotters.plots import (
     plot_style_bw_cb_fit,
     plot_style_paper,
     plot_style_validation_mc,
 )
 
-from python.utilities.data_loader import custom_cuts
+from python.tools.data_loader import custom_cuts
 import seaborn as sns
 
 config = SSConfig()
 pc.plotting_functions = {
-    'crossCheckMC': plot_style_validation_mc,
-    'fit': plot_style_bw_cb_fit,
-    'paper': plot_style_paper,
+    "crossCheckMC": plot_style_validation_mc,
+    "fit": plot_style_bw_cb_fit,
+    "paper": plot_style_paper,
 }
+
 
 def get_tuple(this_string):
     """
@@ -34,10 +35,11 @@ def get_tuple(this_string):
         tuple: tuple of the form (a,b)
     ----------
     """
-    this_string = this_string.replace("(","")
-    this_string = this_string.replace(")","")
+    this_string = this_string.replace("(", "")
+    this_string = this_string.replace(")", "")
     this_string = this_string.split(",")
-    return (float(this_string[0]),float(this_string[1]))
+    return (float(this_string[0]), float(this_string[1]))
+
 
 def get_var(df, info, _isData=True, title=None):
     """
@@ -67,43 +69,66 @@ def get_var(df, info, _isData=True, title=None):
         # gonna have to do something fancier here
         raise ValueError("variable not in dataframe")
     else:
-        var_key = info["variable"] 
+        var_key = info["variable"]
 
     # apply the cuts
-    print(f"Lead eta: {bounds_eta_lead}, Lead r9: {bounds_r9_lead}, Lead et: {bounds_et_lead}")
-    print(f"Sub eta: {bounds_eta_sub}, Sub r9: {bounds_r9_sub}, Sub et: {bounds_et_sub}")
-    df_with_cuts = custom_cuts(df, 
-                    inv_mass_cuts=(80, 100),
-                    eta_cuts=(bounds_eta_lead, bounds_eta_sub),
-                    et_cuts=(bounds_et_lead, bounds_et_sub),
-                    r9_cuts=(bounds_r9_lead, bounds_r9_sub))
-    
+    print(
+        f"Lead eta: {bounds_eta_lead}, Lead r9: {bounds_r9_lead}, Lead et: {bounds_et_lead}"
+    )
+    print(
+        f"Sub eta: {bounds_eta_sub}, Sub r9: {bounds_r9_sub}, Sub et: {bounds_et_sub}"
+    )
+    df_with_cuts = custom_cuts(
+        df,
+        inv_mass_cuts=(80, 100),
+        eta_cuts=(bounds_eta_lead, bounds_eta_sub),
+        et_cuts=(bounds_et_lead, bounds_et_sub),
+        r9_cuts=(bounds_r9_lead, bounds_r9_sub),
+    )
+
     # plot all variables in grid
-    described_df = df_with_cuts.describe(include='all')
+    described_df = df_with_cuts.describe(include="all")
     # sns.pairplot(df_with_cuts, diag_kind='hist')
 
     if var_key == dc.INVMASS:
         # check if systematics available
-        
+
         if _isData:
             df_title = "_" + title if title else ""
-            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_data{df_title}.csv", sep='\t', index=True, float_format='%.4f')
-            if pvc.KEY_INVMASS_UP not in df.columns or pvc.KEY_INVMASS_DOWN not in df.columns:
+            described_df.to_csv(
+                f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_data{df_title}.csv",
+                sep="\t",
+                index=True,
+                float_format="%.4f",
+            )
+            if (
+                pvc.KEY_INVMASS_UP not in df.columns
+                or pvc.KEY_INVMASS_DOWN not in df.columns
+            ):
                 # there's no systematics, so just return the data
                 return np.array(df[var_key].values)
             # return the data
-            return [np.array(df_with_cuts[var_key].values),
-                    np.array(df_with_cuts[pvc.KEY_INVMASS_UP].values),
-                    np.array(df_with_cuts[pvc.KEY_INVMASS_DOWN].values)]
+            return [
+                np.array(df_with_cuts[var_key].values),
+                np.array(df_with_cuts[pvc.KEY_INVMASS_UP].values),
+                np.array(df_with_cuts[pvc.KEY_INVMASS_DOWN].values),
+            ]
         else:
             df_title = "_" + title if title else ""
-            described_df.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_mc{df_title}.csv", sep='\t', index=True, float_format='%.4f')
+            described_df.to_csv(
+                f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_mc{df_title}.csv",
+                sep="\t",
+                index=True,
+                float_format="%.4f",
+            )
         # otherwise return mc
-        return [np.array(df_with_cuts[var_key].values),
-                np.array(df_with_cuts[pvc.KEY_PTY].values)]
-        
-    
+        return [
+            np.array(df_with_cuts[var_key].values),
+            np.array(df_with_cuts[pvc.KEY_PTY].values),
+        ]
+
     return np.array(df_with_cuts[var_key].values)
+
 
 def plot(data, mc, cats, **options):
     """
@@ -119,7 +144,7 @@ def plot(data, mc, cats, **options):
     """
 
     # get constants
-    df_cats = pd.read_csv(cats, sep='\t', comment='#')
+    df_cats = pd.read_csv(cats, sep="\t", comment="#")
     plot_consts = pc()
     # copy categories into a new dataframe
     df_results = df_cats.copy()
@@ -128,23 +153,35 @@ def plot(data, mc, cats, **options):
 
     # loop over cats
     results = []
-    for i,row in df_cats.iterrows():
+    for i, row in df_cats.iterrows():
         print(row[pvc.i_plot_name])
         # determine what plot style and plotting function to use
         plotting_class = plot_consts.get_plotting_function(row[pvc.i_plot_style])
         # run the plotting function
         val = plotting_class(
-                get_var(data, row[pvc.i_plot_var::], title=row[pvc.i_plot_name]),  # gets events from data to plot
-                get_var(mc, row[pvc.i_plot_var::], _isData=False, title=row[pvc.i_plot_name]),  # gets events from mc to plot
-                row[pvc.i_plot_name],  # plot title
-                **options,
-                syst= (row[pvc.i_plot_var] == dc.INVMASS and 'invmass_up' in data.columns and 'invmass_down' in data.columns),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
-                #no_ratio=True
+            get_var(
+                data, row[pvc.i_plot_var : :], title=row[pvc.i_plot_name]
+            ),  # gets events from data to plot
+            get_var(
+                mc, row[pvc.i_plot_var : :], _isData=False, title=row[pvc.i_plot_name]
+            ),  # gets events from mc to plot
+            row[pvc.i_plot_name],  # plot title
+            **options,
+            syst=(
+                row[pvc.i_plot_var] == dc.INVMASS
+                and "invmass_up" in data.columns
+                and "invmass_down" in data.columns
+            ),  # if we're plotting the invariant mass, we need to plot the systematic uncertainty,
+            # no_ratio=True
         )
 
         df_results.loc[i, pvc.i_plot_results] = val
 
     # save the results
-    df_results.to_csv(f"{config.DEFAULT_WRITE_FILES_PATH}/{options['tag']}_plot_results.csv", sep='\t', index=False)
+    df_results.to_csv(
+        f"{config.DEFAULT_WRITE_FILES_PATH}/{options['tag']}_plot_results.csv",
+        sep="\t",
+        index=False,
+    )
 
     return

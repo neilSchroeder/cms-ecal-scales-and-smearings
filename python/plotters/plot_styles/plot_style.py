@@ -1,21 +1,22 @@
 from collections import namedtuple
+
 PlotStyle = namedtuple(
-            'PlotStyle',
-            [
-                'style',
-                'binning',
-                'y_scale',
-                'fig',
-                'subplot',
-                'legend',
-                'colors',
-                'line_styles',
-                'labels',
-                'error_bar_style',
-                'sci_notation_offset',
-                'annotations',
-            ]
-    )
+    "PlotStyle",
+    [
+        "style",
+        "binning",
+        "y_scale",
+        "fig",
+        "subplot",
+        "legend",
+        "colors",
+        "line_styles",
+        "labels",
+        "error_bar_style",
+        "sci_notation_offset",
+        "annotations",
+    ],
+)
 
 TITLE_ANNOTATIONS = {
     "invMass_Barrel-Barrel": "Barrel-Barrel",

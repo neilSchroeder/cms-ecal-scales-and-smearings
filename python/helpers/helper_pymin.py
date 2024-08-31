@@ -11,14 +11,16 @@ import uproot3 as up
 
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
-from python.utilities.data_loader import get_dataframe
-import python.utilities.write_files as write_files
+from python.tools.data_loader import get_dataframe
+import python.tools.write_files as write_files
+
 config = SSConfig()
 
+
 def get_options(args):
-    """ deletes the options that are not needed for the current step """
+    """deletes the options that are not needed for the current step"""
     ret = vars(args)
-    del ret['weights']
+    del ret["weights"]
     return ret
 
 
@@ -32,14 +34,15 @@ def get_cmd():
         cmd: the command line string that was used to run the current program
     """
 
-    cmd = ''
+    cmd = ""
     for arg in sys.argv:
-        if ' ' in arg:
+        if " " in arg:
             cmd += '"{}"  '.format(arg)
         else:
-            cmd +="{}  ".format(arg)
+            cmd += "{}  ".format(arg)
 
     return cmd
+
 
 def get_step(args):
     """
@@ -56,6 +59,7 @@ def get_step(args):
 
     return -1
 
+
 def rewrite(args):
     """
     Rewrites the scales and smearings files with the new values.
@@ -69,10 +73,14 @@ def rewrite(args):
     file_name_only_step = args.only_step
     only_step_path = os.path.dirname(file_name_only_step)
 
-    file_name_scales = f"{only_step_path}/step{step}closure_{args.output}_scales.dat" if args._kClosure else f"{only_step_path}/step{step}_{args.output}_scales.dat"
+    file_name_scales = (
+        f"{only_step_path}/step{step}closure_{args.output}_scales.dat"
+        if args._kClosure
+        else f"{only_step_path}/step{step}_{args.output}_scales.dat"
+    )
 
-    #if not args._kClosure: write_files.rewrite_smearings(args.catsFile, new_smears)
-    write_files.combine( file_name_only_step, args.scales, file_name_scales)
+    # if not args._kClosure: write_files.rewrite_smearings(args.catsFile, new_smears)
+    write_files.combine(file_name_only_step, args.scales, file_name_scales)
 
 
 def load_dataframes(files, args):
@@ -89,10 +97,10 @@ def load_dataframes(files, args):
     data = None
     mc = None
 
-    root_files = open(files, 'r').readlines()
+    root_files = open(files, "r").readlines()
     root_files = [x.strip() for x in root_files]
 
-    #import data and mc to dataframes
+    # import data and mc to dataframes
     print("[INFO] importing data and mc to dataframes (this might take a bit) ...")
 
     if root_files[0].find("data") != -1:
@@ -129,23 +137,38 @@ def write_results(args, scales_smears):
         step = get_step(args)
         cats = pd.read_csv(args.catsFile, sep="\t", comment="#", header=None)
 
-        tag = args.output                                   
-        this_dir = f"{os.getcwd()}/condor/{tag}/" if args._kFromCondor else config.DEFAULT_WRITE_FILES_PATH
-        file_name =  f"{this_dir}/step{step}_{tag}" if not args._kClosure else f"{this_dir}/step{step}closure_{tag}"
-        only_step_file_name =  f"{this_dir}/onlystep{step}_{tag}" if not args._kClosure else f"{this_dir}/onlystep{step}closure_{tag}"
+        tag = args.output
+        this_dir = (
+            f"{os.getcwd()}/condor/{tag}/"
+            if args._kFromCondor
+            else config.DEFAULT_WRITE_FILES_PATH
+        )
+        file_name = (
+            f"{this_dir}/step{step}_{tag}"
+            if not args._kClosure
+            else f"{this_dir}/step{step}closure_{tag}"
+        )
+        only_step_file_name = (
+            f"{this_dir}/onlystep{step}_{tag}"
+            if not args._kClosure
+            else f"{this_dir}/onlystep{step}closure_{tag}"
+        )
 
         new_scales = f"{only_step_file_name}_scales.dat"
         new_smears = f"{file_name}_smearings.dat"
         scales_out = f"{file_name}_scales.dat"
 
         write_files.write_scales(scales_smears, cats, new_scales)
-        if not args._kClosure: write_files.write_smearings(scales_smears, cats, new_smears)
+        if not args._kClosure:
+            write_files.write_smearings(scales_smears, cats, new_smears)
 
-        #make scales file here
+        # make scales file here
         print("[INFO] creating new scales file: {}".format(scales_out))
-        write_files.combine( new_scales, args.scales, scales_out )
+        write_files.combine(new_scales, args.scales, scales_out)
     except Exception as e:
-        print("[ERROR][python/helpers/helper_pymin.py][write_results] the following exception occured when trying to write results to file:")
+        print(
+            "[ERROR][python/helpers/helper_pymin.py][write_results] the following exception occured when trying to write results to file:"
+        )
         print(e)
         return False
 
@@ -161,19 +184,21 @@ def combine_files(args):
     Returns:
         None
     """
-    
+
     # remove word only from the file name
-    out_file = f"{config.DEFAULT_WRITE_FILES_PATH}/{args.output}" if args.output is not None else args.only_step.replace("only", "combined_")
+    out_file = (
+        f"{config.DEFAULT_WRITE_FILES_PATH}/{args.output}"
+        if args.output is not None
+        else args.only_step.replace("only", "combined_")
+    )
 
     # verify that the user wants to overwrite the file if it already exists
     if os.path.exists(out_file):
-        print(f"[WARNING] the output file {out_file} already exists. \n[WARNING] Do you want to overwrite it? (y/n)")
-        if input().lower() != 'y':
+        print(
+            f"[WARNING] the output file {out_file} already exists. \n[WARNING] Do you want to overwrite it? (y/n)"
+        )
+        if input().lower() != "y":
             print("[INFO] exiting program")
             sys.exit(0)
 
-    write_files.combine( 
-        args.only_step,
-        args.scales, 
-        out_file
-        )
+    write_files.combine(args.only_step, args.scales, out_file)
