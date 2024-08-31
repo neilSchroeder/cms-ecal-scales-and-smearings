@@ -12,6 +12,10 @@ from python.classes.constant_classes import (
 import python.helpers.helper_minimizer as helper_minimizer
 import python.plotters.plot_cats as plotter
 import python.tools.data_loader as data_loader
+from python.tools.target_function import (
+    scan_nll,
+    target_function_wrapper,
+)
 
 __num_scales__ = 0
 __num_smears__ = 0
@@ -179,7 +183,7 @@ def minimize(data, mc, cats_df, args):
     # set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
     empty_guess = [0 for x in guess]
-    loss_function, reset_initial_guess = helper_minimizer.target_function_wrapper(
+    loss_function, reset_initial_guess = target_function_wrapper(
         empty_guess, __ZCATS__
     )
 
@@ -230,7 +234,7 @@ def minimize(data, mc, cats_df, args):
             "[INFO][python/utilities/minimizer][minimize] You've selected scan start. Beginning scan:"
         )
 
-        guess = helper_minimizer.scan_nll(
+        guess = scan_nll(
             guess,
             zcats=__ZCATS__,
             __GUESS__=empty_guess,
