@@ -321,7 +321,7 @@ class zcat:
         x = [h[0] for h in self.history]
         y = [h[1] for h in self.history]
         c = [h[4] for h in self.history]
-        plt.scatter(x, y, c=c)
+        plt.scatter(x, y, c=c, alpha=0.25)
         plt.xlabel("lead scale")
         plt.ylabel("sublead scale")
         plt.title("Scale history")
@@ -334,7 +334,7 @@ class zcat:
         x = [h[2] for h in self.history]
         y = [h[3] for h in self.history]
         c = [h[4] for h in self.history]
-        plt.scatter(x, y, c=c)
+        plt.scatter(x, y, c=c, alpha=0.25)
         plt.xlabel("lead smearing")
         plt.ylabel("sublead smearing")
         plt.title("Smearing history")
