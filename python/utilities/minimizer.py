@@ -282,7 +282,7 @@ def minimize(data, mc, cats_df, args):
         print("#" * 40)
         # plot the history in each category
         for cat in __ZCATS__:
-            cat.plot_history(plot_dir)
+            cat.plot_history()
         return optimum.x
 
     if _kTestMethodAccuracy:
