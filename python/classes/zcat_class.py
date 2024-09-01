@@ -311,7 +311,10 @@ class zcat:
         plt.xlabel("iteration")
         plt.ylabel("NLL")
         plt.title("NLL history")
+        plt.set_yscale("log")
         plt.savefig(f"category_{self.lead_index}_{self.sublead_index}_nll_history.png")
+        # clear the plot
+        plt.clf()
 
         # plot step history of scales
         # scatter plot with color representing the NLL value
@@ -324,6 +327,7 @@ class zcat:
         plt.title("Scale history")
         plt.colorbar()
         plt.savefig(f"category_{self.lead_index}_{self.sublead_index}_scale_history.png")
+        plt.clf()
 
         # plot step history of smearings
         # scatter plot with color representing the NLL value
@@ -338,5 +342,6 @@ class zcat:
         plt.savefig(
             f"category_{self.lead_index}_{self.sublead_index}_smearing_history.png"
         )
+        plt.clf()
 
-        
+
