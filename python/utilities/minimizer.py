@@ -280,6 +280,9 @@ def minimize(data, mc, cats_df, args):
         print("[ERROR] Please review the output and resubmit")
         print("#" * 40)
         print("#" * 40)
+        # plot the history in each category
+        for cat in __ZCATS__:
+            cat.plot_history(plot_dir)
         return optimum.x
 
     if _kTestMethodAccuracy:

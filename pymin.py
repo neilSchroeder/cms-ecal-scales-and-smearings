@@ -462,11 +462,6 @@ def main():
         print("[INFO] plotting is done, please review")
         return
 
-    # minimization may not succeed, in this case the program will just end
-    if len(scales_smears) == 0:
-        print("[ERROR] Review logs, minimization did not succeed")
-        return
-
     # write the results
     file_written = helper_pymin.write_results(args, scales_smears)
     if not file_written:

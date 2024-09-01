@@ -111,6 +111,7 @@ class zcat:
         self.seed = 3543136929  #  use a fixed random integer for your seed to avoid fluctuations in nll value from smearings
         self.valid = True
         self.bins = np.array([])
+        self.history = []
 
         # set the bin size if auto binning is enabled
         if self.auto_bin and self.bin_size == 0.25:
@@ -278,7 +279,64 @@ class zcat:
 
         # compute the NLL
         self.NLL = compute_nll_chisqr(binned_data, norm_binned_mc, num_bins)
+        self.history.append(
+            (
+                lead_scale,
+                sublead_scale,
+                lead_smear,
+                sublead_smear,
+                self.NLL,
+                self.bin_size,
+            )
+        )
 
         if np.isnan(self.NLL):
             # if the NLL is nan, set the category to invalid
             self.clean_up()
+
+    def plot_history(self):
+        """
+        Plot the history of the NLL values for the z category.
+        """
+        import matplotlib.pyplot as plt
+
+        if len(self.history) == 0:
+            print("[INFO][zcat][plot_history] no history to plot")
+            return
+
+        # plot step history of NLL
+        x = np.arange(len(self.history))
+        y = [h[4] for h in self.history]
+        plt.plot(x, y)
+        plt.xlabel("iteration")
+        plt.ylabel("NLL")
+        plt.title("NLL history")
+        plt.savefig(f"category_{self.lead_index}_{self.sublead_index}_nll_history.png")
+
+        # plot step history of scales
+        # scatter plot with color representing the NLL value
+        x = [h[0] for h in self.history]
+        y = [h[1] for h in self.history]
+        c = [h[4] for h in self.history]
+        plt.scatter(x, y, c=c)
+        plt.xlabel("lead scale")
+        plt.ylabel("sublead scale")
+        plt.title("Scale history")
+        plt.colorbar()
+        plt.savefig(f"category_{self.lead_index}_{self.sublead_index}_scale_history.png")
+
+        # plot step history of smearings
+        # scatter plot with color representing the NLL value
+        x = [h[2] for h in self.history]
+        y = [h[3] for h in self.history]
+        c = [h[4] for h in self.history]
+        plt.scatter(x, y, c=c)
+        plt.xlabel("lead smearing")
+        plt.ylabel("sublead smearing")
+        plt.title("Smearing history")
+        plt.colorbar()
+        plt.savefig(
+            f"category_{self.lead_index}_{self.sublead_index}_smearing_history.png"
+        )
+
+        
