@@ -63,7 +63,7 @@ def compute_nll_chisqr(binned_data, norm_binned_mc, num_bins=80):
     penalty = xlogy(np.sum(binned_data) - binned_data, 1 - norm_binned_mc)
     penalty[penalty == -np.inf] = 0
     penalty = np.sum(penalty) / len(penalty)
-    return -2 * (nll + penalty) * chi_sqr
+    return -2 * (nll + penalty) * chi_sqr / 1e5
 
 
 class zcat:
