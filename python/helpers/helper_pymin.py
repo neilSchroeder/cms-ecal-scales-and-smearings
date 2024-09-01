@@ -115,8 +115,8 @@ def load_dataframes(files, args):
 
     if args._kDebug:
         # only use a small subset of the data for debugging
-        data = data.head(10000)
-        mc = mc.head(10000)
+        data = data.head(100000)
+        mc = mc.head(100000)
 
     return data, mc
 
