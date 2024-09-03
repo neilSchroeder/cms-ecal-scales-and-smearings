@@ -133,8 +133,8 @@ def target_function(x, *args, verbose=False, **options):
             print("-------------------------------------")
             print()
 
-    tot = sum([cat.weight for cat in cats_to_update])
-    ret = sum([cat.NLL*cat.weight for cat in cats_to_update])
+    tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
+    ret = sum([cat.NLL*cat.weight for cat in __ZCATS__ if cat.valid])
 
 
     if verbose:
