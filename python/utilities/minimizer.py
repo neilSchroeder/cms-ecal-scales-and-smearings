@@ -3,6 +3,7 @@ import gc
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize as minz
+import logging
 
 
 from python.classes.constant_classes import (
@@ -181,7 +182,7 @@ def minimize(data, mc, cats_df, args):
     helper_minimizer.deactivate_cats(__ZCATS__, ignore_cats)
 
     # set up and run a basic nll scan for the initial guess
-    guess = [1 for x in range(__num_scales__)] + [0.00 for x in range(__num_smears__)]
+    guess = [1 for x in range(__num_scales__)] + [0.001 for x in range(__num_smears__)]
     empty_guess = [0 for x in guess]
     loss_function, reset_initial_guess = target_function_wrapper(
         empty_guess, __ZCATS__
@@ -265,7 +266,7 @@ def minimize(data, mc, cats_df, args):
         args=(empty_guess, __ZCATS__, __num_scales__, __num_smears__),
         method=dc.MINIMIZATION_STRATEGY,  # might be interesting to try Nelder-Mead
         bounds=bounds,
-        options=min_step_dict,
+        # options=min_step_dict,
     )
 
     print(
@@ -328,12 +329,12 @@ def set_bounds(cats, **options):
             bounds = [(0.95, 1.05) for i in range(options["num_scales"])]
     elif options["_kTestMethodAccuracy"]:
         bounds = [(0.96, 1.04) for i in range(options["num_scales"])]
-        bounds += [(0.0, 0.05) for i in range(options["num_smears"])]
+        bounds += [(0.000001, 0.03) for i in range(options["num_smears"])]
     elif options["_kFixScales"]:
         bounds = [(0.999999999, 1.000000001) for i in range(options["num_scales"])]
-        bounds += [(0.0, 0.05) for i in range(options["num_smears"])]
+        bounds += [(0.000001, 0.03) for i in range(options["num_smears"])]
     else:
         bounds = [(0.96, 1.04) for i in range(options["num_scales"])]
-        bounds += [(0.000, 0.05) for i in range(options["num_smears"])]
+        bounds += [(0.000001, 0.03) for i in range(options["num_smears"])]
 
     return bounds

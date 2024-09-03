@@ -32,9 +32,10 @@ def apply_scale(data, lead_scale, sublead_scale):
 
 
 @numba.njit
-def compute_nll_chisqr(binned_data, norm_binned_mc, num_bins=80):
+def compute_nll_chisqr(binned_data, binned_mc, num_bins=80):
     # Implement NLL and Chi-squared computation here
     # This is a placeholder, replace with actual implementation
+    norm_binned_mc = binned_mc / np.sum(binned_mc)
     scaled_mc = norm_binned_mc * np.sum(binned_data)
     err_mc = np.sqrt(scaled_mc).astype(np.float32)
     err_data = np.sqrt(binned_data).astype(np.float32)
@@ -274,11 +275,8 @@ class zcat:
         # clean binned data and mc, log of 0 is a problem
         binned_mc[binned_mc == 0] = 1e-15
 
-        # normalize mc to use as a pdf
-        norm_binned_mc = binned_mc / np.sum(binned_mc)
-
         # compute the NLL
-        self.NLL = compute_nll_chisqr(binned_data, norm_binned_mc, num_bins)
+        self.NLL = compute_nll_chisqr(binned_data, binned_mc, num_bins)
         self.history.append(
             (
                 lead_scale,
@@ -343,5 +341,3 @@ class zcat:
             f"category_{self.lead_index}_{self.sublead_index}_smearing_history.png"
         )
         plt.close('all')
-
-

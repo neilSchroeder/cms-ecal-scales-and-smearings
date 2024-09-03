@@ -95,8 +95,9 @@ def target_function(x, *args, verbose=False, **options):
         print("-------------------------------------")
         print()
 
-    tot = sum([cat.weight for cat in cats_to_update])
-    ret = sum([cat.NLL * cat.weight for cat in cats_to_update])
+    tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
+    ret = sum([cat.NLL * cat.weight for cat in __ZCATS__ if cat.valid])
+    final_value = ret / tot if tot != 0 else 9e30
 
     if verbose:
         print("------------- total info -------------")
@@ -112,8 +113,7 @@ def target_function(x, *args, verbose=False, **options):
         print("using scales:", x)
         print("--------------------------------------")
 
-    return ret / tot if tot != 0 else 9e30
-
+    return final_value
 
 def scan_nll(x, **options):
     """
@@ -217,7 +217,7 @@ def scan_nll(x, **options):
 
             # smearings are different, so use different values for low,high,step
             if max_index != cc.empty:
-                low = 0.000
+                low = 0.00025
                 high = 0.025
                 step = 0.00025
                 x = np.arange(low, high, step)

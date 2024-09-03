@@ -104,9 +104,9 @@ def load_dataframes(files, args):
     print("[INFO] importing data and mc to dataframes (this might take a bit) ...")
 
     if root_files[0].find("data") != -1:
-        data, mc = get_dataframe([root_files[0]]), get_dataframe([root_files[1]])
+        data, mc = get_dataframe([root_files[0]], debug=args._kDebug), get_dataframe([root_files[1]], debug=args._kDebug)
     elif root_files[1].find("data") != -1:
-        data, mc = get_dataframe([root_files[1]]), get_dataframe([root_files[0]])
+        data, mc = get_dataframe([root_files[1]], debug=args._kDebug), get_dataframe([root_files[0]], debug=args._kDebug)
     else:
         print("[ERROR] could not find a data file to open")
         return

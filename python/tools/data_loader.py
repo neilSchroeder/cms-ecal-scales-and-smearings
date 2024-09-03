@@ -17,6 +17,7 @@ def get_dataframe(
     r9_cuts: tuple = None,
     working_point: tuple = None,
     debug: bool = False,
+    nrows: int = 1_000_000,
 ):
     """
     Loads root files into a pandas dataframe.
@@ -38,6 +39,7 @@ def get_dataframe(
     df = pd.DataFrame()
 
     if ".root" in files[0]:
+        # read from root files
         # this takes a long time, so avoid it if possible
         df = pd.concat(
             [up.open(f)[dc.TREE_NAME].pandas.df(dc.KEEP_COLS) for f in files]
@@ -45,15 +47,12 @@ def get_dataframe(
         # drop unnecessary columns
         df.drop(dc.DROP_LIST, axis=1, inplace=True)
     elif ".csv" in files[0] or ".tsv" in files[0]:
-        df = pd.concat([pd.read_csv(f, sep="\t", dtype=dc.DATA_TYPES) for f in files])
-        print(df.head())
+        # read from csv or tsv files
+        rows = nrows if debug else None
+        df = pd.concat([pd.read_csv(f, sep="\t", dtype=dc.DATA_TYPES, nrows=rows) for f in files])
     else:
         print("[python][helpers][helper_main] ERROR: file type not recognized")
         raise ValueError("file type not recognized: must be .root, .csv, or .tsv")
-
-    if debug:
-        # use a smaller dataset for debugging
-        df = df.head(100000)
 
     if apply_cuts == "standard":
         df = standard_cuts(df)
@@ -482,11 +481,9 @@ def clean_up(data, mc, cats):
         data (pandas.DataFrame): cleaned data dataframe
         mc (pandas.DataFrame): cleaned mc dataframe
     """
-    print(data.head())
     if cats.iloc[0, cc.i_et_min] != cc.empty:
         data, mc = add_transverse_energy(data, mc)
 
-    print(data.head())
     drop_list = [dc.E_LEAD, dc.E_SUB, dc.RUN]
     if cats.iloc[0, cc.i_gain] == cc.empty:
         drop_list += [dc.GAIN_LEAD, dc.GAIN_SUB]
@@ -494,6 +491,5 @@ def clean_up(data, mc, cats):
     print("[INFO][python/nll] dropping {}".format(drop_list))
     data.drop(drop_list, axis=1, inplace=True)
     mc.drop(drop_list, axis=1, inplace=True)
-    print(data.head())
 
     return data, mc
