@@ -25,32 +25,48 @@ def main():
     """
     Main function for the pymin.py script. This function will parse the command line arguments and call the appropriate
     functions to derive the scales and smearings.
-    --------------------------------
+    
     Args:
-        -i, --inputFile: path to file containing the data and mc paths
-        --prune: option to prune down the data and mc to keep memory usage low
-        --pruned-file-dest: destination for the pruned files
-        --run-divide: option to make the run division file for time_stability
-        --min-events: minimum number of events allowed in a given run bin
-        -c, --cats: path to file describing categories to use in minimization
-        --time-stability: scale data to PDG Z mass, pass the run divide file as your categories
-        -s, --scales: path to scales file to apply to data
-        --smearings: path to smearings file to apply to MC
-        -w, --weights: tsv containing rapidity x ptz weights, if empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.
-        -o, --output: output tag to add to file names
-        --closure: derive the closure of the scales for a given step
-        --ignore: list of categories to ignore for the current derivation
-        --hist-min: Min of histogram for binned NLL evaluation
-        --hist-max: Max of histogram for binned NLL evaluation
-        --no-auto-bin: Turns off the auto binning feature (using Freedman-Diaconis method)
-        --bin-size: Size of bins for binned NLL evaluation
-        --start-style: Style of starting values for minimization
-        --condor: submit the script to run on condor
-        --queue: (only use with --condor) tell condor which queue to submit to
-    --------------------------------
+        -i, --inputFile: Path to file containing the data and MC paths.
+        --prune: Option to prune down the data and MC to keep memory usage low.
+        --pruned-file-dest: Destination for the pruned files.
+        --run-divide: Option to make the run division file for time stability.
+        --min-events: Minimum number of events allowed in a given run bin.
+        -c, --catsFile: Path to file describing categories to use in minimization.
+        --time-stability: Scale data to PDG Z mass, pass the run divide file as your categories.
+        -s, --scales: Path to scales file to apply to data.
+        --smearings: Path to smearings file to apply to MC.
+        -w, --weights: TSV containing rapidity x ptz weights. If empty, they will be derived. It is recommended that these be derived just after deriving time stability (step1) corrections.
+        -o, --output: Output tag to add to file names.
+        --closure: Derive the closure of the scales for a given step.
+        --ignore: List of categories to ignore for the current derivation.
+        --hist-min: Minimum of histogram for binned NLL evaluation.
+        --hist-max: Maximum of histogram for binned NLL evaluation.
+        --no-auto-bin: Turns off the auto binning feature (using Freedman-Diaconis method).
+        --bin-size: Size of bins for binned NLL evaluation.
+        --start-style: Style of starting values for minimization.
+        --condor: Submit the script to run on condor.
+        --queue: (Only use with --condor) Tell condor which queue to submit to, options are 'today', 'tomorrow', 'testmatch', 'nextweek'.
+        --from-condor: [NOT FOR USER] Flag added by condor_handler to indicate this has been submitted from condor.
+        --rewrite: Only writes the scales file associated with this step.
+        --combine-files: [ADVANCED] Combines two specified files, using the --only_step and --step options.
+        --only-step: [ADVANCED] Only step file, to be used with the --combine_files and --step options.
+        --plot: Plot the invariant mass distributions for data and MC in the provided categories.
+        --plot-dir: Directory to write the plots.
+        --lumi-label: Lumi label to add to plots, example: '35.9 fb^{-1} (13 TeV) 2016'.
+        --test-method-accuracy: Treat MC as data, inject known scales into MC categories, see how well method recovers known scale injection.
+        --scan-nll: Scan the NLL phase space for a given set of categories. A set of scales in the 'onlystepX' format should be provided as the scan center.
+        --scan-scales: Scales defining the center of the scan [this is highly recommended when scanning the NLL phase space].
+        --debug: Turn on debug mode, which prints out additional information and uses a smaller dataset.
+
     Returns:
         None
-    --------------------------------
+
+    Raises:
+        None
+
+    Prints:
+        Information about the execution process and any errors encountered.
     """
 
     ss_config = SSConfig()  # initialize the config class
@@ -456,11 +472,6 @@ def main():
     print("[INFO] initiating minimization using scipy.optimize.minimize")
     options = helper_pymin.get_options(args)
     scales_smears = minimizer.minimize(data, mc, cats_df, options)
-
-    # if we're plotting there's nothing to write, so just print a done message and exit
-    if args._kPlot:
-        print("[INFO] plotting is done, please review")
-        return
 
     # write the results
     file_written = helper_pymin.write_results(args, scales_smears)

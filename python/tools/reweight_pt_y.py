@@ -42,7 +42,7 @@ def get_zpt(df: pd.DataFrame) -> np.ndarray:
         np.multiply(np.sin(theta_lead), np.sin(df[dc.PHI_LEAD].values)),
     )
     p_sub_x = np.multiply(
-        df[dc.E_LEAD].values,
+        df[dc.E_SUB].values,
         np.multiply(np.sin(theta_sub), np.cos(df[dc.PHI_SUB].values)),
     )
     p_sub_y = np.multiply(

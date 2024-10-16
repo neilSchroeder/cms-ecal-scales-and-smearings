@@ -24,7 +24,7 @@ pc.plotting_functions = {
 }
 
 
-def get_tuple(this_string):
+def convert_str_to_tuple(this_string):
     """
     converts a string of the form "(a,b)" to a tuple (a,b)
     ----------
@@ -41,7 +41,7 @@ def get_tuple(this_string):
     return (float(this_string[0]), float(this_string[1]))
 
 
-def get_var(df, info, _isData=True, title=None):
+def get_array_with_cuts(df, info, _isData=True, title=None):
     """
     Gets the variable to plot from the dataframe
     ----------
@@ -56,12 +56,12 @@ def get_var(df, info, _isData=True, title=None):
     """
 
     # unpack the info
-    bounds_eta_lead = get_tuple(info[pvc.ETA_LEAD])
-    bounds_r9_lead = get_tuple(info[pvc.R9_LEAD])
-    bounds_et_lead = get_tuple(info[pvc.ET_LEAD])
-    bounds_eta_sub = get_tuple(info[pvc.ETA_SUB])
-    bounds_r9_sub = get_tuple(info[pvc.R9_SUB])
-    bounds_et_sub = get_tuple(info[pvc.ET_SUB])
+    bounds_eta_lead = convert_str_to_tuple(info[pvc.ETA_LEAD])
+    bounds_r9_lead = convert_str_to_tuple(info[pvc.R9_LEAD])
+    bounds_et_lead = convert_str_to_tuple(info[pvc.ET_LEAD])
+    bounds_eta_sub = convert_str_to_tuple(info[pvc.ETA_SUB])
+    bounds_r9_sub = convert_str_to_tuple(info[pvc.R9_SUB])
+    bounds_et_sub = convert_str_to_tuple(info[pvc.ET_SUB])
 
     # determine what variable we're plotting
     var_key = None
@@ -86,21 +86,11 @@ def get_var(df, info, _isData=True, title=None):
         r9_cuts=(bounds_r9_lead, bounds_r9_sub),
     )
 
-    # plot all variables in grid
-    described_df = df_with_cuts.describe(include="all")
-    # sns.pairplot(df_with_cuts, diag_kind='hist')
-
     if var_key == dc.INVMASS:
         # check if systematics available
 
         if _isData:
             df_title = "_" + title if title else ""
-            described_df.to_csv(
-                f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_data{df_title}.csv",
-                sep="\t",
-                index=True,
-                float_format="%.4f",
-            )
             if (
                 pvc.KEY_INVMASS_UP not in df.columns
                 or pvc.KEY_INVMASS_DOWN not in df.columns
@@ -115,12 +105,6 @@ def get_var(df, info, _isData=True, title=None):
             ]
         else:
             df_title = "_" + title if title else ""
-            described_df.to_csv(
-                f"{config.DEFAULT_WRITE_FILES_PATH}/described_df_mc{df_title}.csv",
-                sep="\t",
-                index=True,
-                float_format="%.4f",
-            )
         # otherwise return mc
         return [
             np.array(df_with_cuts[var_key].values),
@@ -159,10 +143,10 @@ def plot(data, mc, cats, **options):
         plotting_class = plot_consts.get_plotting_function(row[pvc.i_plot_style])
         # run the plotting function
         val = plotting_class(
-            get_var(
+            get_array_with_cuts(
                 data, row[pvc.i_plot_var : :], title=row[pvc.i_plot_name]
             ),  # gets events from data to plot
-            get_var(
+            get_array_with_cuts(
                 mc, row[pvc.i_plot_var : :], _isData=False, title=row[pvc.i_plot_name]
             ),  # gets events from mc to plot
             row[pvc.i_plot_name],  # plot title
@@ -178,6 +162,7 @@ def plot(data, mc, cats, **options):
         df_results.loc[i, pvc.i_plot_results] = val
 
     # save the results
+    print(f"Saving plot results to {config.DEFAULT_WRITE_FILES_PATH}/{options['tag']}_plot_results.csv")
     df_results.to_csv(
         f"{config.DEFAULT_WRITE_FILES_PATH}/{options['tag']}_plot_results.csv",
         sep="\t",

@@ -188,12 +188,6 @@ def minimize(data, mc, cats_df, args):
         empty_guess, __ZCATS__
     )
 
-    # if we're plotting, just plot and return, don't run a minimization
-    if _kPlot:
-        loss_function(guess, empty_guess, __ZCATS__, __num_scales__, __num_smears__)
-        plotter.plot_cats(plot_dir, __ZCATS__, cats_df)
-        return [], []
-
     # It is sometimes necessary to demonstrate a likelihood scan.
     if _kScanNLL:
         loss_function(
@@ -273,6 +267,10 @@ def minimize(data, mc, cats_df, args):
         "[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:"
     )
     print(optimum)
+    
+    if _kPlot:
+        for cat in __ZCATS__:
+            cat.plot_history()
 
     if not optimum.success:
         print("#" * 40)
