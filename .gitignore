@@ -5,3 +5,4 @@ datFiles/*.tsv
 condor/*
 workspace/*
 *.cc
+plots/**
