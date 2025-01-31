@@ -404,6 +404,25 @@ To fix the scales, and only derive a set of smearings, use the `--fix-scales` op
 
 To submit the minimization to condor, use the `--condor` option, additionally you can specify the job flavour using the `--queue` options, the defualt queue is `tomorrow`
 
+To refine a specific set of scales or smearings, use the `--start-style` option paired with the `--only-step` option and a file in the `only_step` format with the desired scales and smearings. like so:
+
+```
+python pymin.py -i /path/to/data.cfg \
+           -c /path/to/categories.tsv \
+           -s /path/to/scales.dat \
+           -w /path/to/weights.tsv \
+           -o <output_tag> \
+           --start-style 'specify' \
+           --only-step /path/to/only/step.tsv
+           --condor --queue <queue>
+```
+
+Note: only step files have the following format:
+```
+runmin	runmax	etamin	etamax	r9min	r9max	etmin	etmax	gain	scaleOrSmear	unc
+```
+for the purposes of use in `--start-style` the binning is for your benefit. The program will read in the values without checking the binning. Please ensure the order of your binning matches the order of the binning in the categories file.
+
 ### Additional Use Options
 
 [table of contents](#table-of-contents)
