@@ -1,11 +1,12 @@
 import json
-import numpy as np
 import os
-import pandas as pd
 from collections import OrderedDict
 
-from python.classes.constant_classes import DataConstants as dc
+import numpy as np
+import pandas as pd
+
 from python.classes.config_class import SSConfig
+from python.classes.constant_classes import DataConstants as dc
 
 ss_config = SSConfig()
 
@@ -283,8 +284,8 @@ def combine(thisStep, lastStep, outFile):
         dictForDf[col] = []
 
     # format is: runMin runMax etaMin etaMax r9Min r9Max etMin etMax gain val err
-    for iLast, rowLast in dfLastStep.iterrows():
-        for iThis, rowThis in dfThisStep.iterrows():
+    for rowLast in dfLastStep.itertuples(index=False):
+        for rowThis in dfThisStep.itertuples(index=False):
             # only build an entry if the two categories are congruent
             kCongruent = congruentCategories(rowLast, rowThis, lastStep, thisStep)
             if int(kCongruent) == -999:

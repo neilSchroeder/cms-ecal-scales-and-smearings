@@ -1,11 +1,12 @@
-from collections import OrderedDict
 import datetime
+import statistics as stat
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
-import statistics as stat
 
-from python.classes.constant_classes import DataConstants as dc
 from python.classes.config_class import SSConfig
+from python.classes.constant_classes import DataConstants as dc
 
 ss_config = SSConfig()
 
@@ -48,7 +49,7 @@ def derive(data, runs, output, _kWriteData=True):
     for col in headers:
         dictForDf[col] = []
 
-    for i, pair in run_bins.iterrows():
+    for pair in run_bins.itertuples(index=False):
         mask_run = np.logical_and(
             pair[0] <= data[dc.RUN].values, data[dc.RUN].values <= pair[1]
         )

@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from python.classes.config_class import SSConfig
-from python.classes.constant_classes import DataConstants as dc
 from python.classes.constant_classes import CategoryConstants as cc
+from python.classes.constant_classes import DataConstants as dc
 from python.classes.zcat_class import zcat
 
 ss_config = SSConfig()

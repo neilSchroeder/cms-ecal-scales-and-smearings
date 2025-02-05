@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
+import python.tools.data_loader as data_loader
 from python.classes.constant_classes import DataConstants as dc
 from python.classes.constant_classes import PyValConstants as pvc
-import python.tools.data_loader as data_loader
 
 
 def prepare_scales_lookup(scales_df):
@@ -45,7 +45,7 @@ def prepare_scales_lookup(scales_df):
         np.nan,
     )
 
-    for idx, row in scales_df.iterrows():
+    for row in scales_df.itertuples(index=False):
         run_id = np.digitize(row[dc.i_run_min], run_edges) - 1
         eta_id = np.digitize(row[dc.i_eta_min] + 1e-6, eta_edges) - 1
         r9_id = [np.digitize(row[dc.i_r9_min] + 1e-6, r9_edges) - 1]
