@@ -1,11 +1,10 @@
+import numba
 import numpy as np
 import pandas as pd
 from scipy import stats
 
 import python.tools.numba_hist as numba_hist
 from python.classes.constant_classes import CategoryConstants as cc
-
-import numba
 
 
 @numba.njit
@@ -32,39 +31,24 @@ def apply_scale(data, lead_scale, sublead_scale):
 
 
 @numba.njit
-def compute_nll_chisqr(binned_data, binned_mc, num_bins=80):
-    # Implement NLL and Chi-squared computation here
-    # This is a placeholder, replace with actual implementation
-    norm_binned_mc = binned_mc / np.sum(binned_mc)
-    scaled_mc = norm_binned_mc * np.sum(binned_data)
-    err_mc = np.sqrt(scaled_mc).astype(np.float32)
-    err_data = np.sqrt(binned_data).astype(np.float32)
-    err = np.sqrt(
-        np.add(
-            np.multiply(err_mc, err_mc).astype(np.float32),
-            np.multiply(err_data, err_data).astype(np.float32),
-        ).astype(np.float32)
-    ).astype(np.float32)
-    chi_sqr = (
-        np.sum(
-            np.divide(
-                np.multiply(binned_data - scaled_mc, binned_data - scaled_mc).astype(
-                    np.float32
-                ),
-                err,
-            ).astype(np.float32)
-        )
-        / num_bins
-    )
+def compute_loss(binned_data, binned_mc, num_bins=80):
+    """
+    Compute the earth mover's distance between the data and mc histograms.
+    """
+    # compute the cumulative sum of the data and mc histograms
+    hist1_normalized = binned_data / np.sum(binned_data)
+    hist2_normalized = binned_mc / np.sum(binned_mc)
 
-    nll = xlogy(binned_data, norm_binned_mc)
-    nll[nll == -np.inf] = 0
-    nll = np.sum(nll) / len(nll)
-    # evaluate penalty
-    penalty = xlogy(np.sum(binned_data) - binned_data, 1 - norm_binned_mc)
-    penalty[penalty == -np.inf] = 0
-    penalty = np.sum(penalty) / len(penalty)
-    return -2 * (nll + penalty) * chi_sqr / 1e5
+    # Calculate the cumulative distribution functions (CDFs)
+    # The CDF at each point represents the total probability mass up to that point
+    cdf1 = np.cumsum(hist1_normalized)
+    cdf2 = np.cumsum(hist2_normalized)
+
+    # The EMD in 1D is actually just the area between the CDFs
+    # We can calculate this using the absolute difference between CDFs
+    emd = np.sum(np.abs(cdf1 - cdf2))
+
+    return emd
 
 
 class zcat:
@@ -276,7 +260,7 @@ class zcat:
         binned_mc[binned_mc == 0] = 1e-15
 
         # compute the NLL
-        self.NLL = compute_nll_chisqr(binned_data, binned_mc, num_bins)
+        self.NLL = compute_loss(binned_data, binned_mc, num_bins)
         self.history.append(
             (
                 lead_scale,
@@ -312,7 +296,7 @@ class zcat:
         plt.yscale("log")
         plt.savefig(f"category_{self.lead_index}_{self.sublead_index}_nll_history.png")
         # clear the plot
-        plt.close('all')
+        plt.close("all")
 
         # plot step history of scales
         # scatter plot with color representing the NLL value
@@ -324,8 +308,10 @@ class zcat:
         plt.ylabel("sublead scale")
         plt.title("Scale history")
         plt.colorbar()
-        plt.savefig(f"category_{self.lead_index}_{self.sublead_index}_scale_history.png")
-        plt.close('all')
+        plt.savefig(
+            f"category_{self.lead_index}_{self.sublead_index}_scale_history.png"
+        )
+        plt.close("all")
 
         # plot step history of smearings
         # scatter plot with color representing the NLL value
@@ -340,4 +326,4 @@ class zcat:
         plt.savefig(
             f"category_{self.lead_index}_{self.sublead_index}_smearing_history.png"
         )
-        plt.close('all')
+        plt.close("all")
