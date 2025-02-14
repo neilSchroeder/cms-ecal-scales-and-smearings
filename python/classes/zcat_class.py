@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 
 import python.tools.numba_hist as numba_hist
+from python.classes.constant_classes import CategoryConstants as cc
 
 
 @numba.njit
