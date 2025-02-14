@@ -10,7 +10,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.special import rel_entr
 
+from python.classes.constant_classes import CategoryConstants as cc
 from python.classes.constant_classes import DataConstants as dc
+from python.classes.zcat_class import zcat
 from python.tools.data_loader import get_dataframe
 
 
@@ -116,6 +118,11 @@ def main():
         et_cuts=((32, 14000), (20, 14000)),
         debug=True,
         nrows=100000,
+    )
+
+    # create zcat class
+    zcat_obj = zcat(
+        0, 0, 0, 0, df_data[cc.INVMASS], df_mc[cc.INVMASS], df_mc[cc.WEIGHTS]
     )
 
     loss_fun = earth_movers_distance

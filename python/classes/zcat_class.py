@@ -1,3 +1,6 @@
+from dataclasses import dataclass, field
+from typing import List, Tuple
+
 import numba
 import numpy as np
 from scipy import stats
@@ -6,38 +9,6 @@ import python.tools.numba_hist as numba_hist
 from python.classes.constant_classes import CategoryConstants as cc
 
 EPSILON = 1e-15
-
-
-@numba.njit
-def _update_arrays_numba(
-    data,
-    mc,
-    weights,
-    temp_data,
-    temp_mc,
-    temp_weights,
-    data_mask,
-    mc_mask,
-    hist_min,
-    hist_max,
-):
-    """Optimized array update function separate from class"""
-    n_data = np.sum(data_mask)
-    n_mc = np.sum(mc_mask)
-
-    # Fill the pre-allocated arrays
-    temp_data[:n_data] = data[data_mask]
-    temp_data[n_data] = hist_min
-    temp_data[n_data + 1] = hist_max
-
-    temp_mc[:n_mc] = mc[mc_mask]
-    temp_mc[n_mc] = hist_min
-    temp_mc[n_mc + 1] = hist_max
-
-    temp_weights[:n_mc] = weights[mc_mask]
-    temp_weights[n_mc : n_mc + 2] = 0
-
-    return n_data + 2, n_mc + 2
 
 
 def apply_smearing(mc, lead_smear, sublead_smear, seed):
@@ -94,9 +65,8 @@ class zcat:
 
         # Pre-allocate buffers for frequent operations
         self.num_bins = int(round((self.hist_max - self.hist_min) / self.bin_size, 0))
-        self.temp_data = np.empty(len(self.data) + 2, dtype=np.float32)
-        self.temp_mc = np.empty(len(self.mc) + 2, dtype=np.float32)
-        self.temp_weights = np.empty(len(self.weights) + 2, dtype=np.float32)
+        self.temp_data = np.copy(self.data[self.data_mask])
+        self.temp_mc = np.copy(self.mc[self.mc_mask])
 
         # Initialize other attributes
         self.updated = False
@@ -109,6 +79,7 @@ class zcat:
         self.sublead_smear = 0
         self.lead_scale = 1
         self.sublead_scale = 1
+        self.top_and_bottom = [self.hist_min, self.hist_max]
 
         if self.auto_bin and self.bin_size == 0.25:
             self.set_bin_size()
@@ -120,55 +91,41 @@ class zcat:
 
         self.updated = True
 
-        # Apply scales
+        # Apply scales, only update if necessary
         lead_scale = 1.0 if lead_scale == 0 else lead_scale
         sublead_scale = 1.0 if sublead_scale == 0 else sublead_scale
 
-        # Use pre-allocated arrays
-        temp_data = (
-            self.temp_data
-            if self.lead_scale == lead_scale and self.sublead_scale == sublead_scale
-            else apply_scale(self.data, lead_scale, sublead_scale)
-        )
-        self.lead_scale = lead_scale
-        self.sublead_scale = sublead_scale
+        if self.lead_scale != lead_scale or self.sublead_scale != sublead_scale:
+            self.temp_data = apply_scale(self.data, lead_scale, sublead_scale)
+            self.lead_scale = lead_scale
+            self.sublead_scale = sublead_scale
+            self.data_mask = (self.hist_min <= self.temp_data) & (
+                self.temp_data <= self.hist_max
+            )
 
-        temp_mc = (
-            self.temp_mc
-            if lead_smear == self.lead_smear and sublead_smear == self.sublead_smear
-            else apply_smearing(self.mc, lead_smear, sublead_smear, self.seed)
-        )
-        self.lead_smear = lead_smear
-        self.sublead_smear = sublead_smear
+        # Apply smearing, only update if necessary
+        if self.lead_smear != lead_smear or self.sublead_smear != sublead_smear:
+            self.temp_mc = apply_smearing(self.mc, lead_smear, sublead_smear, self.seed)
+            self.lead_smear = lead_smear
+            self.sublead_smear = sublead_smear
+            self.mc_mask = (self.hist_min <= self.temp_mc) & (
+                self.temp_mc <= self.hist_max
+            )
 
-        # Update masks
-        data_mask = (self.hist_min <= temp_data) & (temp_data <= self.hist_max)
-        mc_mask = (self.hist_min <= temp_mc) & (temp_mc <= self.hist_max)
-
-        # Use pre-allocated arrays for histograms
-        n_data, n_mc = _update_arrays_numba(
-            temp_data,
-            temp_mc,
-            self.weights,
-            self.temp_data,
-            self.temp_mc,
-            self.temp_weights,
-            data_mask,
-            mc_mask,
-            self.hist_min,
-            self.hist_max,
-        )
-
-        if self.check_invalid(n_data - 2, n_mc - 2):
+        if self.check_invalid(len(self.temp_mc), len(self.temp_data)):
             self.clean_up()
             return
 
         # Compute histograms using pre-allocated arrays
+        top_and_bottom = [self.hist_min, self.hist_max]
         binned_data, _ = numba_hist.numba_histogram(
-            self.temp_data[:n_data], self.num_bins
+            np.concatenate(self.temp_data, self.top_and_bottom),
+            self.num_bins,
         )
         binned_mc, _ = numba_hist.numba_weighted_histogram(
-            self.temp_mc[:n_mc], self.temp_weights[:n_mc], self.num_bins
+            np.concatenate(self.temp_mc, self.top_and_bottom),
+            np.concatenate(self.temp_weights, [0, 0]),
+            self.num_bins,
         )
 
         # Clean binned data
