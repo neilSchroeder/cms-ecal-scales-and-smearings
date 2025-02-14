@@ -230,6 +230,16 @@ class zcat:
         if self.hist_params.auto_bin and self.hist_params.bin_size == DEFAULT_BIN_SIZE:
             self._set_bin_size()
 
+        print(self)
+
+    def __repr__(self) -> str:
+        """
+        Print all relevant information about the category.
+        """
+        print(f"zcat ({self.lead_index},{self.sublead_index})")
+        for key, value in self.__dict__.items():
+            print(f"{key}: {value}")
+
     def _compute_masks(self) -> None:
         """Compute masks for valid data ranges."""
         self.data_mask = (self.hist_params.hist_min <= self.data) & (

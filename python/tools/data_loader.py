@@ -253,10 +253,10 @@ def extract_cats(
     """
     # check for empty data
     if len(data) == 0:
-        print("[WARNING][python/nll] no data, returning")
+        print("[WARNING][python/utilities/data_loader] no data, returning")
         return []
     if len(mc) == 0:
-        print("[WARNING][python/nll] no mc, returning")
+        print("[WARNING][python/utilities/data_loader] no mc, returning")
         return []
 
     categories = []
