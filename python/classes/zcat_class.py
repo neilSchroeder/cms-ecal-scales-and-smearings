@@ -273,8 +273,8 @@ class zcat:
 
         try:
             # Apply scales with validation
-            lead_scale = max(EPSILON, lead_scale if lead_scale != 0 else 1.0)
-            sublead_scale = max(EPSILON, sublead_scale if sublead_scale != 0 else 1.0)
+            lead_scale = 1 if lead_scale < 0 else lead_scale
+            sublead_scale = 1 if sublead_scale < 0 else sublead_scale
 
             # Apply transformations
             temp_data = (
@@ -282,12 +282,16 @@ class zcat:
                 if self.lead_scale == lead_scale and self.sublead_scale == sublead_scale
                 else apply_scale(self.data, lead_scale, sublead_scale)
             )
+            self.lead_scale = lead_scale
+            self.sublead_scale = sublead_scale
 
             temp_mc = (
                 self.temp_mc
                 if lead_smear == self.lead_smear and sublead_smear == self.sublead_smear
                 else apply_smearing(self.mc, lead_smear, sublead_smear, self.rng)
             )
+            self.lead_smear = lead_smear
+            self.sublead_smear = sublead_smear
 
             # Update state
             self.lead_scale = lead_scale
