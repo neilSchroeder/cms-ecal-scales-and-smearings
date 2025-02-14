@@ -97,15 +97,17 @@ class zcat:
         self.valid = True
         self.bins = np.array([])
         self.history = []
+        if self.auto_bin and self.bin_size == 0.25:
+            # a user may forget to turn off auto binning, so we need to check if the bin size is valid
+            self.set_bin_size()
 
-        # set the bin size if auto binning is enabled
+    def set_bin_size(self):
         if self.auto_bin and self.bin_size == 0.25:
             # prune and check data and mc for validity
             temp_data = self.data[
                 np.logical_and(self.hist_min <= self.data, self.data <= self.hist_max)
             ]
             mask_mc = np.logical_and(self.mc >= self.hist_min, self.mc <= self.hist_max)
-            temp_weights = self.weights[mask_mc]
             temp_mc = self.mc[mask_mc]
             if self.check_invalid(temp_data, temp_mc):
                 print(
