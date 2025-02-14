@@ -79,7 +79,7 @@ class zcat:
         self.sublead_smear = 0
         self.lead_scale = 1
         self.sublead_scale = 1
-        self.top_and_bottom = [self.hist_min, self.hist_max]
+        self.top_and_bottom = np.array([self.hist_min, self.hist_max])
 
         if self.auto_bin and self.bin_size == 0.25:
             self.set_bin_size()
@@ -124,7 +124,7 @@ class zcat:
         )
         binned_mc, _ = numba_hist.numba_weighted_histogram(
             np.concatenate(self.temp_mc, self.top_and_bottom),
-            np.concatenate(self.temp_weights, [0, 0]),
+            np.concatenate(self.temp_weights, np.array([0, 0])),
             self.num_bins,
         )
 
