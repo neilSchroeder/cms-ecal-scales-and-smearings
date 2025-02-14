@@ -51,10 +51,10 @@ def xlogy(x, y):
 def apply_smearing(mc, lead_smear, sublead_smear, seed):
     """Pre-allocated version of smearing application"""
     np.random.seed(seed)
+    rand = np.random.Generator(np.random.PCG64(seed))
     # Avoid temporary arrays by computing directly
     return mc * np.sqrt(
-        np.random.normal(1, lead_smear, len(mc))
-        * np.random.normal(1, sublead_smear, len(mc))
+        rand.normal(1, lead_smear, len(mc)) * rand.normal(1, sublead_smear, len(mc))
     )
 
 
@@ -113,29 +113,13 @@ class zcat:
         self.seed = 3543136929
         self.valid = True
         self.history = []
+        self.lead_smear = 0
+        self.sublead_smear = 0
+        self.lead_scale = 1
+        self.sublead_scale = 1
 
         if self.auto_bin and self.bin_size == 0.25:
             self.set_bin_size()
-
-    @numba.njit
-    def _update_arrays(self, temp_data, temp_mc, temp_weights, data_mask, mc_mask):
-        """Optimized array update function"""
-        # Use pre-allocated arrays and avoid concatenation
-        n_data = np.sum(data_mask)
-        n_mc = np.sum(mc_mask)
-
-        temp_data[:n_data] = self.data[data_mask]
-        temp_data[n_data] = self.hist_min
-        temp_data[n_data + 1] = self.hist_max
-
-        temp_mc[:n_mc] = self.mc[mc_mask]
-        temp_mc[n_mc] = self.hist_min
-        temp_mc[n_mc + 1] = self.hist_max
-
-        temp_weights[:n_mc] = self.weights[mc_mask]
-        temp_weights[n_mc:] = 0
-
-        return n_data + 2, n_mc + 2
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
         """Optimized update function using pre-allocated arrays"""
@@ -149,12 +133,21 @@ class zcat:
         sublead_scale = 1.0 if sublead_scale == 0 else sublead_scale
 
         # Use pre-allocated arrays
-        temp_data = apply_scale(self.data, lead_scale, sublead_scale)
+        temp_data = (
+            self.temp_data
+            if self.lead_scale == lead_scale and self.sublead_scale == sublead_scale
+            else apply_scale(self.data, lead_scale, sublead_scale)
+        )
+        self.lead_scale = lead_scale
+        self.sublead_scale = sublead_scale
+
         temp_mc = (
-            self.mc
-            if lead_smear == 0 and sublead_smear == 0
+            self.temp_mc
+            if lead_smear == self.lead_smear and sublead_smear == self.sublead_smear
             else apply_smearing(self.mc, lead_smear, sublead_smear, self.seed)
         )
+        self.lead_smear = lead_smear
+        self.sublead_smear = sublead_smear
 
         # Update masks
         data_mask = (self.hist_min <= temp_data) & (temp_data <= self.hist_max)
