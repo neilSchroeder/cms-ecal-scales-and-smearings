@@ -96,21 +96,25 @@ class zcat:
         sublead_scale = 1.0 if sublead_scale == 0 else sublead_scale
 
         if self.lead_scale != lead_scale or self.sublead_scale != sublead_scale:
+            print("scaling")
             self.temp_data = apply_scale(self.data, lead_scale, sublead_scale)
             self.lead_scale = lead_scale
             self.sublead_scale = sublead_scale
             self.data_mask = (self.hist_min <= self.temp_data) & (
                 self.temp_data <= self.hist_max
             )
+            self.temp_data = self.temp_data[self.data_mask]
 
         # Apply smearing, only update if necessary
         if self.lead_smear != lead_smear or self.sublead_smear != sublead_smear:
+            print("smearing")
             self.temp_mc = apply_smearing(self.mc, lead_smear, sublead_smear, self.seed)
             self.lead_smear = lead_smear
             self.sublead_smear = sublead_smear
             self.mc_mask = (self.hist_min <= self.temp_mc) & (
                 self.temp_mc <= self.hist_max
             )
+            self.temp_mc = self.temp_mc[self.mc_mask]
 
         if self.check_invalid(len(self.temp_mc), len(self.temp_data)):
             self.clean_up()
@@ -118,9 +122,6 @@ class zcat:
 
         # Compute histograms using pre-allocated arrays
         # print type
-        print(type(self.temp_data))
-        print(type(self.temp_mc))
-        print(type(self.top_and_bottom))
         binned_data, _ = numba_hist.numba_histogram(
             np.concatenate([self.temp_data, self.top_and_bottom]),
             self.num_bins,
