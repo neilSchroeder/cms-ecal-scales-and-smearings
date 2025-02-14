@@ -1,22 +1,17 @@
-import os
 import gc
+import logging
+import os
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize as minz
-import logging
 
-
-from python.classes.constant_classes import (
-    DataConstants as dc,
-    CategoryConstants as cc,
-)
 import python.helpers.helper_minimizer as helper_minimizer
 import python.plotters.plot_cats as plotter
 import python.tools.data_loader as data_loader
-from python.tools.target_function import (
-    scan_nll,
-    target_function_wrapper,
-)
+from python.classes.constant_classes import CategoryConstants as cc
+from python.classes.constant_classes import DataConstants as dc
+from python.tools.target_function import scan_nll, target_function_wrapper
 
 __num_scales__ = 0
 __num_smears__ = 0
@@ -120,6 +115,7 @@ def minimize(data, mc, cats_df, args):
     __ZCATS__ = data_loader.extract_cats(
         data, mc, cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **args
     )
+
     __ZCATS__ = [
         cat for cat in __ZCATS__ if cat.valid
     ]  # remove any initially bad categories
@@ -127,6 +123,7 @@ def minimize(data, mc, cats_df, args):
     # once categories are extracted, data and mc can be released to make more room.
     del data
     del mc
+    gc.collect()
 
     # set up boundaries on starting location of scales
     bounds = set_bounds(
@@ -184,9 +181,7 @@ def minimize(data, mc, cats_df, args):
     # set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.001 for x in range(__num_smears__)]
     empty_guess = [0 for x in guess]
-    loss_function, reset_initial_guess = target_function_wrapper(
-        empty_guess, __ZCATS__
-    )
+    loss_function, reset_initial_guess = target_function_wrapper(empty_guess, __ZCATS__)
 
     # It is sometimes necessary to demonstrate a likelihood scan.
     if _kScanNLL:
@@ -254,6 +249,13 @@ def minimize(data, mc, cats_df, args):
         min_step_dict = {"eps": 0.00001}  # TODO: figure out how to make this dynamic
 
     # minimize
+    import cProfile
+    import io
+    import pstats
+
+    pr = cProfile.Profile()
+    pr.enable()
+
     optimum = minz(
         loss_function,
         np.array(guess),
@@ -263,11 +265,17 @@ def minimize(data, mc, cats_df, args):
         # options=min_step_dict,
     )
 
+    pr.disable()
+    s = io.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats("cumulative")
+    ps.print_stats()
+    print(s.getvalue())
+
     print(
         "[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:"
     )
     print(optimum)
-    
+
     if _kPlot:
         for cat in __ZCATS__:
             cat.plot_history()
