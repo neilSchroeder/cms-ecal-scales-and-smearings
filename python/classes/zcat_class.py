@@ -96,7 +96,6 @@ class zcat:
         sublead_scale = 1.0 if sublead_scale == 0 else sublead_scale
 
         if self.lead_scale != lead_scale or self.sublead_scale != sublead_scale:
-            print("scaling")
             self.temp_data = apply_scale(self.data, lead_scale, sublead_scale)
             self.lead_scale = lead_scale
             self.sublead_scale = sublead_scale
@@ -107,7 +106,6 @@ class zcat:
 
         # Apply smearing, only update if necessary
         if self.lead_smear != lead_smear or self.sublead_smear != sublead_smear:
-            print("smearing")
             self.temp_mc = apply_smearing(self.mc, lead_smear, sublead_smear, self.seed)
             self.lead_smear = lead_smear
             self.sublead_smear = sublead_smear
