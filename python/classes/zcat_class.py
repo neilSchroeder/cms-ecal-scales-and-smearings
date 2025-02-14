@@ -220,7 +220,7 @@ class zcat:
             ]
             mask_mc = np.logical_and(self.mc >= self.hist_min, self.mc <= self.hist_max)
             temp_mc = self.mc[mask_mc]
-            if self.check_invalid(temp_data, temp_mc):
+            if self.check_invalid(len(temp_data), len(temp_mc)):
                 print(
                     "[INFO][zcat][init] category ({},{}) was deactivated due to insufficient statistics in data".format(
                         self.lead_index, self.sublead_index
@@ -253,7 +253,7 @@ class zcat:
         self.bins = None
         self.valid = False
 
-    def check_invalid(self, data=None, mc=None):
+    def check_invalid(self, data: int = 0, mc: int = 0):
         """
         Check if the z category is valid.
 
@@ -295,11 +295,11 @@ class zcat:
         self.data = self.data * np.sqrt(lead_scale * sublead_scale, dtype=np.float32)
         if lead_smear != 0 and sublead_smear != 0:
             lead_smear_list = np.random.normal(
-                1, np.abs(lead_smear), len(self.data), dtype=np.float32
-            )
+                1, np.abs(lead_smear), len(self.data)
+            ).astype(np.float32)
             sublead_smear_list = np.random.normal(
-                1, np.abs(sublead_smear), len(self.data), dtype=np.float32
-            )
+                1, np.abs(sublead_smear), len(self.data)
+            ).astype(np.float32)
             self.data = self.data * np.sqrt(
                 np.multiply(lead_smear_list, sublead_smear_list, dtype=np.float32),
                 dtype=np.float32,
