@@ -7,6 +7,38 @@ from python.classes.constant_classes import CategoryConstants as cc
 
 
 @numba.njit
+def _update_arrays_numba(
+    data,
+    mc,
+    weights,
+    temp_data,
+    temp_mc,
+    temp_weights,
+    data_mask,
+    mc_mask,
+    hist_min,
+    hist_max,
+):
+    """Optimized array update function separate from class"""
+    n_data = np.sum(data_mask)
+    n_mc = np.sum(mc_mask)
+
+    # Fill the pre-allocated arrays
+    temp_data[:n_data] = data[data_mask]
+    temp_data[n_data] = hist_min
+    temp_data[n_data + 1] = hist_max
+
+    temp_mc[:n_mc] = mc[mc_mask]
+    temp_mc[n_mc] = hist_min
+    temp_mc[n_mc + 1] = hist_max
+
+    temp_weights[:n_mc] = weights[mc_mask]
+    temp_weights[n_mc : n_mc + 2] = 0
+
+    return n_data + 2, n_mc + 2
+
+
+@numba.njit
 def xlogy(x, y):
     """Compute x * log(y) with special handling for x == 0."""
     result = np.zeros_like(x)
@@ -134,8 +166,17 @@ class zcat:
         mc_mask = (self.hist_min <= temp_mc) & (temp_mc <= self.hist_max)
 
         # Use pre-allocated arrays for histograms
-        n_data, n_mc = self._update_arrays(
-            self.temp_data, self.temp_mc, self.temp_weights, data_mask, mc_mask
+        n_data, n_mc = _update_arrays_numba(
+            temp_data,
+            temp_mc,
+            self.weights,
+            self.temp_data,
+            self.temp_mc,
+            self.temp_weights,
+            data_mask,
+            mc_mask,
+            self.hist_min,
+            self.hist_max,
         )
 
         if self.check_invalid(n_data - 2, n_mc - 2):
