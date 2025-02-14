@@ -73,14 +73,9 @@ def compute_loss(binned_data, binned_mc):
     if sum_data == 0 or sum_mc == 0:
         return np.inf
 
-    hist1_normalized = binned_data / sum_data
-    hist2_normalized = binned_mc / sum_mc
-
-    # Use in-place operations where possible
-    np.cumsum(hist1_normalized, out=hist1_normalized)
-    np.cumsum(hist2_normalized, out=hist2_normalized)
-
-    return np.sum(np.abs(hist1_normalized - hist2_normalized))
+    return np.sum(
+        np.abs(np.cumsum(binned_data / sum_data) - np.cumsum(binned_mc / sum_mc))
+    )
 
 
 class zcat:
