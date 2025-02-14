@@ -262,17 +262,10 @@ class zcat:
         Returns:
             bool: True if the z category is invalid, False otherwise
         """
-        if data is None:
-            data = self.data
-        if mc is None:
-            mc = self.mc
         return (
-            len(data) < cc.MIN_EVENTS_DATA
-            or len(mc) < cc.MIN_EVENTS_MC_DIAG
-            or (
-                len(mc) < cc.MIN_EVENTS_MC_OFFDIAG
-                and self.lead_index != self.sublead_index
-            )
+            data < cc.MIN_EVENTS_DATA
+            or mc < cc.MIN_EVENTS_MC_DIAG
+            or (mc < cc.MIN_EVENTS_MC_OFFDIAG and self.lead_index != self.sublead_index)
         )
 
     def print(self):
