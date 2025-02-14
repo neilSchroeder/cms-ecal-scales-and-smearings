@@ -47,7 +47,6 @@ def xlogy(x, y):
     return result
 
 
-@numba.njit
 def apply_smearing(mc, lead_smear, sublead_smear, seed):
     """Pre-allocated version of smearing application"""
     np.random.seed(seed)
