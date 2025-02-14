@@ -117,14 +117,17 @@ class zcat:
             return
 
         # Compute histograms using pre-allocated arrays
-        top_and_bottom = [self.hist_min, self.hist_max]
+        # print type
+        print(type(self.temp_data))
+        print(type(self.temp_mc))
+        print(type(self.top_and_bottom))
         binned_data, _ = numba_hist.numba_histogram(
-            np.concatenate(self.temp_data, self.top_and_bottom),
+            np.concatenate([self.temp_data, self.top_and_bottom]),
             self.num_bins,
         )
         binned_mc, _ = numba_hist.numba_weighted_histogram(
-            np.concatenate(self.temp_mc, self.top_and_bottom),
-            np.concatenate(self.temp_weights, np.array([0, 0])),
+            np.concatenate([self.temp_mc, self.top_and_bottom]),
+            np.concatenate([self.weights, [0, 0]]),
             self.num_bins,
         )
 
