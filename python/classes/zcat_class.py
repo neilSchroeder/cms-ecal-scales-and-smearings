@@ -158,7 +158,7 @@ def compute_loss(
     return np.sum(np.abs(np.cumsum(norm_data) - np.cumsum(norm_mc)))
 
 
-class ZCategory:
+class zcat:
     """
     Z-boson category analysis class with optimized performance.
     """
