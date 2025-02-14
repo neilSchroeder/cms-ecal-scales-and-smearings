@@ -169,3 +169,104 @@ class zcat:
 
         if np.isnan(self.NLL):
             self.clean_up()
+
+    def set_bin_size(self):
+        if self.auto_bin and self.bin_size == 0.25:
+            # prune and check data and mc for validity
+            temp_data = self.data[
+                np.logical_and(self.hist_min <= self.data, self.data <= self.hist_max)
+            ]
+            mask_mc = np.logical_and(self.mc >= self.hist_min, self.mc <= self.hist_max)
+            temp_mc = self.mc[mask_mc]
+            if self.check_invalid(temp_data, temp_mc):
+                print(
+                    "[INFO][zcat][init] category ({},{}) was deactivated due to insufficient statistics in data".format(
+                        self.lead_index, self.sublead_index
+                    )
+                )
+                self.clean_up()
+                return
+
+            data_width = (
+                2
+                * stats.iqr(temp_data, rng=(25, 75), nan_policy="omit")
+                / np.power(len(temp_data), 1.0 / 3.0)
+            )
+            mc_width = (
+                2
+                * stats.iqr(temp_mc, rng=(25, 75), nan_policy="omit")
+                / np.power(len(temp_mc), 1.0 / 3.0)
+            )
+            self.bin_size = max(
+                data_width, mc_width
+            )  # always choose the larger binning scheme
+
+    def clean_up(self):
+        """
+        Set all variables to None to free up memory.
+        """
+        self.data = None
+        self.mc = None
+        self.weights = None
+        self.bins = None
+        self.valid = False
+
+    def check_invalid(self, data=None, mc=None):
+        """
+        Check if the z category is valid.
+
+        Args:
+            None
+        Returns:
+            bool: True if the z category is invalid, False otherwise
+        """
+        if data is None:
+            data = self.data
+        if mc is None:
+            mc = self.mc
+        return (
+            len(data) < cc.MIN_EVENTS_DATA
+            or len(mc) < cc.MIN_EVENTS_MC_DIAG
+            or (
+                len(mc) < cc.MIN_EVENTS_MC_OFFDIAG
+                and self.lead_index != self.sublead_index
+            )
+        )
+
+    def print(self):
+        """Print the z category object."""
+        print("lead index:", self.lead_index)
+        print("sublead index:", self.sublead_index)
+        print("lead smearing index:", self.lead_smear_index)
+        print("sublead smearing index:", self.sublead_smear_index)
+        print("nevents, data:", len(self.data))
+        print("nevents, mc: ", len(self.mc))
+        print("NLL:", self.NLL, " || w/bin size:", self.bin_size)
+        print("weight:", self.weight)
+        print("valid:", self.valid)
+
+    def inject(self, lead_scale, sublead_scale, lead_smear, sublead_smear):
+        """
+        Artificially inject scales and smearings in to the "toy mc" labelled here as data.
+
+        Args:
+            lead_scale (float): scale for the leading electron
+            sublead_scale (float): scale for the subleading electron
+            lead_smear (float): smearing for the leading electron
+            sublead_smear (float): smearing for the subleading electron
+        Returns:
+            None
+        """
+        self.data = self.data * np.sqrt(lead_scale * sublead_scale, dtype=np.float32)
+        if lead_smear != 0 and sublead_smear != 0:
+            lead_smear_list = np.random.normal(
+                1, np.abs(lead_smear), len(self.data), dtype=np.float32
+            )
+            sublead_smear_list = np.random.normal(
+                1, np.abs(sublead_smear), len(self.data), dtype=np.float32
+            )
+            self.data = self.data * np.sqrt(
+                np.multiply(lead_smear_list, sublead_smear_list, dtype=np.float32),
+                dtype=np.float32,
+            )
+        return
