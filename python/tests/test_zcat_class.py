@@ -17,9 +17,9 @@ if not hasattr(cc, "MIN_EVENTS_MC_OFFDIAG"):
 @pytest.fixture
 def valid_zcat():
     # create sample data arrays within the allowed histogram range
-    data = np.linspace(80, 100, 50, dtype=np.float32)
-    mc = np.linspace(80, 100, 50, dtype=np.float32)
-    weights = np.ones(50, dtype=np.float32)
+    data = np.random.normal(91.188, 2.8, 100000).astype(np.float32)
+    mc = np.random.normal(91.188, 2.8, 100000).astype(np.float32)
+    weights = np.ones(100000, dtype=np.float32)
     # instantiate with auto_bin off to avoid bin size update complexities
     return zcat(
         0,
@@ -31,6 +31,44 @@ def valid_zcat():
         hist_max=100.0,
         bin_size=0.25,
         _kAutoBin=False,
+    )
+
+
+def test_create_zcat(valid_zcat):
+    # check that the zcat object is created with the correct attributes
+    assert valid_zcat.lead_index == 0
+    assert valid_zcat.sublead_index == 0
+    assert valid_zcat.lead_smear_index == -1
+    assert valid_zcat.sublead_smear_index == -1
+    # assert data, mc, and weights are float32 arrays
+    assert valid_zcat.data.dtype == np.float32
+    assert valid_zcat.mc.dtype == np.float32
+    assert valid_zcat.weights.dtype == np.float32
+
+    assert valid_zcat.hist_min == 80.0
+    assert valid_zcat.hist_max == 100.0
+    assert valid_zcat.auto_bin is False
+    assert valid_zcat.bin_size == 0.25
+    assert valid_zcat.valid is True
+
+    # check bins and buffers
+    assert isinstance(valid_zcat.num_bins, int)
+    assert valid_zcat.num_bins > 0
+    assert valid_zcat.temp_data is not None
+    assert valid_zcat.temp_mc is not None
+
+    # check other attributes
+    assert valid_zcat.updated is False
+    assert valid_zcat.NLL == 0
+    assert valid_zcat.weight == 1
+    assert valid_zcat.seed == 3543136929
+    assert valid_zcat.history == []
+    assert valid_zcat.lead_smear == 0
+    assert valid_zcat.sublead_smear == 0
+    assert valid_zcat.lead_scale == 1
+    assert valid_zcat.sublead_scale == 1
+    assert np.allclose(
+        valid_zcat.top_and_bottom, [valid_zcat.hist_min, valid_zcat.hist_max]
     )
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 
-from python.plotters.plot_styles.paper_style import paper_style
 from python.plotters.plot_styles.bw_cb_fit_style import bw_cb_fit_style
+from python.plotters.plot_styles.paper_style import paper_style
 
 
 class PyValConstants:

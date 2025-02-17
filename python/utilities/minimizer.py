@@ -248,6 +248,12 @@ def minimize(data, mc, cats_df, args):
     else:
         min_step_dict = {"eps": 0.00001}  # TODO: figure out how to make this dynamic
 
+    # increase the number of iterations
+    min_step_dict = {
+        "maxiter": 100000,
+        "maxfev": 100000,
+    }
+
     # minimize
     import cProfile
     import io
@@ -262,7 +268,7 @@ def minimize(data, mc, cats_df, args):
         args=(empty_guess, __ZCATS__, __num_scales__, __num_smears__),
         method=dc.MINIMIZATION_STRATEGY,  # might be interesting to try Nelder-Mead
         bounds=bounds,
-        # options=min_step_dict,
+        options=min_step_dict,
     )
 
     pr.disable()
