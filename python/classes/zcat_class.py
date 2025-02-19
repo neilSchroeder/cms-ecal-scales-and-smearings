@@ -5,6 +5,7 @@ import numba
 import numpy as np
 from scipy import stats
 
+import csmearing
 import python.tools.numba_hist as numba_hist
 from python.classes.constant_classes import CategoryConstants as cc
 
@@ -106,7 +107,9 @@ class zcat:
 
         # Apply smearing, only update if necessary
         if self.lead_smear != lead_smear or self.sublead_smear != sublead_smear:
-            self.temp_mc = apply_smearing(self.mc, lead_smear, sublead_smear, self.seed)
+            self.temp_mc = csmearing.apply_smearing(
+                self.mc, lead_smear, sublead_smear, self.seed
+            )
             self.lead_smear = lead_smear
             self.sublead_smear = sublead_smear
             self.mc_mask = (self.hist_min <= self.temp_mc) & (
