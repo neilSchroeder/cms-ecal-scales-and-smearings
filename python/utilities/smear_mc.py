@@ -34,7 +34,7 @@ def apply_smearing(mc, lead_smear, sublead_smear, seed):
     return mc * x
 
 
-def smear(mc, smearings):
+def smear_old(mc, smearings):
     """
     Applies gaussian smearings to the MC
     ----------
@@ -113,11 +113,12 @@ def smear(mc, smearings):
         )
         # smears_sub_up = multiply(mask_sub, normal(1, row[3] + row[4], len(mask_sub)))
         # smears_sub_down = multiply(mask_sub, normal(1, np.abs(row[3] - row[4]), len(mask_sub)))
-
-        smears_lead[smears_lead == 0] = 1.0
+        no_smear_mask_lead = smears_lead == 0
+        no_smear_mask_sub = smears_sub == 0
+        smears_lead[no_smear_mask_lead] = 1.0
         # smears_lead_up[smears_lead_up==0] = 1.
         # smears_lead_down[smears_lead_down==0] = 1.
-        smears_sub[smears_sub == 0] = 1.0
+        smears_sub[no_smear_mask_sub] = 1.0
         # smears_sub_up[smears_sub_up==0] = 1.
         # smears_sub_down[smears_sub_down==0] = 1.
 
@@ -126,12 +127,113 @@ def smear(mc, smearings):
         mc[dc.E_SUB] = multiply(mc[dc.E_SUB].values, smears_sub)
         mc[dc.INVMASS] = multiply(
             mc[dc.INVMASS].values, np.sqrt(multiply(smears_lead, smears_sub))
-        ) / (1 - row[3] ** 2 / 8)
+        )
 
     if np.sum(total_mask_lead) != len(mc):
         print("[WARNING] Not all events were smeared")
         print(mc[~total_mask_lead].head())
         print(mc[~total_mask_lead].describe())
+
+    return custom_cuts(
+        mc,
+        inv_mass_cuts=(80, 100),
+        eta_cuts=(0, 1.4442, 1.566, 2.5),
+        et_cuts=((32, 14000), (20, 14000)),
+    )
+
+
+@numba.njit
+def transform_smearings(smearings, new_sigma, old_sigma):
+    return (smearings - 1) * (new_sigma / old_sigma) + 1
+
+
+def smear(mc, smearings):
+    """
+    Applies gaussian smearings to the MC in a double loop approach
+
+    This may end up being a little slower, but the logic flows better
+    """
+    delim_cat = "-"
+    delim_var = "_"
+    # read in the smearings
+    smear_df = pd.read_csv(smearings, delimiter="\t", header=None, comment="#")
+
+    rand = np.random.Generator(np.random.PCG64(dc.SEED))
+    lead_smearings = rand.normal(1, 0.001, len(mc))
+    current_smearing_lead = 0.001
+    sublead_smearings = rand.normal(1, 0.001, len(mc))
+    current_smearing_sublead = 0.001
+
+    for i in range(len(smear_df)):
+        # grab the row
+        row_i = smear_df.iloc[i]
+
+        # transform the lead smearings
+        lead_smearings = transform_smearings(
+            lead_smearings, row_i[3], current_smearing_lead
+        )
+        current_smearing_lead = row_i[3]
+
+        # split cat into parts
+        cat = row_i[i]
+        cat_list = cat.split(delim_cat)
+        # cat_list[0] is eta, cat_list[1] is r9
+        eta_list = cat_list[0].split(delim_var)
+        r9_list = cat_list[1].split(delim_var)
+        et_list = (
+            cat_list[2].split(delim_var)
+            if len(cat_list) > 2
+            else ["Et", dc.MIN_ET, dc.MAX_ET]
+        )
+
+        lead_mask = np.logical_and.reduce(
+            (
+                mc[dc.ETA_LEAD].values >= float(eta_list[1]),
+                mc[dc.ETA_LEAD].values < float(eta_list[2]),
+                mc[dc.R9_LEAD].values >= float(r9_list[1]),
+                mc[dc.R9_LEAD].values < float(r9_list[2]),
+                mc[dc.E_LEAD].values >= float(et_list[1]),
+                mc[dc.E_LEAD].values < float(et_list[2]),
+            )
+        )
+        for j in range(len(smear_df)):
+            row_j = smear_df.iloc[j]
+
+            # transform the sublead smearings
+            sublead_smearings = transform_smearings(
+                sublead_smearings, row_j[3], current_smearing_sublead
+            )
+            current_smearing_sublead = row_j[3]
+
+            # split cat into parts
+            cat = row_j[i]
+            cat_list = cat.split(delim_cat)
+            # cat_list[0] is eta, cat_list[1] is r9
+            eta_list = cat_list[0].split(delim_var)
+            r9_list = cat_list[1].split(delim_var)
+            et_list = (
+                cat_list[2].split(delim_var)
+                if len(cat_list) > 2
+                else ["Et", dc.MIN_ET, dc.MAX_ET]
+            )
+
+            sublead_mask = np.logical_and.reduce(
+                (
+                    mc[dc.ETA_SUB].values >= float(eta_list[1]),
+                    mc[dc.ETA_SUB].values < float(eta_list[2]),
+                    mc[dc.R9_SUB].values >= float(r9_list[1]),
+                    mc[dc.R9_SUB].values < float(r9_list[2]),
+                    mc[dc.E_SUB].values >= float(et_list[1]),
+                    mc[dc.E_SUB].values < float(et_list[2]),
+                )
+            )
+
+            mask = np.logical_and(lead_mask, sublead_mask)
+            mc.loc[mask, dc.E_LEAD] *= lead_smearings[mask]
+            mc.loc[mask, dc.E_SUB] *= sublead_smearings[mask]
+            mc.loc[mask, dc.INVMASS] *= np.sqrt(
+                lead_smearings[mask] * sublead_smearings[mask]
+            ) / (1 - current_smearing_lead * current_smearing_sublead / 8)
 
     return custom_cuts(
         mc,
