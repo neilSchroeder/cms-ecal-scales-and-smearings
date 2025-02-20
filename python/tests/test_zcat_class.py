@@ -63,8 +63,8 @@ def test_create_zcat(valid_zcat):
     assert valid_zcat.weight == 1
     assert valid_zcat.seed == 3543136929
     assert valid_zcat.history == []
-    assert valid_zcat.lead_smear == 0
-    assert valid_zcat.sublead_smear == 0
+    assert valid_zcat.lead_smear == 0.001
+    assert valid_zcat.sublead_smear == 0.001
     assert valid_zcat.lead_scale == 1
     assert valid_zcat.sublead_scale == 1
     assert np.allclose(

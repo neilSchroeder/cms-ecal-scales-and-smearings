@@ -12,15 +12,6 @@ from python.classes.constant_classes import CategoryConstants as cc
 EPSILON = 1e-15
 
 
-def apply_smearing(mc, lead_smear, sublead_smear, seed):
-    """Pre-allocated version of smearing application"""
-    rand = np.random.Generator(np.random.PCG64(seed))
-    # Avoid temporary arrays by computing directly
-    return mc * np.sqrt(
-        rand.normal(1, lead_smear, len(mc)) * rand.normal(1, sublead_smear, len(mc))
-    )
-
-
 @numba.njit
 def apply_scale(data, lead_scale, sublead_scale):
     """Apply scaling factors to data"""
@@ -76,14 +67,32 @@ class zcat:
         self.seed = 3543136929
         self.valid = True
         self.history = []
-        self.lead_smear = 0
-        self.sublead_smear = 0
+        self.lead_smear = 0.001
+        self.sublead_smear = 0.001
         self.lead_scale = 1
         self.sublead_scale = 1
         self.top_and_bottom = np.array([self.hist_min, self.hist_max])
+        rand = np.random.Generator(np.random.PCG64(self.seed))
+        self.lead_smearings = rand.normal(1, self.lead_smear, len(self.mc))
+        self.sublead_smearings = rand.normal(1, self.sublead_smear, len(self.mc))
 
         if self.auto_bin and self.bin_size == 0.25:
             self.set_bin_size()
+
+    def transform_smearings(self, distribution, original_smearing, new_smearing):
+        """Transform smearing distribution from original to new smearing"""
+        return (distribution - 1) * (new_smearing / original_smearing) + 1
+
+    def apply_smearings(self, lead_smear, sublead_smear):
+        """Apply smearing to the mc"""
+        self.lead_smearings = self.transform_smearings(
+            self.lead_smearings, self.lead_smear, lead_smear
+        )
+        self.lead_smear = lead_smear
+        self.sublead_smearings = self.transform_smearings(
+            self.sublead_smearings, self.sublead_smear, sublead_smear
+        )
+        self.temp_mc = apply_scale(self.mc, self.lead_smearings, self.sublead_smearings)
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
         """Optimized update function using pre-allocated arrays"""
@@ -107,11 +116,7 @@ class zcat:
 
         # Apply smearing, only update if necessary
         if self.lead_smear != lead_smear or self.sublead_smear != sublead_smear:
-            self.temp_mc = csmearing.apply_smearing(
-                self.mc, lead_smear, sublead_smear, self.seed
-            )
-            self.lead_smear = lead_smear
-            self.sublead_smear = sublead_smear
+            self.apply_smearings(lead_smear, sublead_smear)
             self.mc_mask = (self.hist_min <= self.temp_mc) & (
                 self.temp_mc <= self.hist_max
             )
