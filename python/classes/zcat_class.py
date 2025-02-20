@@ -92,7 +92,9 @@ class zcat:
         self.sublead_smearings = self.transform_smearings(
             self.sublead_smearings, self.sublead_smear, sublead_smear
         )
-        self.temp_mc = apply_scale(self.mc, self.lead_smearings, self.sublead_smearings)
+        self.temp_mc = apply_scale(
+            self.mc, self.lead_smearings, self.sublead_smearings
+        ) / (1 - (lead_smear * sublead_smear / 8))
 
     def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
         """Optimized update function using pre-allocated arrays"""
