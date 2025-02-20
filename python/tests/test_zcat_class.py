@@ -140,3 +140,24 @@ def test_print_output(valid_zcat, capsys):
     assert "lead index:" in captured
     assert "sublead index:" in captured
     assert "NLL:" in captured
+
+
+def test_apply_smearing(valid_zcat):
+    # apply smearing to the data and check that it has changed
+    old_mc = valid_zcat.temp_mc.copy()
+    new_lead_smear = 0.01
+    new_sublead_smear = 0.02
+
+    # check the mean and std of the original
+    old_lead_mean = np.mean(valid_zcat.temp_mc)
+    old_lead_std = np.std(valid_zcat.temp_mc)
+
+    valid_zcat.update(1, 1, lead_smear=new_lead_smear, sublead_smear=new_sublead_smear)
+    # check the mean and std of the smeared data
+    new_lead_mean = np.mean(valid_zcat.temp_mc)
+    new_lead_std = np.std(valid_zcat.temp_mc)
+
+    assert new_lead_mean != old_lead_mean
+    assert new_lead_std != old_lead_std
+    assert np.std(valid_zcat.lead_smearings) - new_lead_smear < 1e-3
+    assert np.std(valid_zcat.sublead_smearings) - new_sublead_smear < 1e-3

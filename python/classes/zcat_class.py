@@ -10,6 +10,7 @@ import python.tools.numba_hist as numba_hist
 from python.classes.constant_classes import CategoryConstants as cc
 
 EPSILON = 1e-15
+UNSET = object()
 
 
 @numba.njit
@@ -81,7 +82,7 @@ class zcat:
 
     def transform_smearings(self, distribution, original_smearing, new_smearing):
         """Transform smearing distribution from original to new smearing"""
-        return (distribution - 1) * (new_smearing / original_smearing) + 1
+        return ((distribution - 1) * (new_smearing / original_smearing)) + 1
 
     def apply_smearings(self, lead_smear, sublead_smear):
         """Apply smearing to the mc"""
@@ -92,11 +93,13 @@ class zcat:
         self.sublead_smearings = self.transform_smearings(
             self.sublead_smearings, self.sublead_smear, sublead_smear
         )
+        self.sublead_smear = sublead_smear
         self.temp_mc = apply_scale(
             self.mc, self.lead_smearings, self.sublead_smearings
         ) / (1 - (lead_smear * sublead_smear / 8))
+        # this division corrects for the fact that <sqrt(X)*sqrt(Y)> = mu - sigma_X*sigma_Y/8
 
-    def update(self, lead_scale, sublead_scale, lead_smear=0, sublead_smear=0):
+    def update(self, lead_scale, sublead_scale, lead_smear=UNSET, sublead_smear=UNSET):
         """Optimized update function using pre-allocated arrays"""
         if not self.valid:
             return
@@ -117,12 +120,16 @@ class zcat:
             self.temp_data = self.temp_data[self.data_mask]
 
         # Apply smearing, only update if necessary
-        if self.lead_smear != lead_smear or self.sublead_smear != sublead_smear:
-            self.apply_smearings(lead_smear, sublead_smear)
-            self.mc_mask = (self.hist_min <= self.temp_mc) & (
-                self.temp_mc <= self.hist_max
-            )
-            self.temp_mc = self.temp_mc[self.mc_mask]
+        if lead_smear is not UNSET or sublead_smear is not UNSET:
+            if lead_smear != self.lead_smear and sublead_smear != self.sublead_smear:
+                self.apply_smearings(
+                    lead_smear if lead_smear != UNSET else self.lead_smear,
+                    sublead_smear if sublead_smear != UNSET else self.sublead_smear,
+                )
+                self.mc_mask = (self.hist_min <= self.temp_mc) & (
+                    self.temp_mc <= self.hist_max
+                )
+                self.temp_mc = self.temp_mc[self.mc_mask]
 
         if self.check_invalid(len(self.temp_mc), len(self.temp_data)):
             self.clean_up()

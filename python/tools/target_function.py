@@ -1,8 +1,7 @@
 import numpy as np
-from python.classes.constant_classes import (
-    DataConstants as dc,
-    CategoryConstants as cc,
-)
+
+from python.classes.constant_classes import CategoryConstants as cc
+from python.classes.constant_classes import DataConstants as dc
 
 
 def target_function_wrapper(initial_guess, __ZCATS__, *args, **kwargs):
@@ -82,8 +81,8 @@ def target_function(x, *args, verbose=False, **options):
             else cat.update(
                 x[cat.lead_index],
                 x[cat.sublead_index],
-                x[cat.lead_smear_index],
-                x[cat.sublead_smear_index],
+                lead_smear=x[cat.lead_smear_index],
+                sublead_smear=x[cat.sublead_smear_index],
             )
         )
         for cat in cats_to_update
@@ -114,6 +113,7 @@ def target_function(x, *args, verbose=False, **options):
         print("--------------------------------------")
 
     return final_value
+
 
 def scan_nll(x, **options):
     """
@@ -168,7 +168,7 @@ def scan_nll(x, **options):
                 # generate a few guesses
                 for j, val in enumerate(x):
                     guess[max_index] = val
-                    my_guesses.append(guess.copy())
+                    my_guesses.append(guess[:])
 
                 # evaluate nll for each guess
                 nll_vals = np.array(
@@ -206,6 +206,10 @@ def scan_nll(x, **options):
     ]
     weights.sort(key=lambda x: x[0])
 
+    low = 0.00025
+    high = 0.025
+    step = 0.00025
+    x = np.arange(low, high, step)
     if options["num_smears"] > 0:
         while weights:
             max_index = cc.empty
@@ -217,16 +221,12 @@ def scan_nll(x, **options):
 
             # smearings are different, so use different values for low,high,step
             if max_index != cc.empty:
-                low = 0.00025
-                high = 0.025
-                step = 0.00025
-                x = np.arange(low, high, step)
                 my_guesses = []
 
                 # generate a few guesses
                 for j, val in enumerate(x):
                     guess[max_index] = val
-                    my_guesses.append(guess.copy())
+                    my_guesses.append(guess[:])
 
                 # evaluate nll for each guess
                 nll_vals = np.array(
