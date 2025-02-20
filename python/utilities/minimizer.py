@@ -270,7 +270,7 @@ def minimize(data, mc, cats_df, args):
         bounds=bounds,
         options={
             "maxiter": 100000,
-            "maxfev": 100000,
+            "maxfun": 100000,
         },
     )
 
