@@ -1,10 +1,11 @@
-import pandas as pd
-import numba
-import numpy as np
 import time
 
-from python.classes.constant_classes import DataConstants as dc
+import numba
+import numpy as np
+import pandas as pd
+
 from python.classes.constant_classes import CategoryConstants as cc
+from python.classes.constant_classes import DataConstants as dc
 from python.tools.data_loader import custom_cuts
 
 
@@ -125,7 +126,7 @@ def smear(mc, smearings):
         mc[dc.E_SUB] = multiply(mc[dc.E_SUB].values, smears_sub)
         mc[dc.INVMASS] = multiply(
             mc[dc.INVMASS].values, np.sqrt(multiply(smears_lead, smears_sub))
-        )
+        ) / (1 - row[3] ** 2 / 8)
 
     if np.sum(total_mask_lead) != len(mc):
         print("[WARNING] Not all events were smeared")
