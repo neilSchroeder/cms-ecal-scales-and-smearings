@@ -206,7 +206,7 @@ def smear(mc, smearings):
             current_smearing_sublead = row_j[3]
 
             # split cat into parts
-            cat = row_j[i]
+            cat = row_j[j]
             cat_list = cat.split(delim_cat)
             # cat_list[0] is eta, cat_list[1] is r9
             eta_list = cat_list[0].split(delim_var)
