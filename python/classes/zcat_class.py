@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
+import csmearing
 import numba
 import numpy as np
 from scipy import stats
 
-import csmearing
 import python.tools.numba_hist as numba_hist
 from python.classes.constant_classes import CategoryConstants as cc
 
@@ -21,17 +21,30 @@ def apply_scale(data, lead_scale, sublead_scale):
 
 @numba.njit
 def compute_loss(binned_data, binned_mc):
-    """Optimized EMD computation"""
+    """
+    Optimized EMD computation
+
+    This function computes the Earth Mover's Distance (EMD) between two histograms.
+    It is weighted by the number of events in each bin in data in order to strongly
+    target the bins with the most events.
+
+    Args:
+        binned_data (np.array): binned data
+        binned_mc (np.array): binned mc
+    Returns:
+        float: EMD loss
+    """
     # Pre-normalize to avoid division
     sum_data = np.sum(binned_data)
     sum_mc = np.sum(binned_mc)
 
     return np.sum(
-        np.abs(
+        binned_data
+        * np.abs(
             np.cumsum(binned_data / (sum_data + EPSILON))
             - np.cumsum(binned_mc / (sum_mc + EPSILON))
         )
-    )
+    ) / sum(binned_data)
 
 
 class zcat:
