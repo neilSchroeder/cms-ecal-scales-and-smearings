@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-import csmearing
 import numba
 import numpy as np
 from scipy import stats
