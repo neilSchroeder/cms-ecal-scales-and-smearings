@@ -1,3 +1,4 @@
+style	name	variable	eta0	r90	et0	eta1	r91	et1
 paper	invMass_leadCat00_subleadCat00	invMass_ECAL_ele	(0.0, 1.0)	(0.0, 0.96)	(32, 39)	(0.0, 1.0)	(0.0, 0.96)	(32, 39)
 paper	invMass_leadCat00_subleadCat01	invMass_ECAL_ele	(0.0, 1.0)	(0.0, 0.96)	(32, 39)	(0.0, 1.0)	(0.0, 0.96)	(39, 50)
 paper	invMass_leadCat00_subleadCat02	invMass_ECAL_ele	(0.0, 1.0)	(0.0, 0.96)	(32, 39)	(0.0, 1.0)	(0.0, 0.96)	(50, 65)
