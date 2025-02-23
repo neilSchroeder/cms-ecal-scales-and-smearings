@@ -41,8 +41,8 @@ def compute_loss(binned_data, binned_mc):
         np.sum(
             binned_data
             * np.abs(
-                np.cumsum(binned_data / (sum_data + EPSILON))
-                - np.cumsum(binned_mc / (sum_mc + EPSILON))
+                np.cumsum(binned_data / (sum_data + EPSILON))  # normalize
+                - np.cumsum(binned_mc / (sum_mc + EPSILON))  # normalize
             )
             ** 0.5
         )
@@ -148,6 +148,9 @@ class zcat:
                 self.temp_mc = self.temp_mc[self.mc_mask]
 
         if self.check_invalid(len(self.temp_mc), len(self.temp_data)):
+            print(
+                f"[INFO][zcat][update] category ({self.lead_index},{self.sublead_index}) was deactivated due to insufficient statistics in data"
+            )
             self.clean_up()
             return
 
@@ -182,6 +185,9 @@ class zcat:
         )
 
         if np.isnan(self.NLL):
+            print(
+                f"[INFO][zcat][update] category ({self.lead_index},{self.sublead_index}) was deactivated due to NaN in loss function"
+            )
             self.clean_up()
 
     def set_bin_size(self):
