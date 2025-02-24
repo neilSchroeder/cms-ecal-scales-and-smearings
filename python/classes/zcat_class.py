@@ -97,21 +97,6 @@ class zcat:
         """Transform smearing distribution from original to new smearing"""
         return ((distribution - 1) * (new_smearing / original_smearing)) + 1
 
-    def apply_smearings(self, lead_smear, sublead_smear):
-        """Apply smearing to the mc"""
-        self.lead_smearings = self.transform_smearings(
-            self.lead_smearings, self.lead_smear, lead_smear
-        )
-        self.lead_smear = lead_smear
-        self.sublead_smearings = self.transform_smearings(
-            self.sublead_smearings, self.sublead_smear, sublead_smear
-        )
-        self.sublead_smear = sublead_smear
-        self.temp_mc = apply_scale(
-            self.mc, self.lead_smearings, self.sublead_smearings
-        ) / (1 - (lead_smear * sublead_smear / 8))
-        # this division corrects for the fact that <sqrt(X)*sqrt(Y)> = mu - sigma_X*sigma_Y/8
-
     def update(self, lead_scale, sublead_scale, lead_smear=UNSET, sublead_smear=UNSET):
         """Optimized update function using pre-allocated arrays"""
         if not self.valid:
@@ -133,16 +118,32 @@ class zcat:
             self.temp_data = self.temp_data[self.data_mask]
 
         # Apply smearing, only update if necessary
-        if lead_smear is not UNSET or sublead_smear is not UNSET:
-            if lead_smear != self.lead_smear and sublead_smear != self.sublead_smear:
-                self.apply_smearings(
-                    lead_smear if lead_smear != UNSET else self.lead_smear,
-                    sublead_smear if sublead_smear != UNSET else self.sublead_smear,
+        update_smearing = False
+        if lead_smear is not UNSET and lead_smear != 0:
+            if lead_smear != self.lead_smear:
+                self.lead_smearings = self.transform_smearings(
+                    self.lead_smearings, self.lead_smear, lead_smear
                 )
-                self.mc_mask = (self.hist_min <= self.temp_mc) & (
-                    self.temp_mc <= self.hist_max
+                self.lead_smear = lead_smear
+                update_smearing = True
+
+        if sublead_smear is not UNSET and sublead_smear != 0:
+            if sublead_smear != self.sublead_smear:
+                self.sublead_smearings = self.transform_smearings(
+                    self.sublead_smearings, self.sublead_smear, sublead_smear
                 )
-                self.temp_mc = self.temp_mc[self.mc_mask]
+                self.sublead_smear = sublead_smear
+                update_smearing = True
+
+        if update_smearing:
+            self.temp_mc = apply_scale(
+                self.mc, self.lead_smearings, self.sublead_smearings
+            ) / (1 - (lead_smear * sublead_smear / 8))
+
+            self.mc_mask = (self.hist_min <= self.temp_mc) & (
+                self.temp_mc <= self.hist_max
+            )
+            self.temp_mc = self.temp_mc[self.mc_mask]
 
         if self.check_invalid(len(self.temp_mc), len(self.temp_data)):
             print(
@@ -163,9 +164,6 @@ class zcat:
             self.num_bins,
         )
 
-        # Clean binned data
-        binned_mc[binned_mc == 0] = 1e-15
-
         # Compute loss
         self.NLL = compute_loss(binned_data, binned_mc)
 
@@ -185,7 +183,7 @@ class zcat:
             print(
                 f"[INFO][zcat][update] category ({self.lead_index},{self.sublead_index}) was deactivated due to NaN in loss function"
             )
-            self.clean_up()
+            del self
 
     def set_bin_size(self):
         if self.auto_bin and self.bin_size == 0.25:
@@ -225,8 +223,16 @@ class zcat:
         self.data = None
         self.mc = None
         self.weights = None
+        self.temp_data = None
+        self.temp_mc = None
+        self.data_mask = None
+        self.mc_mask = None
+        self.lead_smearings = None
+        self.sublead_smearings = None
+        self.weight = 0
         self.bins = None
         self.valid = False
+        self.NLL = 1e30
 
     def check_invalid(self, data: int = 0, mc: int = 0):
         """

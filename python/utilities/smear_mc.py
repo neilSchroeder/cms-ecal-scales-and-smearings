@@ -1,5 +1,3 @@
-import time
-
 import numba
 import numpy as np
 import pandas as pd
@@ -59,16 +57,15 @@ def smear(mc, smearings):
             else ["Et", dc.MIN_ET, dc.MAX_ET]
         )
 
-        lead_mask = np.logical_and.reduce(
-            (
-                lead_eta >= float(eta_list[1]),
-                lead_eta < float(eta_list[2]),
-                lead_r9 >= float(r9_list[1]),
-                lead_r9 < float(r9_list[2]),
-                lead_et >= float(et_list[1]),
-                lead_et < float(et_list[2]),
-            )
+        lead_mask = (
+            (lead_eta >= eta_list[1])
+            & (lead_eta < eta_list[2])
+            & (lead_r9 >= r9_list[1])
+            & (lead_r9 < r9_list[2])
+            & (lead_et >= et_list[1])
+            & (lead_et < et_list[2])
         )
+
         for j, row_j in smear_df.iterrows():
             # transform the sublead smearings
             sublead_smearings = transform_smearings(
@@ -88,15 +85,13 @@ def smear(mc, smearings):
                 else ["Et", dc.MIN_ET, dc.MAX_ET]
             )
 
-            sublead_mask = np.logical_and.reduce(
-                (
-                    sublead_eta >= float(eta_list[1]),
-                    sublead_eta < float(eta_list[2]),
-                    sublead_r9 >= float(r9_list[1]),
-                    sublead_r9 < float(r9_list[2]),
-                    sublead_et >= float(et_list[1]),
-                    sublead_et < float(et_list[2]),
-                )
+            sublead_mask = (
+                (sublead_eta >= eta_list[1])
+                & (sublead_eta < eta_list[2])
+                & (sublead_r9 >= r9_list[1])
+                & (sublead_r9 < r9_list[2])
+                & (sublead_et >= et_list[1])
+                & (sublead_et < et_list[2])
             )
 
             mask = np.logical_and(lead_mask, sublead_mask)
