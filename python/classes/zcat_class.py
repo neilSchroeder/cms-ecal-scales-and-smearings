@@ -37,17 +37,14 @@ def compute_loss(binned_data, binned_mc):
     sum_data = np.sum(binned_data)
     sum_mc = np.sum(binned_mc)
 
-    return (
-        np.sum(
-            binned_data
-            * np.abs(
-                np.cumsum(binned_data / (sum_data + EPSILON))  # normalize
-                - np.cumsum(binned_mc / (sum_mc + EPSILON))  # normalize
-            )
-            ** 0.5
+    return np.sum(
+        binned_data**2
+        * np.abs(
+            np.cumsum(binned_data / (sum_data + EPSILON))  # normalize
+            - np.cumsum(binned_mc / (sum_mc + EPSILON))  # normalize
         )
-        / sum_data
-    )
+        ** 0.5
+    ) / np.sum(binned_data**2)
 
 
 class zcat:
