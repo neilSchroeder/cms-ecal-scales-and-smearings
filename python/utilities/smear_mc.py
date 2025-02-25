@@ -69,12 +69,12 @@ def smear(mc, smearings):
         eta_list, r9_list, et_list = categories[i]
 
         lead_mask = (
-            (lead_eta >= eta_list[1])
-            & (lead_eta < eta_list[2])
-            & (lead_r9 >= r9_list[1])
-            & (lead_r9 < r9_list[2])
-            & (lead_et >= et_list[1])
-            & (lead_et < et_list[2])
+            (lead_eta >= eta_list[0])
+            & (lead_eta < eta_list[1])
+            & (lead_r9 >= r9_list[0])
+            & (lead_r9 < r9_list[1])
+            & (lead_et >= et_list[0])
+            & (lead_et < et_list[1])
         )
 
         for j in range(num_rows):
@@ -87,12 +87,12 @@ def smear(mc, smearings):
             eta_list, r9_list, et_list = categories[j]
 
             sublead_mask = (
-                (sublead_eta >= eta_list[1])
-                & (sublead_eta < eta_list[2])
-                & (sublead_r9 >= r9_list[1])
-                & (sublead_r9 < r9_list[2])
-                & (sublead_et >= et_list[1])
-                & (sublead_et < et_list[2])
+                (sublead_eta >= eta_list[0])
+                & (sublead_eta < eta_list[1])
+                & (sublead_r9 >= r9_list[0])
+                & (sublead_r9 < r9_list[1])
+                & (sublead_et >= et_list[0])
+                & (sublead_et < et_list[1])
             )
 
             mask = np.logical_and(lead_mask, sublead_mask)
