@@ -12,6 +12,23 @@ def transform_smearings(smearings, new_sigma, old_sigma):
     return (smearings - 1) * (new_sigma / old_sigma) + 1
 
 
+def parse_category_values(cat_str, delim_cat="-", delim_var="_"):
+    """Parse category string into numeric arrays"""
+    cat_list = cat_str.split(delim_cat)
+    eta_vals = np.array([float(x) for x in cat_list[0].split(delim_var)[1:]])
+    r9_vals = np.array([float(x) for x in cat_list[1].split(delim_var)[1:]])
+    if len(cat_list) > 2:
+        et_vals = np.array(
+            [
+                float(x) if x != "-1" else dc.MAX_ET
+                for x in cat_list[2].split(delim_var)[1:]
+            ]
+        )
+    else:
+        et_vals = np.array([dc.MIN_ET, dc.MAX_ET])
+    return eta_vals, r9_vals, et_vals
+
+
 def smear(mc, smearings):
     """
     Applies gaussian smearings to the MC in a double loop approach
@@ -38,24 +55,18 @@ def smear(mc, smearings):
     sublead_e = mc[dc.E_SUB].values
     sublead_et = np.divide(sublead_e, np.cosh(sublead_eta))
 
-    for i, row_i in smear_df.iterrows():
+    categories = [parse_category_values(x, delim_cat, delim_var) for x in smear_df[0]]
+    smearings = smear_df[3]
+    num_rows = len(smear_df)
+    for i in range(num_rows):
         # transform the lead smearings
         lead_smearings = transform_smearings(
-            lead_smearings, row_i[3], current_smearing_lead
+            lead_smearings, smearings[i], current_smearing_lead
         )
-        current_smearing_lead = row_i[3]
+        current_smearing_lead = smearings[i]
 
         # split cat into parts
-        cat = row_i[0]
-        cat_list = cat.split(delim_cat)
-        # cat_list[0] is eta, cat_list[1] is r9
-        eta_list = cat_list[0].split(delim_var)
-        r9_list = cat_list[1].split(delim_var)
-        et_list = (
-            cat_list[2].split(delim_var)
-            if len(cat_list) > 2
-            else ["Et", dc.MIN_ET, dc.MAX_ET]
-        )
+        eta_list, r9_list, et_list = categories[i]
 
         lead_mask = (
             (lead_eta >= eta_list[1])
@@ -66,24 +77,14 @@ def smear(mc, smearings):
             & (lead_et < et_list[2])
         )
 
-        for j, row_j in smear_df.iterrows():
+        for j in range(num_rows):
             # transform the sublead smearings
             sublead_smearings = transform_smearings(
-                sublead_smearings, row_j[3], current_smearing_sublead
+                sublead_smearings, smearings[j], current_smearing_sublead
             )
-            current_smearing_sublead = row_j[3]
+            current_smearing_sublead = smearings[j]
 
-            # split cat into parts
-            cat = row_j[0]
-            cat_list = cat.split(delim_cat)
-            # cat_list[0] is eta, cat_list[1] is r9
-            eta_list = cat_list[0].split(delim_var)
-            r9_list = cat_list[1].split(delim_var)
-            et_list = (
-                cat_list[2].split(delim_var)
-                if len(cat_list) > 2
-                else ["Et", dc.MIN_ET, dc.MAX_ET]
-            )
+            eta_list, r9_list, et_list = categories[j]
 
             sublead_mask = (
                 (sublead_eta >= eta_list[1])
