@@ -29,16 +29,20 @@ def parse_category_values(cat_str, delim_cat="-", delim_var="_"):
     return eta_vals, r9_vals, et_vals
 
 
-def smear(mc, smearings):
+def smear(mc, smearings_file) -> pd.DataFrame:
     """
     Applies gaussian smearings to the MC in a double loop approach
 
-    This may end up being a little slower, but the logic flows better
+    Args:
+        mc (pd.DataFrame): the MC dataframe
+        smearings_file (str): the file containing the smearings
+    Returns:
+        pd.DataFrame: the MC dataframe with the smearings applied
     """
     delim_cat = "-"
     delim_var = "_"
     # read in the smearings
-    smear_df = pd.read_csv(smearings, delimiter="\t", header=None, comment="#")
+    smear_df = pd.read_csv(smearings_file, delimiter="\t", header=None, comment="#")
 
     rand = np.random.Generator(np.random.PCG64(dc.SEED))
     lead_smearings = rand.normal(1, 0.001, len(mc))
