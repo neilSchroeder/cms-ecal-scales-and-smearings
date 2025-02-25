@@ -45,9 +45,9 @@ def smear(mc, smearings_file) -> pd.DataFrame:
     smear_df = pd.read_csv(smearings_file, delimiter="\t", header=None, comment="#")
 
     rand = np.random.Generator(np.random.PCG64(dc.SEED))
-    lead_smearings = rand.normal(1, 0.001, len(mc))
+    lead_smearings = rand.normal(1, 0.001, len(mc)).astype(np.float32)
     current_smearing_lead = 0.001
-    sublead_smearings = rand.normal(1, 0.001, len(mc))
+    sublead_smearings = rand.normal(1, 0.001, len(mc)).astype(np.float32)
     current_smearing_sublead = 0.001
 
     lead_eta = mc[dc.ETA_LEAD].values
