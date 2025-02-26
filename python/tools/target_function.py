@@ -74,19 +74,25 @@ def target_function(x, *args, verbose=False, **options):
     cats_to_update = np.array(__ZCATS__)[mask]
 
     active_indices = [
-        (cat.lead_index, cat.sublead_index) for cat in __ZCATS__ if cat.valid
+        (
+            cat.lead_index,
+            cat.sublead_index,
+            cat.lead_smear_index,
+            cat.sublead_smear_index,
+        )
+        for cat in __ZCATS__
+        if cat.valid
     ]
 
     # count how many times each scale is used
     scale_counts = np.zeros(len(x))
-    for cat in cats_to_update:
-        scale_counts[cat.lead_index] += 1
-        scale_counts[cat.sublead_index] += 1
+    for ind in active_indices:
+        scale_counts[ind[0]] += 1
+        scale_counts[ind[1]] += 1
 
-    if __num_smears__ > 0:
-        for cat in cats_to_update:
-            scale_counts[cat.lead_smear_index] += 1
-            scale_counts[cat.sublead_smear_index] += 1
+        if __num_smears__ > 0:
+            scale_counts[ind[2]] += 1
+            scale_counts[ind[3]] += 1
 
     # if any scale is not used at all, give the user a warning
     for i, count in enumerate(scale_counts):
