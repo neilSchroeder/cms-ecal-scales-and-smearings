@@ -271,6 +271,7 @@ def minimize(data, mc, cats_df, args):
         options={
             "maxiter": 100000,
             "maxfun": 100000,
+            "eps": 0.00001,
         },
     )
 
