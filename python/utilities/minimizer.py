@@ -242,17 +242,8 @@ def minimize(data, mc, cats_df, args):
             ),
         )
     )
-    min_step_dict = {}
-    if min_step is not None:
-        min_step_dict = {"eps": float(min_step)}
-    else:
-        min_step_dict = {"eps": 0.00001}  # TODO: figure out how to make this dynamic
 
     # increase the number of iterations
-    min_step_dict = {
-        "maxiter": 100000,
-        "maxfev": 100000,
-    }
 
     # minimize
     import cProfile
@@ -271,7 +262,7 @@ def minimize(data, mc, cats_df, args):
         options={
             "maxiter": 100000,
             "maxfun": 100000,
-            "eps": 0.00001,
+            "eps": 0.000001 if min_step is None else float(min_step),
         },
     )
 
