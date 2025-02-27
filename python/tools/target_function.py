@@ -69,19 +69,6 @@ def target_function(x, *args, verbose=False, **options):
 
     updated_scales = np.where(diff_mask)[0]
 
-    # Vectorized mask creation for categories that need updates
-    cat_indices = np.array(
-        [
-            (
-                cat.lead_index,
-                cat.sublead_index,
-                cat.lead_smear_index if __num_smears__ > 0 else -1,
-                cat.sublead_smear_index if __num_smears__ > 0 else -1,
-            )
-            for cat in __ZCATS__
-        ]
-    )
-
     # Check if any updated scales affect each category
     mask = np.zeros(len(__ZCATS__), dtype=bool)
     for i, cat in enumerate(__ZCATS__):
@@ -206,7 +193,7 @@ class OptimizedAdamWMinimizer:
         weight_decay=0.01,
         max_iter=1000,
         tol=1e-5,
-        patience=10,  # Added patience for early stopping
+        patience=100,  # Added patience for early stopping
         lr_reduce_factor=0.5,  # For learning rate scheduling
         lr_reduce_patience=5,
         verbose=False,
