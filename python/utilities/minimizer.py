@@ -10,7 +10,7 @@ import python.plotters.plot_cats as plotter
 import python.tools.data_loader as data_loader
 from python.classes.constant_classes import CategoryConstants as cc
 from python.classes.constant_classes import DataConstants as dc
-from python.tools.target_function import calculate_gradient
+from python.tools.target_function import fast_gradient as calculate_gradient
 from python.tools.target_function import minimize as minz
 from python.tools.target_function import scan_nll, target_function_wrapper
 
