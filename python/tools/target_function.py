@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.optimize
+from scipy.optimize import OptimizeResult
 
 from python.classes.constant_classes import CategoryConstants as cc
 from python.classes.constant_classes import DataConstants as dc
@@ -325,3 +327,311 @@ def scan_nll(x, **options):
 
     print("[INFO][python/nll] scan complete")
     return guess
+
+
+class AdamWMinimizer:
+    """
+    Implementation of AdamW optimizer compatible with scipy.optimize.minimize interface.
+
+    AdamW is Adam with decoupled weight decay regularization, which can improve
+    generalization performance in optimization problems.
+    """
+
+    def __init__(
+        self,
+        lr=0.001,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=0.01,
+        max_iter=1000,
+        tol=1e-5,
+        verbose=False,
+    ):
+        """
+        Initialize AdamW optimizer.
+
+        Args:
+            lr: Learning rate
+            betas: Coefficients for computing running averages of gradient and its square
+            eps: Term added to denominator to improve numerical stability
+            weight_decay: Weight decay coefficient
+            max_iter: Maximum number of iterations
+            tol: Tolerance for termination
+            verbose: Whether to print progress
+        """
+        self.lr = lr
+        self.beta1, self.beta2 = betas
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self.max_iter = max_iter
+        self.tol = tol
+        self.verbose = verbose
+
+        # States to be initialized when optimize is called
+        self.m = None  # First moment vector
+        self.v = None  # Second moment vector
+        self.t = 0  # Timestep
+
+    def _step(self, x, grad, func_val):
+        """
+        Perform one optimization step.
+
+        Args:
+            x: Current parameter values
+            grad: Gradient of objective function at x
+            func_val: Value of objective function at x
+
+        Returns:
+            new_x: Updated parameter values
+        """
+        # Initialize moment estimates on first call
+        if self.m is None:
+            self.m = np.zeros_like(x)
+            self.v = np.zeros_like(x)
+
+        self.t += 1
+
+        # Update biased first moment estimate
+        self.m = self.beta1 * self.m + (1 - self.beta1) * grad
+
+        # Update biased second raw moment estimate
+        self.v = self.beta2 * self.v + (1 - self.beta2) * (grad * grad)
+
+        # Bias correction
+        m_hat = self.m / (1 - self.beta1**self.t)
+        v_hat = self.v / (1 - self.beta2**self.t)
+
+        # AdamW decoupled weight decay
+        x_wd = x * (1 - self.lr * self.weight_decay)
+
+        # Update parameters
+        new_x = x_wd - self.lr * m_hat / (np.sqrt(v_hat) + self.eps)
+
+        return new_x
+
+    def minimize(self, fun, x0, args=(), jac=None, bounds=None, callback=None):
+        """
+        Minimize a function using AdamW.
+
+        Args:
+            fun: Objective function to minimize
+            x0: Initial guess
+            args: Extra arguments passed to the objective function
+            jac: Method for computing the gradient vector
+            bounds: Bounds for variables
+            callback: Called after each iteration
+
+        Returns:
+            OptimizeResult describing the solution
+        """
+        x = np.asarray(x0).copy()
+        if bounds is not None:
+            x = np.clip(x, *zip(*bounds))
+
+        # Initialize best solution tracker
+        best_x = x.copy()
+        best_fun = float("inf")
+
+        # Initialize history for tracking convergence
+        fun_history = []
+
+        # Reset optimizer state
+        self.m = None
+        self.v = None
+        self.t = 0
+
+        # Function to get both function value and gradient
+        if jac is None:
+            # Use finite difference if no gradient provided
+            def get_fun_and_grad(x_new):
+                f = fun(x_new, *args)
+                g = scipy.optimize._numdiff.approx_fprime(x_new, fun, 1e-8, args=args)
+                return f, g
+
+        else:
+
+            def get_fun_and_grad(x_new):
+                if callable(jac):
+                    f = fun(x_new, *args)
+                    g = jac(x_new, *args)
+                    return f, g
+                else:
+                    # If jac == True, fun should return both value and gradient
+                    f, g = fun(x_new, *args)
+                    return f, g
+
+        # Initial evaluation
+        f, g = get_fun_and_grad(x)
+        fun_history.append(f)
+
+        # Update best solution
+        if f < best_fun:
+            best_fun = f
+            best_x = x.copy()
+
+        if self.verbose:
+            print(f"Initial loss: {f:.6f}")
+
+        # Main optimization loop
+        for i in range(self.max_iter):
+            # Perform a step
+            x_new = self._step(x, g, f)
+
+            # Apply bounds if provided
+            if bounds is not None:
+                x_new = np.clip(x_new, *zip(*bounds))
+
+            # Evaluate function and gradient at new point
+            f_new, g_new = get_fun_and_grad(x_new)
+            fun_history.append(f_new)
+
+            # Update best solution if improved
+            if f_new < best_fun:
+                best_fun = f_new
+                best_x = x_new.copy()
+
+            # Call user-provided callback if present
+            if callback is not None:
+                callback(x_new)
+
+            # Check for convergence
+            x_diff = np.linalg.norm(x_new - x)
+            f_diff = abs(f_new - f)
+            g_norm = np.linalg.norm(g_new)
+
+            if self.verbose and (i % 20 == 0 or i == self.max_iter - 1):
+                print(
+                    f"Iter {i}: f={f_new:.6f}, |g|={g_norm:.6f}, |x_diff|={x_diff:.6f}"
+                )
+
+            # Update for next iteration
+            x = x_new
+            f = f_new
+            g = g_new
+
+            # Convergence criteria
+            if x_diff < self.tol and f_diff < self.tol:
+                if self.verbose:
+                    print(f"Converged after {i+1} iterations.")
+                break
+
+        # Return in the same format as scipy.optimize.minimize
+        result = OptimizeResult(
+            x=best_x,
+            fun=best_fun,
+            jac=g,
+            nit=i + 1,
+            nfev=i + 1,
+            success=(i < self.max_iter - 1) or (g_norm < self.tol),
+            message=(
+                "Optimization terminated successfully."
+                if ((i < self.max_iter - 1) or (g_norm < self.tol))
+                else "Maximum iterations reached."
+            ),
+            history=fun_history,
+        )
+
+        return result
+
+
+# Function to provide scipy.optimize.minimize compatible interface
+def adamw_minimize(
+    fun,
+    x0,
+    args=(),
+    jac=None,
+    bounds=None,
+    callback=None,
+    lr=0.001,
+    betas=(0.9, 0.999),
+    eps=1e-8,
+    weight_decay=0.01,
+    max_iter=1000,
+    tol=1e-5,
+    verbose=False,
+    **kwargs,
+):
+    """
+    Minimization of scalar function using AdamW algorithm.
+
+    This creates a consistent interface with scipy.optimize.minimize.
+
+    Args:
+        fun: Objective function
+        x0: Initial guess
+        args: Extra arguments to pass to function
+        jac: Jacobian (gradient) of objective function
+        bounds: Bounds for variables
+        callback: Called after each iteration
+        lr: Learning rate
+        betas: Coefficients for computing running averages
+        eps: Term added to denominator for numerical stability
+        weight_decay: Weight decay coefficient
+        max_iter: Maximum number of iterations
+        tol: Tolerance for termination
+        verbose: Whether to print progress
+
+    Returns:
+        OptimizeResult
+    """
+    optimizer = AdamWMinimizer(
+        lr=lr,
+        betas=betas,
+        eps=eps,
+        weight_decay=weight_decay,
+        max_iter=max_iter,
+        tol=tol,
+        verbose=verbose,
+    )
+
+    return optimizer.minimize(fun, x0, args, jac, bounds, callback)
+
+
+def minimize(
+    fun, x0, args=(), method="adamw", jac=None, bounds=None, callback=None, options=None
+):
+    """
+    Wrapper to integrate AdamW with scipy.optimize.minimize interface.
+
+    Args:
+        fun: Objective function
+        x0: Initial guess
+        args: Extra arguments to pass to function
+        method: When 'adamw', use AdamW optimizer, otherwise pass to scipy.optimize.minimize
+        jac: Jacobian (gradient) of objective function
+        bounds: Bounds for variables
+        callback: Called after each iteration
+        options: Dictionary with parameters for AdamW
+
+    Returns:
+        OptimizeResult
+    """
+    if method.lower() == "adamw":
+        # Set default options
+        default_options = {
+            "lr": 0.001,
+            "betas": (0.9, 0.999),
+            "eps": 1e-8,
+            "weight_decay": 0.01,
+            "max_iter": 1000,
+            "tol": 1e-5,
+            "verbose": False,
+        }
+
+        # Update with user-provided options
+        if options is not None:
+            default_options.update(options)
+
+        return adamw_minimize(fun, x0, args, jac, bounds, callback, **default_options)
+    else:
+        # Fall back to scipy's implementation
+        return scipy.optimize.minimize(
+            fun,
+            x0,
+            args=args,
+            method=method,
+            jac=jac,
+            bounds=bounds,
+            callback=callback,
+            options=options,
+        )
