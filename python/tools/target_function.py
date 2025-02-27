@@ -421,13 +421,13 @@ def minimize(
     if method.lower() == "adamw":
         # Default options
         default_options = {
-            "lr": 0.001,
+            "lr": 1e-5,
             "betas": (0.9, 0.999),
             "eps": 1e-8,
-            "weight_decay": 0.01,
+            "weight_decay": 1e-6,
             "max_iter": 1000,
             "tol": 1e-5,
-            "patience": 10,
+            "patience": 100,
             "lr_reduce_factor": 0.5,
             "lr_reduce_patience": 5,
             "verbose": False,
