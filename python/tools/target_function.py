@@ -143,6 +143,49 @@ def target_function(x, *args, verbose=False, **options):
     return final_value
 
 
+def calculate_gradient(x, *args, h=1e-6, verbose=False, **options):
+    """
+    Numerically calculates the gradient of the target function using central difference method.
+
+    Args:
+        x (iterable): iterable of floats, representing the scales and smearings
+        *args: a tuple of arguments to pass to target_function
+        h (float): step size for numerical differentiation
+        verbose (bool): whether to print debugging information
+        **options: keyword arguments to pass to target_function
+
+    Returns:
+        gradient (numpy.ndarray): gradient vector of the target function at point x
+    """
+    gradient = np.zeros_like(x, dtype=float)
+    base_loss = target_function(x, *args, verbose=False, **options)
+
+    if verbose:
+        print("Calculating gradient, base loss:", base_loss)
+
+    for i in range(len(x)):
+        # Create copies with one parameter slightly adjusted
+        x_plus = x.copy()
+        x_minus = x.copy()
+
+        x_plus[i] += h
+        x_minus[i] -= h
+
+        # Calculate losses for the adjusted points
+        loss_plus = target_function(x_plus, *args, verbose=False, **options)
+        loss_minus = target_function(x_minus, *args, verbose=False, **options)
+
+        # Central difference approximation of the derivative
+        gradient[i] = (loss_plus - loss_minus) / (2 * h)
+
+        if verbose:
+            print(
+                f"Parameter {i}: derivative = {gradient[i]:.6f} (f({x[i]+h:.6f})={loss_plus:.6f}, f({x[i]-h:.6f})={loss_minus:.6f})"
+            )
+
+    return gradient
+
+
 def scan_nll(x, **options):
     """
     Performs the NLL scan to initialize the variables.

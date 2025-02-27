@@ -11,7 +11,11 @@ import python.plotters.plot_cats as plotter
 import python.tools.data_loader as data_loader
 from python.classes.constant_classes import CategoryConstants as cc
 from python.classes.constant_classes import DataConstants as dc
-from python.tools.target_function import scan_nll, target_function_wrapper
+from python.tools.target_function import (
+    calculate_gradient,
+    scan_nll,
+    target_function_wrapper,
+)
 
 __num_scales__ = 0
 __num_smears__ = 0
@@ -259,6 +263,7 @@ def minimize(data, mc, cats_df, args):
         args=(empty_guess, __ZCATS__, __num_scales__, __num_smears__),
         method=dc.MINIMIZATION_STRATEGY,  # might be interesting to try Nelder-Mead
         bounds=bounds,
+        jac=calculate_gradient,
         options={
             "maxiter": 100000,
             "maxfun": 100000,
