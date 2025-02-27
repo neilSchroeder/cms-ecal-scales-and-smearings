@@ -664,6 +664,116 @@ def adaptive_scan_nll(x, **options):
     )
 
     # -------------------------------------------------
+    # Adaptive smearing optimization
+    # -------------------------------------------------
+    if options["num_smears"] > 0:
+        print("[INFO][python/helper_minimizer/scan_nll] adaptively scanning smearings")
+
+        # Similar approach for smearing parameters
+        smear_diagonal_cats = [
+            (cat.weight, cat.lead_smear_index)
+            for cat in __ZCATS__
+            if cat.valid and cat.lead_smear_index == cat.sublead_smear_index
+        ]
+        smear_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
+
+        scanned_smears = set()
+
+        # Batch processing for smearings
+        batch_size = 3  # Process fewer at a time for better convergence
+
+        for i in range(0, len(smear_diagonal_cats), batch_size):
+            batch = smear_diagonal_cats[i : i + batch_size]
+
+            for weight, smear_index in batch:
+                if smear_index in scanned_smears:
+                    continue
+
+                scanned_smears.add(smear_index)
+
+                # Multi-stage adaptive search
+                min_val = options.get("smear_scan_min", 0.00025)
+                max_val = options.get("smear_scan_max", 0.025)
+
+                # Stage 1: Logarithmic coarse scan (better for smearing parameters)
+                n_points = 10
+                # Use logarithmic spacing for smearing (often works better)
+                if min_val <= 0:
+                    min_val = 1e-6  # Avoid log(0)
+                coarse_grid = np.logspace(
+                    np.log10(min_val), np.log10(max_val), n_points
+                )
+
+                def evaluate_smear(val):
+                    test_guess = guess.copy()
+                    test_guess[smear_index] = val
+                    nll = loss_function(
+                        test_guess,
+                        __GUESS__,
+                        __ZCATS__,
+                        options["num_scales"],
+                        options["num_smears"],
+                    )
+                    return val, nll
+
+                # Evaluate coarse grid
+                results = Parallel(n_jobs=n_jobs)(
+                    delayed(evaluate_smear)(val) for val in coarse_grid
+                )
+
+                vals, nlls = zip(*results)
+                vals = np.array(vals)
+                nlls = np.array(nlls)
+
+                # Filter invalid values
+                mask = (nlls > 0) & (nlls < 1e10)
+                if not np.any(mask):
+                    continue
+
+                filtered_vals = vals[mask]
+                filtered_nlls = nlls[mask]
+
+                # Find best region
+                best_idx = np.argmin(filtered_nlls)
+                best_val = filtered_vals[best_idx]
+
+                # Stage 2: Refine around best value
+                # Use linear spacing for the refined grid
+                window_factor = 2.0  # Wider window for smearing
+                refined_min = best_val / window_factor
+                refined_max = best_val * window_factor
+
+                # Create refined grid (linear spacing for final precision)
+                n_points = 15
+                refined_grid = np.linspace(refined_min, refined_max, n_points)
+
+                # Evaluate refined grid
+                refined_results = Parallel(n_jobs=n_jobs)(
+                    delayed(evaluate_smear)(val) for val in refined_grid
+                )
+
+                refined_vals, refined_nlls = zip(*refined_results)
+                refined_vals = np.array(refined_vals)
+                refined_nlls = np.array(refined_nlls)
+
+                # Filter and find best value
+                mask = (refined_nlls > 0) & (refined_nlls < 1e10)
+                if np.any(mask):
+                    filtered_vals = refined_vals[mask]
+                    filtered_nlls = refined_nlls[mask]
+                    best_idx = np.argmin(filtered_nlls)
+                    best_val = filtered_vals[best_idx]
+
+                    # Update guess
+                    guess[smear_index] = best_val
+                    print(
+                        f"[INFO][python/nll] best guess for smearing {smear_index} is {best_val:.6f}"
+                    )
+
+            # Reset cache after each batch
+            reset_loss_initial_guess(guess)
+
+    # -------------------------------------------------
     # Adaptive scale optimization
     # -------------------------------------------------
     if not options["_kFixScales"]:
