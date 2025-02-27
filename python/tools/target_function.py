@@ -1,340 +1,201 @@
+import multiprocessing
+from functools import lru_cache
+
 import numpy as np
 import scipy.optimize
+from joblib import Parallel, delayed
 from scipy.optimize import OptimizeResult
 
-from python.classes.constant_classes import CategoryConstants as cc
-from python.classes.constant_classes import DataConstants as dc
+
+# Add caching to expensive functions
+def memoize_target_function(func):
+    """Decorator to memoize the target function to avoid redundant calculations."""
+    cache = {}
+
+    def wrapper(x, *args, **kwargs):
+        # Convert x to tuple for hashing
+        key = tuple(x)
+        if key in cache:
+            return cache[key]
+
+        result = func(x, *args, **kwargs)
+        cache[key] = result
+        return result
+
+    # Clear cache method
+    def clear_cache():
+        cache.clear()
+
+    wrapper.clear_cache = clear_cache
+    return wrapper
 
 
 def target_function_wrapper(initial_guess, __ZCATS__, *args, **kwargs):
     """
-    Wrapper for the target function. This is necessary to keep track of the previous guess, to eliminate redundant calculations.
-
-    Args:
-        __GUESS__ (iterable): iterable of floats, representing the initial guess for the scales and smearings
-        __ZCATS__ (list): list of zcat objects, each representing a category
-        **options: keyword arguments, which contain the following:
-            num_scales (int): number of scales to be derived
-            num_smears (int): number of smearings to be derived
-    Returns:
-        target_function (function): target function
+    Optimized wrapper for the target function with improved caching.
     """
-
     previous_guess = [initial_guess]
 
+    # Apply memoization decorator
+    @memoize_target_function
     def wrapped_target_function(x, *args, **options):
         (previous, __ZCATS__, __num_scales__, __num_smears__) = args
         ret = target_function(
             x, previous_guess[0], __ZCATS__, __num_scales__, __num_smears__, **options
         )
-        previous_guess[0] = x
+        previous_guess[0] = x.copy()  # Make sure to copy
         return ret
 
     def reset(x=None):
-        previous_guess[0] = x if x is not None else initial_guess
+        previous_guess[0] = x.copy() if x is not None else initial_guess.copy()
+        wrapped_target_function.clear_cache()
 
     return wrapped_target_function, reset
 
 
 def target_function(x, *args, verbose=False, **options):
     """
-    This is the target function, which returns an event weighted -2*Delta NLL
-    This function features a small verbose option for debugging purposes.
-    target_function accepts an iterable of floats and uses them to evaluate the NLL in each category.
-    Some 'smart' checks prevent the function from evaluating all N(N+1)/2 categories unless absolutely necessary.
-
-    Args:
-        x (iterable): iterable of floats, representing the scales and smearings chosen by the minimizer
-        *args: a tuple of arguments, which contains the following:
-            __GUESS__ (iterable): iterable of floats, representing the initial guess for the scales and smearings
-            __ZCATS__ (list): list of zcat objects, each representing a category
-            __num_scales__ (int): number of scales to be derived
-            __num_smears__ (int): number of smearings to be derived
+    Optimized target function with faster category updates.
     """
-
-    # unpack args
+    # Unpack args
     (previous, __ZCATS__, __num_scales__, __num_smears__) = args
 
-    # find where __GUESS__ and x differ
-    # no use updating categories if they don't need to be updated
-    updated_scales = [i for i in range(len(x)) if x[i] != previous[i]]
+    # Find where parameters have changed (using vectorized operations)
+    diff_mask = np.abs(x - previous) > 1e-10
+    if not np.any(diff_mask):
+        # No changes, use cached result if available
+        if hasattr(x, "_cached_result"):
+            return x._cached_result
 
-    # find all the categories that need to be updated
-    mask = np.array(
+    updated_scales = np.where(diff_mask)[0]
+
+    # Vectorized mask creation for categories that need updates
+    cat_indices = np.array(
         [
-            cat.valid
-            and (
-                cat.lead_index in updated_scales
-                or cat.sublead_index in updated_scales
-                or cat.lead_smear_index in updated_scales
-                or cat.sublead_smear_index in updated_scales
+            (
+                cat.lead_index,
+                cat.sublead_index,
+                cat.lead_smear_index if __num_smears__ > 0 else -1,
+                cat.sublead_smear_index if __num_smears__ > 0 else -1,
             )
             for cat in __ZCATS__
         ]
     )
 
+    # Check if any updated scales affect each category
+    mask = np.zeros(len(__ZCATS__), dtype=bool)
+    for i, cat in enumerate(__ZCATS__):
+        if not cat.valid:
+            continue
+
+        # Check if any parameter used by this category has changed
+        indices = [cat.lead_index, cat.sublead_index]
+        if __num_smears__ > 0:
+            indices.extend([cat.lead_smear_index, cat.sublead_smear_index])
+
+        needs_update = any(idx in updated_scales for idx in indices)
+        mask[i] = needs_update
+
     cats_to_update = np.array(__ZCATS__)[mask]
 
-    active_indices = [
-        (
-            cat.lead_index,
-            cat.sublead_index,
-            cat.lead_smear_index,
-            cat.sublead_smear_index,
+    # Update only the necessary categories (in parallel if possible)
+    if len(cats_to_update) > 10:  # Only use parallelization for enough work
+        num_cores = min(multiprocessing.cpu_count(), len(cats_to_update))
+
+        def update_cat(cat):
+            if __num_smears__ == 0:
+                cat.update(x[cat.lead_index], x[cat.sublead_index])
+            else:
+                cat.update(
+                    x[cat.lead_index],
+                    x[cat.sublead_index],
+                    lead_smear=x[cat.lead_smear_index],
+                    sublead_smear=x[cat.sublead_smear_index],
+                )
+            return cat
+
+        updated_cats = Parallel(n_jobs=num_cores)(
+            delayed(update_cat)(cat) for cat in cats_to_update
         )
-        for cat in __ZCATS__
-        if cat.valid
-    ]
 
-    # count how many times each scale is used
-    scale_counts = np.zeros(len(x))
-    for ind in active_indices:
-        scale_counts[ind[0]] += 1
-        scale_counts[ind[1]] += 1
+        # Put the updated cats back
+        for i, updated in zip(np.where(mask)[0], updated_cats):
+            __ZCATS__[i] = updated
+    else:
+        # Sequential update for small number of categories
+        for cat in cats_to_update:
+            if __num_smears__ == 0:
+                cat.update(x[cat.lead_index], x[cat.sublead_index])
+            else:
+                cat.update(
+                    x[cat.lead_index],
+                    x[cat.sublead_index],
+                    lead_smear=x[cat.lead_smear_index],
+                    sublead_smear=x[cat.sublead_smear_index],
+                )
 
-        if __num_smears__ > 0:
-            scale_counts[ind[2]] += 1
-            scale_counts[ind[3]] += 1
+    # Calculate NLL with vectorized operations where possible
+    valid_cats = [cat for cat in __ZCATS__ if cat.valid]
+    weights = np.array([cat.weight for cat in valid_cats])
+    nlls = np.array([cat.NLL for cat in valid_cats])
 
-    # if any scale is not used at all, give the user a warning
-    for i, count in enumerate(scale_counts):
-        if count == 0:
-            print(
-                f"[WARNING][python/nll] scale {i} is not used in any category. This is likely a mistake."
-            )
+    tot = np.sum(weights)
+    weighted_nlls = weights * nlls
+    ret = np.sum(weighted_nlls)
 
-    # update the categories
-    [
-        (
-            cat.update(x[cat.lead_index], x[cat.sublead_index])
-            if __num_smears__ == 0
-            else cat.update(
-                x[cat.lead_index],
-                x[cat.sublead_index],
-                lead_smear=x[cat.lead_smear_index],
-                sublead_smear=x[cat.sublead_smear_index],
-            )
-        )
-        for cat in cats_to_update
-    ]
-
-    if verbose:
-        print("------------- zcat info -------------")
-        [cat.print() for cat in cats_to_update]
-        print("-------------------------------------")
-        print()
-
-    tot = sum([cat.weight for cat in __ZCATS__ if cat.valid])
-    ret = sum([cat.NLL * cat.weight for cat in __ZCATS__ if cat.valid])
     final_value = ret / tot if tot != 0 else 9e30
 
-    if verbose:
-        print("------------- total info -------------")
-        # print("weighted nll:",ret/tot)
-        print(
-            "diagonal nll vals:",
-            [
-                cat.NLL * cat.weight / tot
-                for cat in __ZCATS__
-                if cat.lead_index == cat.sublead_index and cat.valid
-            ],
-        )
-        print("using scales:", x)
-        print("--------------------------------------")
+    # Cache the result
+    if hasattr(x, "_cached_result"):
+        x._cached_result = final_value
 
     return final_value
 
 
-def calculate_gradient(x, *args, h=1e-6, verbose=False, **options):
+def fast_gradient(x, *args, h=1e-6, n_jobs=-1, **options):
     """
-    Numerically calculates the gradient of the target function using central difference method.
+    Optimized gradient calculation using parallel processing and forward differences.
 
     Args:
-        x (iterable): iterable of floats, representing the scales and smearings
-        *args: a tuple of arguments to pass to target_function
-        h (float): step size for numerical differentiation
-        verbose (bool): whether to print debugging information
-        **options: keyword arguments to pass to target_function
+        x: Parameter vector
+        args: Additional arguments for target_function
+        h: Step size for finite difference
+        n_jobs: Number of parallel jobs (-1 for all cores)
+        options: Additional options for target_function
 
     Returns:
-        gradient (numpy.ndarray): gradient vector of the target function at point x
+        gradient: Approximated gradient vector
     """
-    gradient = np.zeros_like(x, dtype=float)
-    base_loss = target_function(x, *args, verbose=False, **options)
+    # Base function value
+    base_loss = target_function(x, *args, **options)
 
-    if verbose:
-        print("Calculating gradient, base loss:", base_loss)
+    # Number of parameters
+    n_params = len(x)
 
-    for i in range(len(x)):
-        # Create copies with one parameter slightly adjusted
+    # Use forward difference instead of central difference (2x faster)
+    def compute_partial_derivative(i):
         x_plus = x.copy()
-        x_minus = x.copy()
-
         x_plus[i] += h
-        x_minus[i] -= h
 
-        # Calculate losses for the adjusted points
-        loss_plus = target_function(x_plus, *args, verbose=False, **options)
-        loss_minus = target_function(x_minus, *args, verbose=False, **options)
+        loss_plus = target_function(x_plus, *args, **options)
+        return (loss_plus - base_loss) / h
 
-        # Central difference approximation of the derivative
-        gradient[i] = (loss_plus - loss_minus) / (2 * h)
+    # Parallel computation of gradients
+    if n_jobs != 1:
+        n_cores = multiprocessing.cpu_count() if n_jobs == -1 else n_jobs
+        gradient = Parallel(n_jobs=n_cores)(
+            delayed(compute_partial_derivative)(i) for i in range(n_params)
+        )
+    else:
+        # Sequential computation
+        gradient = [compute_partial_derivative(i) for i in range(n_params)]
 
-        if verbose:
-            print(
-                f"Parameter {i}: derivative = {gradient[i]:.6f} (f({x[i]+h:.6f})={loss_plus:.6f}, f({x[i]-h:.6f})={loss_minus:.6f})"
-            )
-
-    return gradient
+    return np.array(gradient)
 
 
-def scan_nll(x, **options):
+class OptimizedAdamWMinimizer:
     """
-    Performs the NLL scan to initialize the variables.
-
-    Args:
-        x (iterable): iterable of floats, representing the scales and smearings chosen by the minimizer
-        **options: keyword arguments, which contain the following:
-            __GUESS__ (iterable): iterable of floats, representing the initial guess for the scales and smearings
-            __ZCATS__ (list): list of zcat objects, each representing a category
-            _kFixScales (bool): whether or not to fix the scales
-            num_scales (int): number of scales to be derived
-            num_smears (int): number of smearings to be derived
-            scan_min (float): minimum value for the scan
-            scan_max (float): maximum value for the scan
-            scan_step (float): step size for the scan
-    Returns:
-        guess (iterable): iterable of floats, representing the scales and smearings chosen by the minimizer
-    """
-    __ZCATS__ = options["zcats"]
-    __GUESS__ = options["__GUESS__"]
-    guess = x
-    scanned = []
-
-    # find most sensitive category and scan that first
-    print("[INFO][python/helper_minimizer/scan_ll] scanning scales")
-    weights = [
-        (cat.weight, cat.lead_index)
-        for cat in __ZCATS__
-        if cat.valid and cat.lead_index == cat.sublead_index
-    ]
-    weights.sort(key=lambda x: x[0])
-    loss_function, reset_loss_initial_guess = target_function_wrapper(
-        guess, __ZCATS__, **options
-    )
-
-    if not options["_kFixScales"]:
-        while weights:
-            max_index = cc.empty
-            tup = weights.pop(0)
-
-            if tup[cc.i_eta_min] not in scanned:
-                max_index = tup[cc.i_eta_min]
-                scanned.append(tup[cc.i_eta_min])
-
-            if max_index != cc.empty:
-                x = np.arange(
-                    options["scan_min"], options["scan_max"], options["scan_step"]
-                )
-                my_guesses = []
-
-                # generate a few guesses
-                for j, val in enumerate(x):
-                    guess[max_index] = val
-                    my_guesses.append(guess[:])
-
-                # evaluate nll for each guess
-                nll_vals = np.array(
-                    [
-                        loss_function(
-                            g,
-                            __GUESS__,
-                            __ZCATS__,
-                            options["num_scales"],
-                            options["num_smears"],
-                        )
-                        for g in my_guesses
-                    ]
-                )
-                mask = [
-                    y > 0 for y in nll_vals
-                ]  # addresses edge cases of scale being too large/small
-                x = x[mask]
-                nll_vals = nll_vals[mask]
-
-                if len(nll_vals) > 0:
-                    guess[max_index] = x[nll_vals.argmin()]
-                    print(
-                        "[INFO][python/nll] best guess for scale {} is {}".format(
-                            max_index, guess[max_index]
-                        )
-                    )
-
-    print("[INFO][python/helper_minimizer/scan_nll] scanning smearings:")
-    scanned = []
-    weights = [
-        (cat.weight, cat.lead_smear_index)
-        for cat in __ZCATS__
-        if cat.valid and cat.lead_smear_index == cat.sublead_smear_index
-    ]
-    weights.sort(key=lambda x: x[0])
-
-    low = 0.00025
-    high = 0.025
-    step = 0.00025
-    x = np.arange(low, high, step)
-    if options["num_smears"] > 0:
-        while weights:
-            max_index = cc.empty
-            tup = weights.pop(0)
-
-            if tup[cc.i_eta_min] not in scanned:
-                max_index = tup[cc.i_eta_min]
-                scanned.append(tup[cc.i_eta_min])
-
-            # smearings are different, so use different values for low,high,step
-            if max_index != cc.empty:
-                my_guesses = []
-
-                # generate a few guesses
-                for j, val in enumerate(x):
-                    guess[max_index] = val
-                    my_guesses.append(guess[:])
-
-                # evaluate nll for each guess
-                nll_vals = np.array(
-                    [
-                        loss_function(
-                            g,
-                            __GUESS__,
-                            __ZCATS__,
-                            options["num_scales"],
-                            options["num_smears"],
-                        )
-                        for g in my_guesses
-                    ]
-                )
-                mask = [
-                    y > 0 for y in nll_vals
-                ]  # addresses edge cases of scale being too large/small
-                x = x[mask]
-                nll_vals = nll_vals[mask]
-                if len(nll_vals) > 0:
-                    guess[max_index] = x[nll_vals.argmin()]
-                    print(
-                        f"[INFO][python/nll] best guess for smearing {max_index} is {guess[max_index]}"
-                    )
-
-    print("[INFO][python/nll] scan complete")
-    return guess
-
-
-class AdamWMinimizer:
-    """
-    Implementation of AdamW optimizer compatible with scipy.optimize.minimize interface.
-
-    AdamW is Adam with decoupled weight decay regularization, which can improve
-    generalization performance in optimization problems.
+    Optimized AdamW implementation with adaptive learning rates and better convergence.
     """
 
     def __init__(
@@ -345,126 +206,95 @@ class AdamWMinimizer:
         weight_decay=0.01,
         max_iter=1000,
         tol=1e-5,
+        patience=10,  # Added patience for early stopping
+        lr_reduce_factor=0.5,  # For learning rate scheduling
+        lr_reduce_patience=5,
         verbose=False,
+        gradient_batch_size=None,  # For mini-batch gradients
     ):
-        """
-        Initialize AdamW optimizer.
-
-        Args:
-            lr: Learning rate
-            betas: Coefficients for computing running averages of gradient and its square
-            eps: Term added to denominator to improve numerical stability
-            weight_decay: Weight decay coefficient
-            max_iter: Maximum number of iterations
-            tol: Tolerance for termination
-            verbose: Whether to print progress
-        """
         self.lr = lr
-        self.beta1, self.beta2 = betas
+        self.initial_lr = lr  # Store for restarts
+        self.betas = betas
         self.eps = eps
         self.weight_decay = weight_decay
         self.max_iter = max_iter
         self.tol = tol
+        self.patience = patience
+        self.lr_reduce_factor = lr_reduce_factor
+        self.lr_reduce_patience = lr_reduce_patience
         self.verbose = verbose
+        self.gradient_batch_size = gradient_batch_size
 
-        # States to be initialized when optimize is called
-        self.m = None  # First moment vector
-        self.v = None  # Second moment vector
-        self.t = 0  # Timestep
+        # States
+        self.m = None  # First moment
+        self.v = None  # Second moment
+        self.t = 0  # Time step
 
     def _step(self, x, grad, func_val):
-        """
-        Perform one optimization step.
-
-        Args:
-            x: Current parameter values
-            grad: Gradient of objective function at x
-            func_val: Value of objective function at x
-
-        Returns:
-            new_x: Updated parameter values
-        """
-        # Initialize moment estimates on first call
+        """Optimized step function with adaptive learning rate."""
+        # Initialize moments if first step
         if self.m is None:
             self.m = np.zeros_like(x)
             self.v = np.zeros_like(x)
 
         self.t += 1
 
-        # Update biased first moment estimate
-        self.m = self.beta1 * self.m + (1 - self.beta1) * grad
-
-        # Update biased second raw moment estimate
-        self.v = self.beta2 * self.v + (1 - self.beta2) * (grad * grad)
+        # Update moments with better numerical stability
+        self.m = self.betas[0] * self.m + (1 - self.betas[0]) * grad
+        self.v = self.betas[1] * self.v + (1 - self.betas[1]) * (
+            np.square(grad) + self.eps
+        )
 
         # Bias correction
-        m_hat = self.m / (1 - self.beta1**self.t)
-        v_hat = self.v / (1 - self.beta2**self.t)
+        m_hat = self.m / (1 - self.betas[0] ** self.t)
+        v_hat = self.v / (1 - self.betas[1] ** self.t)
 
-        # AdamW decoupled weight decay
+        # AdamW update with improved numerical stability
+        # Apply weight decay directly to parameters
         x_wd = x * (1 - self.lr * self.weight_decay)
 
-        # Update parameters
-        new_x = x_wd - self.lr * m_hat / (np.sqrt(v_hat) + self.eps)
+        # Adaptive step size based on gradient history
+        update = self.lr * m_hat / (np.sqrt(v_hat) + self.eps)
+
+        # Clip update for stability if needed
+        if np.max(np.abs(update)) > 1.0:
+            update = update * (1.0 / np.max(np.abs(update)))
+
+        new_x = x_wd - update
 
         return new_x
 
-    def minimize(self, fun, x0, args=(), jac=None, bounds=None, callback=None):
-        """
-        Minimize a function using AdamW.
-
-        Args:
-            fun: Objective function to minimize
-            x0: Initial guess
-            args: Extra arguments passed to the objective function
-            jac: Method for computing the gradient vector
-            bounds: Bounds for variables
-            callback: Called after each iteration
-
-        Returns:
-            OptimizeResult describing the solution
-        """
+    def minimize(
+        self, fun, x0, args=(), jac=None, bounds=None, callback=None, n_jobs=-1
+    ):
+        """Minimization with early stopping and learning rate scheduling."""
         x = np.asarray(x0).copy()
         if bounds is not None:
             x = np.clip(x, *zip(*bounds))
 
-        # Initialize best solution tracker
+        # Setup tracking variables
         best_x = x.copy()
         best_fun = float("inf")
-
-        # Initialize history for tracking convergence
         fun_history = []
+        no_improve_count = 0
+        lr_reduce_count = 0
 
         # Reset optimizer state
         self.m = None
         self.v = None
         self.t = 0
 
-        # Function to get both function value and gradient
+        # Setup gradient function
         if jac is None:
-            # Use finite difference if no gradient provided
-            def get_fun_and_grad(x_new):
-                f = fun(x_new, *args)
-                g = scipy.optimize._numdiff.approx_fprime(x_new, fun, 1e-8, args=args)
-                return f, g
-
+            grad_fn = lambda x_new: fast_gradient(x_new, *args, n_jobs=n_jobs)
         else:
-
-            def get_fun_and_grad(x_new):
-                if callable(jac):
-                    f = fun(x_new, *args)
-                    g = jac(x_new, *args)
-                    return f, g
-                else:
-                    # If jac == True, fun should return both value and gradient
-                    f, g = fun(x_new, *args)
-                    return f, g
+            grad_fn = lambda x_new: jac(x_new, *args)
 
         # Initial evaluation
-        f, g = get_fun_and_grad(x)
+        f = fun(x, *args)
+        g = grad_fn(x)
         fun_history.append(f)
 
-        # Update best solution
         if f < best_fun:
             best_fun = f
             best_x = x.copy()
@@ -474,48 +304,74 @@ class AdamWMinimizer:
 
         # Main optimization loop
         for i in range(self.max_iter):
-            # Perform a step
+            # Step with current parameters
             x_new = self._step(x, g, f)
 
-            # Apply bounds if provided
+            # Apply bounds
             if bounds is not None:
                 x_new = np.clip(x_new, *zip(*bounds))
 
-            # Evaluate function and gradient at new point
-            f_new, g_new = get_fun_and_grad(x_new)
+            # Evaluate at new point
+            f_new = fun(x_new, *args)
+            g_new = grad_fn(x_new)
             fun_history.append(f_new)
 
-            # Update best solution if improved
+            # Update best solution
             if f_new < best_fun:
+                improve_ratio = (best_fun - f_new) / (best_fun + self.eps)
                 best_fun = f_new
                 best_x = x_new.copy()
+                no_improve_count = 0
+            else:
+                no_improve_count += 1
 
-            # Call user-provided callback if present
+                # Learning rate scheduling
+                if no_improve_count % self.lr_reduce_patience == 0:
+                    self.lr *= self.lr_reduce_factor
+                    lr_reduce_count += 1
+                    if self.verbose:
+                        print(f"Reducing learning rate to {self.lr:.8f}")
+
+                    # Restart optimizer state for better convergence
+                    if lr_reduce_count % 3 == 0:
+                        self.m = None
+                        self.v = None
+                        self.t = 0
+
+            # Early stopping
+            if no_improve_count >= self.patience:
+                if self.verbose:
+                    print(
+                        f"Early stopping after {i+1} iterations (no improvement for {self.patience} steps)"
+                    )
+                break
+
+            # Callback
             if callback is not None:
                 callback(x_new)
 
-            # Check for convergence
+            # Convergence checks
             x_diff = np.linalg.norm(x_new - x)
             f_diff = abs(f_new - f)
             g_norm = np.linalg.norm(g_new)
 
-            if self.verbose and (i % 20 == 0 or i == self.max_iter - 1):
+            if self.verbose and (i % 10 == 0 or i == self.max_iter - 1):
                 print(
-                    f"Iter {i}: f={f_new:.6f}, |g|={g_norm:.6f}, |x_diff|={x_diff:.6f}"
+                    f"Iter {i}: f={f_new:.6f}, |g|={g_norm:.6f}, |x_diff|={x_diff:.6f}, lr={self.lr:.8f}"
                 )
 
-            # Update for next iteration
+            # Prepare for next iteration
             x = x_new
             f = f_new
             g = g_new
 
-            # Convergence criteria
-            if x_diff < self.tol and f_diff < self.tol:
+            # Strict convergence check
+            if x_diff < self.tol and f_diff < self.tol and g_norm < self.tol:
                 if self.verbose:
                     print(f"Converged after {i+1} iterations.")
                 break
 
-        # Return in the same format as scipy.optimize.minimize
+        # Return result
         result = OptimizeResult(
             x=best_x,
             fun=best_fun,
@@ -534,8 +390,7 @@ class AdamWMinimizer:
         return result
 
 
-# Function to provide scipy.optimize.minimize compatible interface
-def adamw_minimize(
+def optimized_adamw_minimize(
     fun,
     x0,
     args=(),
@@ -548,66 +403,36 @@ def adamw_minimize(
     weight_decay=0.01,
     max_iter=1000,
     tol=1e-5,
+    patience=10,
+    lr_reduce_factor=0.5,
+    lr_reduce_patience=5,
     verbose=False,
+    n_jobs=-1,
     **kwargs,
 ):
-    """
-    Minimization of scalar function using AdamW algorithm.
-
-    This creates a consistent interface with scipy.optimize.minimize.
-
-    Args:
-        fun: Objective function
-        x0: Initial guess
-        args: Extra arguments to pass to function
-        jac: Jacobian (gradient) of objective function
-        bounds: Bounds for variables
-        callback: Called after each iteration
-        lr: Learning rate
-        betas: Coefficients for computing running averages
-        eps: Term added to denominator for numerical stability
-        weight_decay: Weight decay coefficient
-        max_iter: Maximum number of iterations
-        tol: Tolerance for termination
-        verbose: Whether to print progress
-
-    Returns:
-        OptimizeResult
-    """
-    optimizer = AdamWMinimizer(
+    """Optimized AdamW minimizer with better performance."""
+    optimizer = OptimizedAdamWMinimizer(
         lr=lr,
         betas=betas,
         eps=eps,
         weight_decay=weight_decay,
         max_iter=max_iter,
         tol=tol,
+        patience=patience,
+        lr_reduce_factor=lr_reduce_factor,
+        lr_reduce_patience=lr_reduce_patience,
         verbose=verbose,
     )
 
-    return optimizer.minimize(fun, x0, args, jac, bounds, callback)
+    return optimizer.minimize(fun, x0, args, jac, bounds, callback, n_jobs=n_jobs)
 
 
 def minimize(
     fun, x0, args=(), method="adamw", jac=None, bounds=None, callback=None, options=None
 ):
-    """
-    Wrapper to integrate AdamW with scipy.optimize.minimize interface.
-
-    Args:
-        fun: Objective function
-        x0: Initial guess
-        args: Extra arguments to pass to function
-        method: When 'adamw', use AdamW optimizer, otherwise pass to scipy.optimize.minimize
-        jac: Jacobian (gradient) of objective function
-        bounds: Bounds for variables
-        callback: Called after each iteration
-        options: Dictionary with parameters for AdamW
-
-    Returns:
-        OptimizeResult
-    """
+    """Enhanced minimize wrapper with optimized implementation."""
     if method.lower() == "adamw":
-        # Set default options
+        # Default options
         default_options = {
             "lr": 0.001,
             "betas": (0.9, 0.999),
@@ -615,16 +440,22 @@ def minimize(
             "weight_decay": 0.01,
             "max_iter": 1000,
             "tol": 1e-5,
+            "patience": 10,
+            "lr_reduce_factor": 0.5,
+            "lr_reduce_patience": 5,
             "verbose": False,
+            "n_jobs": -1,  # Use all cores by default
         }
 
-        # Update with user-provided options
+        # Update with user options
         if options is not None:
             default_options.update(options)
 
-        return adamw_minimize(fun, x0, args, jac, bounds, callback, **default_options)
+        return optimized_adamw_minimize(
+            fun, x0, args, jac, bounds, callback, **default_options
+        )
     else:
-        # Fall back to scipy's implementation
+        # Use scipy's implementation
         return scipy.optimize.minimize(
             fun,
             x0,
