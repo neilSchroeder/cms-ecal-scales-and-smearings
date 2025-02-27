@@ -113,7 +113,7 @@ class DataConstants:
     MIN_E, MAX_E = 0, 14000
     MEDIUM_ID, TIGHT_ID = 0x0008, 0x0010
     R9_BOUNDARY = 0.96
-    MINIMIZATION_STRATEGY = "L-BFGS-B"
+    MINIMIZATION_STRATEGY = "adamw"
 
     # dataframe keys
     RUN = "runNumber"
