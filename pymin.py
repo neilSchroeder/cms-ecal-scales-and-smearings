@@ -4,21 +4,21 @@ import pandas as pd
 import sys
 import time
 
-import python.helpers.helper_pymin as helper_pymin
+import src.helpers.helper_pymin as helper_pymin
 
-import python.utilities.divide_by_run as divide_by_run
-import python.utilities.minimizer as minimizer
-import python.utilities.scale_data as scale_data
-import python.utilities.scale_data_test as scale_data_test
-import python.utilities.smear_mc as smear_mc
-import python.utilities.pruner as pruner
-import python.utilities.time_stability as time_stability
-import python.tools.write_files as write_files
-import python.tools.condor_handler as condor_handler
-import python.tools.reweight_pt_y as reweight_pt_y
-from python.plotters.plot_run_stability import plot_run_stability
+import src.utilities.divide_by_run as divide_by_run
+import src.utilities.minimizer as minimizer
+import src.utilities.scale_data as scale_data
+import src.utilities.scale_data_test as scale_data_test
+import src.utilities.smear_mc as smear_mc
+import src.utilities.pruner as pruner
+import src.utilities.time_stability as time_stability
+import src.tools.write_files as write_files
+import src.tools.condor_handler as condor_handler
+import src.tools.reweight_pt_y as reweight_pt_y
+from src.plotters.plot_run_stability import plot_run_stability
 
-from python.classes.config_class import SSConfig
+from src.classes.config_class import SSConfig
 
 
 def main():

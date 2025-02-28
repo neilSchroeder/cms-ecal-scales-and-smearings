@@ -1,5 +1,5 @@
-from python.tools.data_loader import custom_cuts
-from python.tools.data_loader import get_dataframe
+from src.tools.data_loader import custom_cuts
+from src.tools.data_loader import get_dataframe
 import numpy as np
 import seaborn as sns
 import matplotlib
@@ -8,11 +8,11 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 import pandas as pd
 
-from python.classes.constant_classes import (
+from src.classes.constant_classes import (
     DataConstants as dc,
 )
 
-from python.plotters.plots import (
+from src.plotters.plots import (
     plot_style_bw_cb_fit,
     plot_style_paper,
     plot_style_validation_mc,
@@ -42,7 +42,7 @@ def main():
     )
 
     # derive pt y weights
-    from python.tools.reweight_pt_y import (
+    from src.tools.reweight_pt_y import (
         derive_pt_y_weights,
         add_pt_y_weights,
         get_zpt,

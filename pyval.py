@@ -12,20 +12,20 @@ import numpy as np
 import pandas as pd
 
 # project functions
-from python.helpers.helper_pyval import (
+from src.helpers.helper_pyval import (
     extract_files,
     check_args,
     # get_dataframe,
 )
-from python.tools.data_loader import get_dataframe, custom_cuts
-import python.tools.reweight_pt_y as reweight_pt_y
-import python.utilities.scale_data_test as scale_data_test
-import python.utilities.smear_mc as smear_mc
-import python.plotters.make_plots as make_plots
-from python.utilities.evaluate_systematics import evaluate_systematics
+from src.tools.data_loader import get_dataframe, custom_cuts
+import src.tools.reweight_pt_y as reweight_pt_y
+import src.utilities.scale_data_test as scale_data_test
+import src.utilities.smear_mc as smear_mc
+import src.plotters.make_plots as make_plots
+from src.utilities.evaluate_systematics import evaluate_systematics
 
-from python.classes.constant_classes import PyValConstants as pvc, DataConstants as dc
-import python.classes.config_class as config_class
+from src.classes.constant_classes import PyValConstants as pvc, DataConstants as dc
+import src.classes.config_class as config_class
 
 ss_config = config_class.SSConfig()
 

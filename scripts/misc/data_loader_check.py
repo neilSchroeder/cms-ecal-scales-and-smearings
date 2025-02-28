@@ -1,5 +1,5 @@
-from python.tools.data_loader import custom_cuts
-from python.tools.data_loader import get_dataframe
+from src.tools.data_loader import custom_cuts
+from src.tools.data_loader import get_dataframe
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
