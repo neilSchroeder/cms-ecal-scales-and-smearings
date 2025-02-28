@@ -86,7 +86,7 @@ def target_function(x, *args, verbose=False, **options):
     cats_to_update = np.array(__ZCATS__)[mask]
 
     # Update only the necessary categories (in parallel if possible)
-    if len(cats_to_update) > 10:  # Only use parallelization for enough work
+    if len(cats_to_update) > 1000:  # Only use parallelization for enough work
         num_cores = min(multiprocessing.cpu_count(), len(cats_to_update))
 
         def update_cat(cat):
@@ -431,7 +431,7 @@ def minimize(
             "lr_reduce_factor": 0.5,
             "lr_reduce_patience": 5,
             "verbose": False,
-            "n_jobs": -1,  # Use all cores by default
+            "n_jobs": 1,  # Use all cores by default
         }
 
         # Update with user options
