@@ -431,7 +431,7 @@ def minimize(
             "lr_reduce_factor": 0.5,
             "lr_reduce_patience": 5,
             "verbose": False,
-            "n_jobs": 1,  # Use all cores by default
+            "n_jobs": 1,  # Use no cores by default
         }
 
         # Update with user options
@@ -656,7 +656,7 @@ def adaptive_scan_nll(x, **options):
     __ZCATS__ = options["zcats"]
     __GUESS__ = options["__GUESS__"]
     guess = np.array(x).copy()
-    n_jobs = options.get("n_jobs", -1)
+    n_jobs = options.get("n_jobs", 1)  # default to 1 core to avoid memory issues
 
     # Create the loss function wrapper
     loss_function, reset_loss_initial_guess = target_function_wrapper(
