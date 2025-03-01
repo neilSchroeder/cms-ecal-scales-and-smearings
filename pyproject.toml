@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cms-ecal-scales-and-smearings"
+version = "0.2.0"
+description = "CMS ECAL scales and smearings"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "awkward==2.5.2",
+    "black==24.4.2",
+    "cachetools==5.3.2",
+    "contourpy==1.2.0",
+    "cycler==0.12.1",
+    "fonttools==4.47.2",
+    "fsspec==2023.12.2",
+    "imageio==2.34.2",
+    "importlib-metadata==7.0.1",
+    "iniconfig==1.1.1",
+    "kiwisolver==1.4.5",
+    "llvmlite==0.41.1",
+    "matplotlib==3.8.2",
+    "numba==0.58.1",
+    "numpy==1.26.3",
+    "packaging==23.2",
+    "pandas==2.2.0",
+    "pillow==10.2.0",
+    "pyarrow==15.0.0",
+    "pyparsing==3.1.1",
+    "pyqt6==6.7.0",
+    "pytest==8.3.4",
+    "pytz==2023.3.post1",
+    "scipy==1.12.0",
+    "seaborn==0.13.2",
+    "six==1.16.0",
+    "tqdm==4.66.1",
+    "typing-extensions==4.9.0",
+    "uproot3",
+    "ruff",
+]
+
+[project.optional-dependencies]
+dev = [
+    "flake8==4.0.1",
+    "isort",
+    "mypy==0.910",
+    "pytest-cov==3.0.0",
+    "pytest-mock==3.6.1",
+    "pytest-xdist",
+    "tox==3.24.4",
+    "pre-commit",
+    "coverage==7.6.12",
+]
+
+[tools.setuptools]
+packages = ["cms_ecal_scales_and_smearings"]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+warn_return_any = true
+warn_no_return = true
+warn_return_value = true
+
+[tool.pre-commit.hooks.ruff]
+id = "ruff"
+name = "ruff"
+entry = "ruff check . --fix"
+language = "python"
+types = ["python"]
+pass_filenames = false
+
+[tool.ruff]
+extend-select = [
+    "C4",  # comprehensions
+    "SIM", # simplification
+    "TCH", # type checking
+]
+ignore = []
+show-fixes = true
+target-version = "py311"

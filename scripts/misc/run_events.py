@@ -1,17 +1,14 @@
-from src.tools.data_loader import custom_cuts
-from src.tools.data_loader import get_dataframe
+import matplotlib
 import numpy as np
 import seaborn as sns
-import matplotlib
+
+from src.tools.data_loader import apply_custom_event_selection, get_dataframe
 
 matplotlib.use("Agg")
-from matplotlib import pyplot as plt
 import pandas as pd
+from matplotlib import pyplot as plt
 
-from src.classes.constant_classes import (
-    DataConstants as dc,
-)
-
+from src.classes.constant_classes import DataConstants as dc
 from src.plotters.plots import (
     plot_style_bw_cb_fit,
     plot_style_paper,
@@ -42,11 +39,7 @@ def main():
     )
 
     # derive pt y weights
-    from src.tools.reweight_pt_y import (
-        derive_pt_y_weights,
-        add_pt_y_weights,
-        get_zpt,
-    )
+    from src.tools.reweight_pt_y import add_pt_y_weights, derive_pt_y_weights, get_zpt
 
     weights_file = derive_pt_y_weights(df_data, df_mc, "ul18")
     df_mc = add_pt_y_weights(df_data, weights_file)

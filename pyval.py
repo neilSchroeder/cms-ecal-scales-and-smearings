@@ -6,26 +6,24 @@ import os
 import sys
 import time
 
-# 3rd party
-import uproot3 as up
 import numpy as np
 import pandas as pd
 
-# project functions
-from src.helpers.helper_pyval import (
-    extract_files,
-    check_args,
-    # get_dataframe,
-)
-from src.tools.data_loader import get_dataframe, custom_cuts
+# 3rd party
+import uproot3 as up
+
+import src.classes.config_class as config_class
+import src.plotters.make_plots as make_plots
 import src.tools.reweight_pt_y as reweight_pt_y
 import src.utilities.scale_data_test as scale_data_test
 import src.utilities.smear_mc as smear_mc
-import src.plotters.make_plots as make_plots
-from src.utilities.evaluate_systematics import evaluate_systematics
+from src.classes.constant_classes import DataConstants as dc
+from src.classes.constant_classes import PyValConstants as pvc
 
-from src.classes.constant_classes import PyValConstants as pvc, DataConstants as dc
-import src.classes.config_class as config_class
+# project functions
+from src.helpers.helper_pyval import check_args, extract_files  # get_dataframe,
+from src.tools.data_loader import apply_custom_event_selection, get_dataframe
+from src.utilities.evaluate_systematics import evaluate_systematics
 
 ss_config = config_class.SSConfig()
 

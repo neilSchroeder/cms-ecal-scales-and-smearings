@@ -1,8 +1,8 @@
-from src.tools.data_loader import custom_cuts
-from src.tools.data_loader import get_dataframe
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
+
+from src.tools.data_loader import apply_custom_event_selection, get_dataframe
 
 
 def main():
@@ -36,7 +36,7 @@ def main():
     for eta_cut in check_eta_cuts:
         for r9_cut in check_r9_cuts:
             for et_cut in check_et_cuts:
-                x = custom_cuts(
+                x = apply_custom_event_selection(
                     df,
                     inv_mass_cuts=(80, 100),
                     eta_cuts=eta_cut,
