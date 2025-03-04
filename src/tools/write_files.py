@@ -392,7 +392,7 @@ def write_smearings(smears, cats, out):
                 )
             else:
                 dictForDf["#category"].append(
-                    f"absEta_{row.iloc[cc.i_eta_min]}_{row.iloc[cc.i_eta_max]}-R9_{round(row.iloc[cc.i_r9_min3],4)}_{row.iloc[cc.i_r9_max]}"
+                    f"absEta_{row.iloc[cc.i_eta_min]}_{row.iloc[cc.i_eta_max]}-R9_{round(row.iloc[cc.i_r9_min],4)}_{row.iloc[cc.i_r9_max]}"
                 )
             dictForDf["Emean"].append(6.6)
             dictForDf["err_Emean"].append(0.0)

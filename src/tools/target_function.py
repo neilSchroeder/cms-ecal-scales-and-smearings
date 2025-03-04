@@ -984,3 +984,4 @@ def adaptive_scan_nll(x, **options):
 
     print("[INFO][python/nll] adaptive scan complete")
     return guess
+
