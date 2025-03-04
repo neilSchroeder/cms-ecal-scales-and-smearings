@@ -860,7 +860,7 @@ def minimize(
             "lr_reduce_factor": 0.5,
             "lr_reduce_patience": 5,
             "verbose": False,
-            "n_jobs": 1,  # Use no cores by default
+            "n_jobs": options.get("n_jobs", 1),
         }
 
         # Update with user options

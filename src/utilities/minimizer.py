@@ -245,8 +245,6 @@ def minimize(data, mc, cats_df, args):
         )
     )
 
-    # increase the number of iterations
-
     # minimize
     import cProfile
     import io

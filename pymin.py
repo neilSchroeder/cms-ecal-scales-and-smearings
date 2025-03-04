@@ -212,6 +212,13 @@ def main():
         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.",
     )
     parser.add_argument(
+        "--n-jobs",
+        default=1,
+        type=int,
+        dest="n_jobs",
+        help="Number of cores to use when multiprocessing",
+    )
+    parser.add_argument(
         "--fix-scales",
         default=False,
         action="store_true",
