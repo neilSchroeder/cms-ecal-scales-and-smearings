@@ -158,11 +158,11 @@ class zcat:
 
         # Compute histograms using pre-allocated arrays
         # print type
-        binned_data, _ = numba_hist.numba_histogram(
+        binned_data, _ = numba_hist.threaded_histogram(
             np.concatenate([self.temp_data, self.top_and_bottom]),
             self.num_bins,
         )
-        binned_mc, _ = numba_hist.numba_weighted_histogram(
+        binned_mc, _ = numba_hist.threaded_weighted_histogram(
             np.concatenate([self.temp_mc, self.top_and_bottom]),
             np.concatenate([self.weights, [0, 0]]),
             self.num_bins,

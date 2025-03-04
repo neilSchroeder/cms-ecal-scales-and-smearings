@@ -157,3 +157,189 @@ def numba_weighted_histogram(a, weights, bins, a_min=None, a_max=None):
             hist += local_hists[chunk_id]
     
     return hist, bin_edges
+
+
+import numba
+import numpy as np
+
+@numba.njit(cache=True)
+def get_bin_edges(a_min, a_max, bins):
+    """
+    Create bin edges without using np.linspace to avoid dtype parameter issue
+    """
+    bin_edges = np.zeros(bins + 1, dtype=np.float64)
+    delta = (a_max - a_min) / bins
+    
+    for i in range(bins + 1):
+        bin_edges[i] = a_min + i * delta
+        
+    # Ensure last bin edge is exactly a_max to avoid floating point issues
+    bin_edges[bins] = a_max
+    return bin_edges
+
+@numba.njit(cache=True)
+def compute_bin(x, a_min, a_max, bins):
+    """
+    Compute bin index more efficiently
+    """
+    # Handle edge cases
+    if x < a_min:
+        return -1  # Out of range
+        
+    if x >= a_max:
+        return bins - 1  # Last bin includes a_max
+        
+    # Fast bin calculation
+    bin_idx = int(bins * (x - a_min) / (a_max - a_min))
+    
+    # Ensure bin index is in valid range
+    if bin_idx >= bins:
+        return bins - 1
+        
+    return bin_idx
+
+@numba.njit(cache=True)
+def numba_histogram(a, bins):
+    """
+    Optimized version of numba_histogram compatible with existing code
+    """
+    # Get min and max values
+    a_min = np.min(a)
+    a_max = np.max(a)
+    
+    # Small epsilon to ensure max value is included
+    a_max = a_max * (1.0 + 1e-10)
+    
+    # Pre-allocate histogram arrays
+    hist = np.zeros(bins, dtype=np.int64)
+    bin_edges = get_bin_edges(a_min, a_max, bins)
+    
+    # Fill histogram
+    for i in range(len(a)):
+        bin_idx = compute_bin(a[i], a_min, a_max, bins)
+        if bin_idx >= 0:
+            hist[bin_idx] += 1
+            
+    return hist, bin_edges
+
+@numba.njit(cache=True)
+def numba_weighted_histogram(a, weights, bins):
+    """
+    Optimized version of weighted histogram compatible with existing code
+    """
+    # Get min and max values
+    a_min = np.min(a)
+    a_max = np.max(a)
+    
+    # Small epsilon to ensure max value is included
+    a_max = a_max * (1.0 + 1e-10)
+    
+    # Pre-allocate histogram arrays
+    hist = np.zeros(bins, dtype=np.float32)
+    bin_edges = get_bin_edges(a_min, a_max, bins)
+    
+    # Fill histogram with weights
+    for i in range(len(a)):
+        bin_idx = compute_bin(a[i], a_min, a_max, bins)
+        if bin_idx >= 0:
+            hist[bin_idx] += weights[i]
+            
+    return hist, bin_edges
+
+# Optional: Add threaded versions if your Numba supports it properly
+# These can be enabled if your environment allows parallel execution
+# For now, using safer sequential versions to ensure compatibility
+
+@numba.njit(parallel=True, cache=True)
+def threaded_histogram(a, bins):
+    """
+    Parallelized histogram for large arrays - enable only if your environment supports it
+    """
+    # Get min and max values - must be done outside the parallel region
+    a_min = np.min(a)
+    a_max = np.max(a)
+    a_max = a_max * (1.0 + 1e-10)
+    
+    # Create multiple histograms for each thread to avoid atomic contention
+    n_threads = numba.config.NUMBA_DEFAULT_NUM_THREADS
+    thread_hists = np.zeros((n_threads, bins), dtype=np.int64)
+    bin_edges = get_bin_edges(a_min, a_max, bins)
+    
+    # Process chunks in parallel
+    chunk_size = (len(a) + n_threads - 1) // n_threads
+    
+    # Manual chunking to avoid atomic operations
+    for thread_idx in numba.prange(n_threads):
+        start = thread_idx * chunk_size
+        end = min(start + chunk_size, len(a))
+        
+        # Process this thread's chunk
+        for i in range(start, end):
+            if i < len(a):  # Safety check
+                bin_idx = compute_bin(a[i], a_min, a_max, bins)
+                if bin_idx >= 0:
+                    thread_hists[thread_idx, bin_idx] += 1
+    
+    # Combine thread histograms
+    hist = np.zeros(bins, dtype=np.int64)
+    for i in range(n_threads):
+        for j in range(bins):
+            hist[j] += thread_hists[i, j]
+    
+    return hist, bin_edges
+
+@numba.njit(parallel=True, cache=True)
+def threaded_weighted_histogram(a, weights, bins):
+    """
+    Parallelized weighted histogram for large arrays - enable only if your environment supports it
+    """
+    # Get min and max values - must be done outside the parallel region
+    a_min = np.min(a)
+    a_max = np.max(a)
+    a_max = a_max * (1.0 + 1e-10)
+    
+    # Create multiple histograms for each thread to avoid atomic contention
+    n_threads = numba.config.NUMBA_DEFAULT_NUM_THREADS
+    thread_hists = np.zeros((n_threads, bins), dtype=np.float32)
+    bin_edges = get_bin_edges(a_min, a_max, bins)
+    
+    # Process chunks in parallel
+    chunk_size = (len(a) + n_threads - 1) // n_threads
+    
+    # Manual chunking to avoid atomic operations
+    for thread_idx in numba.prange(n_threads):
+        start = thread_idx * chunk_size
+        end = min(start + chunk_size, len(a))
+        
+        # Process this thread's chunk
+        for i in range(start, end):
+            if i < len(a):  # Safety check
+                bin_idx = compute_bin(a[i], a_min, a_max, bins)
+                if bin_idx >= 0:
+                    thread_hists[thread_idx, bin_idx] += weights[i]
+    
+    # Combine thread histograms
+    hist = np.zeros(bins, dtype=np.float32)
+    for i in range(n_threads):
+        for j in range(bins):
+            hist[j] += thread_hists[i, j]
+    
+    return hist, bin_edges
+
+# For histograms with pre-defined bin edges (useful optimization)
+@numba.njit(cache=True)
+def histogram_fixed_bins(a, bin_edges):
+    """
+    Histogram with pre-defined bin edges to avoid recomputing them
+    """
+    bins = len(bin_edges) - 1
+    hist = np.zeros(bins, dtype=np.int64)
+    a_min = bin_edges[0]
+    a_max = bin_edges[-1]
+    
+    for i in range(len(a)):
+        bin_idx = compute_bin(a[i], a_min, a_max, bins)
+        if bin_idx >= 0:
+            hist[bin_idx] += 1
+            
+    return hist
