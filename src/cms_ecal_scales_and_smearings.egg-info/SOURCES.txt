@@ -29,8 +29,10 @@ src/plotters/plot_styles/paper_style.py
 src/plotters/plot_styles/plot_style.py
 src/tests/__init__.py
 src/tests/test_data_loader.py
+src/tests/test_fit_bw_cb.py
 src/tests/test_helper_pymin_functions.py
 src/tests/test_plot_run_stability.py
+src/tests/test_pymin.py
 src/tests/test_ss_config.py
 src/tests/test_write_smearings.py
 src/tests/test_zcat_class.py

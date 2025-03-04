@@ -5,8 +5,43 @@ from scipy.optimize import minimize
 from scipy.special import xlogy
 import matplotlib.pyplot as plt
 
+EPSILON = 1e-10
 
-def NLL(a, b):
+def NLL(a: np.ndarray, b: np.ndarray) -> float:
+    """
+    Compute the Negative Log-Likelihood (NLL) with penalty and chi-square scaling.
+    This function calculates a modified negative log-likelihood value between two arrays,
+    including a penalty term for deviations and scaling by a chi-square factor.
+    Parameters
+    ----------
+    a : numpy.ndarray
+        Observed values or weights (typically histogram bin contents).
+    b : numpy.ndarray
+        Expected or model values (must be same shape as 'a').
+    Returns
+    -------
+    float
+        The scaled negative log-likelihood value, computed as -2*(nll + penalty)*chi_sqr.
+        Smaller values indicate better agreement between 'a' and 'b'.
+    Notes
+    -----
+    - The function handles zero values in log calculations by setting -inf to 0.
+    - The penalty term accounts for deviations in the complementary probability space.
+    - The chi-square scaling provides additional sensitivity to larger deviations.
+    """
+    if len(a) != len(b):
+        raise ValueError("Arrays 'a' and 'b' must have the same length.")
+    
+    if len(a) < 2 or len(b) < 2:
+        raise ValueError("Arrays 'a' and 'b' must have at least two elements.")
+    
+    # b must be normalized
+    if sum(b) != 1:
+        b = b / sum(b)
+
+    # fill zeros with epsilon
+    a[a == 0] = EPSILON
+    b[b == 0] = EPSILON
 
     nll = xlogy(a, b)
     nll[nll == -np.inf] = 0
@@ -17,21 +52,43 @@ def NLL(a, b):
     penalty = np.sum(penalty) / len(penalty)
 
     b = np.sum(a) * b / np.sum(b)
-    chi_sqr = np.sum(np.divide(np.multiply(a - b, a - b), a)) / (len(a) - 1)
+    chi_sqr = np.divide(np.multiply(a - b, a - b), a+EPSILON) / (len(a) - 1 + EPSILON)
+    # remove inf
+    chi_sqr = chi_sqr[np.isfinite(chi_sqr)]
+    chi_sqr = np.sum(chi_sqr) / len(chi_sqr)
 
     return -2 * (nll + penalty) * chi_sqr
 
 
-def target(guess):
-    global thisBW
-    global thisCB
-    global _DATA_
+def target(guess, *args) -> float:
+    """
+    Calculates the negative log-likelihood (NLL) between a model and observed data.
+    The model is a convolution of a Breit-Wigner function and a Crystal Ball function,
+    where the Crystal Ball parameters are updated with the provided guess.
+    Parameters
+    ----------
+    guess : array-like
+        Parameters to update the Crystal Ball function
+    *args : tuple
+        Contains three objects:
+        - thisBW : object
+            Breit-Wigner function with a defined y attribute
+        - thisCB : object
+            Crystal Ball function that can be updated with parameters and provides a getY method
+        - data : array-like
+            Observed data to compare against the model
+    Returns
+    -------
+    float
+        Negative log-likelihood value representing how well the model fits the data
+    """
+    thisBW, thisCB, data = args
 
     thisCB.update(guess)
     y_vals = np.convolve(thisBW.y, thisCB.getY(), mode="same")
     y_vals = y_vals / np.sum(y_vals)
 
-    return NLL(_DATA_, y_vals)
+    return NLL(data, y_vals)
 
 
 def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
@@ -45,14 +102,9 @@ def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
         Returns:
                 dictionary: dictionary containing the fit parameters
     """
-    global thisBW
-    global thisCB
-    global _DATA_
-
     # make bw distribution
     thisBW = breit_wigner.bw(x)
     thisCB = crystal_ball.cb(x, guess_cb)
-    _DATA_ = y
     guess = guess_cb
 
     bounds = [(0.01, 100), (0.01, 100), (-5, 5), (0.1, 10)]
@@ -61,6 +113,7 @@ def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
     result = minimize(
         target,
         np.array(guess),
+        args=(thisBW, thisCB, y),
         method="Nelder-Mead",
         bounds=bounds,
         options={"eps": 0.0001},
@@ -69,8 +122,8 @@ def fit_bw_cb(x: np.array, y: np.array, guess_cb: list) -> dict:
     print(result)
     thisCB.update(result.x)
     y_vals = np.convolve(thisBW.getY(), thisCB.getY(), mode="same")
-    y_vals = np.sum(y) * y_vals / np.sum(y_vals)
-    chi_sqr = np.sum(np.divide(np.multiply(y - y_vals, y - y_vals), y)) / (len(y) - 1)
+    y_vals = np.sum(y) * y_vals / (np.sum(y_vals)+EPSILON)
+    chi_sqr = np.sum(np.divide(np.multiply(y - y_vals, y - y_vals), y + EPSILON)) / (len(y) - 1)
     print("minimization complete:")
     print("mu:", 91.188 + result.x[2])
     print("sigma:", result.x[3])
