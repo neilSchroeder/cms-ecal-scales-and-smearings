@@ -413,6 +413,435 @@ def optimized_adamw_minimize(
 
     return optimizer.minimize(fun, x0, args, jac, bounds, callback, n_jobs=n_jobs)
 
+class HighPerformanceAdamWMinimizer:
+    """
+    High-performance AdamW implementation with advanced techniques for faster convergence.
+    """
+
+    def __init__(
+        self,
+        lr=0.001,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=0.01,
+        max_iter=1000,
+        tol=1e-5,
+        patience=100,
+        lr_reduce_factor=0.5,
+        lr_reduce_patience=5,
+        verbose=False,
+        gradient_batch_size=None,
+        use_line_search=True,
+        adaptive_params=True,
+        coordinate_descent=False,
+        coordinate_groups=None,
+    ):
+        self.lr = lr
+        self.initial_lr = lr
+        self.betas = betas
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self.max_iter = max_iter
+        self.tol = tol
+        self.patience = patience
+        self.lr_reduce_factor = lr_reduce_factor
+        self.lr_reduce_patience = lr_reduce_patience
+        self.verbose = verbose
+        self.gradient_batch_size = gradient_batch_size
+        self.use_line_search = use_line_search
+        self.adaptive_params = adaptive_params
+        self.coordinate_descent = coordinate_descent
+        self.coordinate_groups = coordinate_groups
+
+        # States
+        self.m = None
+        self.v = None
+        self.t = 0
+        self.param_specific_lr = None
+        self.param_types = None
+
+    def _reset_state(self):
+        """Reset optimizer state for better convergence after LR changes."""
+        self.m = None
+        self.v = None
+        self.t = 0
+
+    def _initialize_param_config(self, x, args=None):
+        """Initialize parameter-specific configurations for better performance."""
+        n_params = len(x)
+        
+        # Set up parameter-specific learning rates
+        self.param_specific_lr = np.ones(n_params) * self.lr
+        
+        # Try to determine parameter types (scales vs smears)
+        if args and len(args) > 1 and hasattr(args[1], "__iter__"):
+            zcats = args[1]
+            if zcats and hasattr(zcats[0], "lead_index"):
+                # Identify parameter types based on ZCATS
+                self.param_types = np.full(n_params, "other", dtype=object)
+                
+                # Identify scale parameters
+                scale_indices = set()
+                for cat in zcats:
+                    if hasattr(cat, "lead_index") and cat.lead_index >= 0:
+                        scale_indices.add(cat.lead_index)
+                    if hasattr(cat, "sublead_index") and cat.sublead_index >= 0:
+                        scale_indices.add(cat.sublead_index)
+                
+                # Identify smearing parameters
+                smear_indices = set()
+                for cat in zcats:
+                    if hasattr(cat, "lead_smear_index") and cat.lead_smear_index >= 0:
+                        smear_indices.add(cat.lead_smear_index)
+                    if hasattr(cat, "sublead_smear_index") and cat.sublead_smear_index >= 0:
+                        smear_indices.add(cat.sublead_smear_index)
+                
+                # Apply parameter-specific settings
+                for idx in scale_indices:
+                    self.param_types[idx] = "scale"
+                    # Scales often need smaller learning rates
+                    self.param_specific_lr[idx] = self.lr * 0.75
+                
+                for idx in smear_indices:
+                    self.param_types[idx] = "smear"
+                    # Smears often need larger learning rates
+                    self.param_specific_lr[idx] = self.lr * 1.5
+        
+        # If coordinate descent is enabled, create parameter groups
+        if self.coordinate_descent and self.coordinate_groups is None:
+            # Auto-create coordinate groups based on parameter types or simple chunking
+            if self.param_types is not None:
+                # Group by parameter type
+                self.coordinate_groups = {
+                    "scales": np.where(self.param_types == "scale")[0],
+                    "smears": np.where(self.param_types == "smear")[0],
+                    "others": np.where(self.param_types == "other")[0]
+                }
+            else:
+                # Simple chunking strategy
+                group_size = min(50, max(10, n_params // 10))
+                self.coordinate_groups = {}
+                for i in range(0, n_params, group_size):
+                    group_name = f"group_{i // group_size}"
+                    self.coordinate_groups[group_name] = list(range(i, min(i + group_size, n_params)))
+
+    def _step(self, x, grad, func_val, iteration):
+        """Optimized step function with parameter-specific adaptive learning rates."""
+        # Initialize moments if first step
+        if self.m is None:
+            self.m = np.zeros_like(x)
+            self.v = np.zeros_like(x)
+
+        # Initialize parameter-specific settings if needed
+        if self.param_specific_lr is None:
+            self.param_specific_lr = np.ones_like(x) * self.lr
+
+        self.t += 1
+
+        # Update moments with better numerical stability
+        self.m = self.betas[0] * self.m + (1 - self.betas[0]) * grad
+        self.v = self.betas[1] * self.v + (1 - self.betas[1]) * (np.square(grad) + self.eps)
+
+        # Bias correction
+        m_hat = self.m / (1 - self.betas[0] ** self.t)
+        v_hat = self.v / (1 - self.betas[1] ** self.t)
+
+        # Adaptive gradient clipping based on norm
+        grad_norm = np.linalg.norm(grad)
+        if grad_norm > 1.0:
+            m_hat = m_hat * (1.0 / grad_norm)
+
+        # Apply weight decay directly to parameters with parameter-specific learning rates
+        x_wd = x * (1 - self.param_specific_lr * self.weight_decay)
+
+        # Compute update with parameter-specific learning rates
+        update = self.param_specific_lr * m_hat / (np.sqrt(v_hat) + self.eps)
+
+        # Apply warmup during early iterations
+        if iteration < 10:
+            warmup_factor = 0.5 + 0.5 * (iteration / 10.0)
+            update = update * warmup_factor
+
+        # Apply update
+        new_x = x_wd - update
+
+        return new_x
+
+    def _perform_line_search(self, fun, x, new_x, f_x, grad, args):
+        """Simple backtracking line search for better step sizes."""
+        if not self.use_line_search:
+            return new_x
+
+        # Calculate the direction we're moving in
+        direction = new_x - x
+        
+        # Check if we're moving in a descent direction
+        directional_derivative = np.dot(grad, direction)
+        if directional_derivative >= 0:
+            # Not moving in a descent direction, stick with standard step
+            return new_x
+
+        # Armijo line search parameters
+        alpha = 1.0
+        c1 = 1e-4  # Sufficient decrease constant
+        max_backtracks = 5
+
+        # Initial candidate point is the standard step
+        x_candidate = new_x
+        f_candidate = fun(x_candidate, *args)
+
+        # Try backtracking steps
+        for i in range(max_backtracks):
+            # Check Armijo condition (sufficient decrease)
+            if f_candidate <= f_x + c1 * alpha * directional_derivative:
+                # Condition satisfied, accept this step
+                return x_candidate
+
+            # Backtrack: reduce alpha
+            alpha *= 0.5
+            
+            # Compute new candidate point
+            x_candidate = x + alpha * direction
+            f_candidate = fun(x_candidate, *args)
+
+        # If we get here, no suitable step found, return the original proposal
+        return new_x
+
+    def _coordinate_step(self, fun, x, grad_fn, group_indices, args):
+        """Perform a step focusing only on a subset of coordinates."""
+        n_params = len(x)
+        
+        # Create a mask for the active parameters
+        active_mask = np.zeros(n_params, dtype=bool)
+        active_mask[group_indices] = True
+        
+        # Compute gradient just for these parameters
+        full_grad = grad_fn(x)
+        group_grad = np.zeros_like(full_grad)
+        group_grad[active_mask] = full_grad[active_mask]
+        
+        # Take a step focusing only on these parameters
+        x_new = self._step(x, group_grad, None, 0)
+        
+        # Apply the update only to the selected parameters
+        result = x.copy()
+        result[active_mask] = x_new[active_mask]
+        
+        return result, full_grad
+
+    def minimize(
+        self, fun, x0, args=(), jac=None, bounds=None, callback=None, n_jobs=-1
+    ):
+        """Minimization with enhanced convergence strategies."""
+        x = np.asarray(x0).copy()
+        if bounds is not None:
+            x = np.clip(x, *zip(*bounds))
+
+        # Setup tracking variables
+        best_x = x.copy()
+        best_fun = float("inf")
+        fun_history = []
+        no_improve_count = 0
+        lr_reduce_count = 0
+
+        # Reset optimizer state
+        self._reset_state()
+        
+        # Initialize parameter-specific configurations
+        self._initialize_param_config(x, args)
+
+        # Setup gradient function
+        if jac is None:
+            # Use enhanced gradient calculation
+            def grad_fn(x_new):
+                return fast_gradient(x_new, *args, n_jobs=n_jobs, h=1e-6)
+        else:
+            grad_fn = lambda x_new: jac(x_new, *args)
+
+        # Initial evaluation
+        f = fun(x, *args)
+        g = grad_fn(x)
+        fun_history.append(f)
+
+        if f < best_fun:
+            best_fun = f
+            best_x = x.copy()
+
+        if self.verbose:
+            print(f"Initial loss: {f:.6f}")
+
+        # Prepare for coordinate descent if enabled
+        if self.coordinate_descent and self.coordinate_groups:
+            coord_groups = list(self.coordinate_groups.values())
+        else:
+            coord_groups = None
+
+        # Main optimization loop
+        for i in range(self.max_iter):
+            # Choose between full-space or coordinate descent step
+            if coord_groups and i > 0 and i % len(coord_groups) != 0:
+                # Take a coordinate descent step
+                group_idx = (i % len(coord_groups))
+                x_new, g_new = self._coordinate_step(fun, x, grad_fn, coord_groups[group_idx], args)
+                f_new = fun(x_new, *args)
+            else:
+                # Standard full-space step
+                x_new = self._step(x, g, f, i)
+                
+                # Apply line search if enabled
+                if self.use_line_search and i > 3:  # Skip early iterations
+                    x_new = self._perform_line_search(fun, x, x_new, f, g, args)
+
+                # Apply bounds
+                if bounds is not None:
+                    x_new = np.clip(x_new, *zip(*bounds))
+
+                # Evaluate at new point
+                f_new = fun(x_new, *args)
+                g_new = grad_fn(x_new)
+
+            # Record history
+            fun_history.append(f_new)
+
+            # Update best solution
+            if f_new < best_fun:
+                improvement = best_fun - f_new
+                relative_improvement = improvement / (abs(best_fun) + self.eps)
+                
+                # Update best known solution
+                best_fun = f_new
+                best_x = x_new.copy()
+                no_improve_count = 0
+                
+                # Adapt learning rates based on parameter importance
+                if self.adaptive_params and relative_improvement > 0.01 and i > 10:
+                    # Identify parameters that contributed significantly to improvement
+                    param_changes = np.abs(x_new - x)
+                    significant_params = param_changes > np.percentile(param_changes, 75)
+                    
+                    # Boost learning rates for significant parameters
+                    boost_factor = min(2.0, 1.0 + relative_improvement * 5)
+                    self.param_specific_lr[significant_params] *= boost_factor
+                    
+                    # Cap learning rates to reasonable bounds
+                    max_lr = self.initial_lr * 5
+                    self.param_specific_lr = np.clip(self.param_specific_lr, 
+                                                    self.initial_lr * 0.1, 
+                                                    max_lr)
+            else:
+                no_improve_count += 1
+
+                # Learning rate scheduling
+                if no_improve_count % self.lr_reduce_patience == 0:
+                    # Reduce learning rates
+                    self.param_specific_lr *= self.lr_reduce_factor
+                    lr_reduce_count += 1
+                    
+                    if self.verbose:
+                        avg_lr = np.mean(self.param_specific_lr)
+                        print(f"Reducing learning rates at iter {i}, average LR: {avg_lr:.8f}")
+
+                    # Periodically reset optimizer state for better convergence
+                    if lr_reduce_count % 3 == 0:
+                        self._reset_state()
+
+            # Early stopping
+            if no_improve_count >= self.patience:
+                if self.verbose:
+                    print(f"Early stopping after {i+1} iterations (no improvement for {self.patience} steps)")
+                break
+
+            # Callback
+            if callback is not None:
+                callback(x_new)
+
+            # Convergence checks
+            x_diff = np.linalg.norm(x_new - x)
+            f_diff = abs(f_new - f)
+            g_norm = np.linalg.norm(g_new)
+
+            if self.verbose and (i % 10 == 0 or i == self.max_iter - 1):
+                avg_lr = np.mean(self.param_specific_lr)
+                print(f"Iter {i}: f={f_new:.6f}, |g|={g_norm:.6f}, |x_diff|={x_diff:.6f}, avg_lr={avg_lr:.8f}")
+
+            # Prepare for next iteration
+            x = x_new
+            f = f_new
+            g = g_new
+
+            # Strict convergence check
+            if x_diff < self.tol and f_diff < self.tol and g_norm < self.tol:
+                if self.verbose:
+                    print(f"Converged after {i+1} iterations.")
+                break
+
+        # Final clip to ensure bounds are respected
+        if bounds is not None:
+            best_x = np.clip(best_x, *zip(*bounds))
+
+        # Return result
+        result = OptimizeResult(
+            x=best_x,
+            fun=best_fun,
+            jac=g,
+            nit=i + 1,
+            nfev=i + 1,
+            success=(i < self.max_iter - 1) or (g_norm < self.tol),
+            message=(
+                "Optimization terminated successfully."
+                if ((i < self.max_iter - 1) or (g_norm < self.tol))
+                else "Maximum iterations reached."
+            ),
+            history=fun_history,
+        )
+
+        return result
+
+
+def high_performance_adamw_minimize(
+    fun,
+    x0,
+    args=(),
+    jac=None,
+    bounds=None,
+    callback=None,
+    lr=0.001,
+    betas=(0.9, 0.999),
+    eps=1e-8,
+    weight_decay=0.01,
+    max_iter=1000,
+    tol=1e-5,
+    patience=10,
+    lr_reduce_factor=0.5,
+    lr_reduce_patience=5,
+    verbose=False,
+    n_jobs=-1,
+    use_line_search=True,
+    adaptive_params=True,
+    coordinate_descent=False,
+    coordinate_groups=None,
+    **kwargs,
+):
+    """High-performance AdamW minimizer with advanced optimization strategies."""
+    optimizer = HighPerformanceAdamWMinimizer(
+        lr=lr,
+        betas=betas,
+        eps=eps,
+        weight_decay=weight_decay,
+        max_iter=max_iter,
+        tol=tol,
+        patience=patience,
+        lr_reduce_factor=lr_reduce_factor,
+        lr_reduce_patience=lr_reduce_patience,
+        verbose=verbose,
+        use_line_search=use_line_search,
+        adaptive_params=adaptive_params,
+        coordinate_descent=coordinate_descent,
+        coordinate_groups=coordinate_groups
+    )
+
+    return optimizer.minimize(fun, x0, args, jac, bounds, callback, n_jobs=n_jobs)
+
 
 def minimize(
     fun, x0, args=(), method="adamw", jac=None, bounds=None, callback=None, options=None
@@ -439,6 +868,33 @@ def minimize(
             default_options.update(options)
 
         return optimized_adamw_minimize(
+            fun, x0, args, jac, bounds, callback, **default_options
+        )
+    elif method.lower() == "high_adamw" or method.lower() == "high_performance_adamw":
+        # Default options for high performance variant
+        default_options = {
+            "lr": 1e-5,
+            "betas": (0.9, 0.999),
+            "eps": 1e-8,
+            "weight_decay": 1e-6,
+            "max_iter": 1000,
+            "tol": 1e-5,
+            "patience": 100,
+            "lr_reduce_factor": 0.5,
+            "lr_reduce_patience": 5,
+            "verbose": False,
+            "n_jobs": 1,
+            "use_line_search": True,
+            "adaptive_params": True,
+            "coordinate_descent": True,
+            "coordinate_groups": None,
+        }
+
+        # Update with user options
+        if options is not None:
+            default_options.update(options)
+
+        return high_performance_adamw_minimize(
             fun, x0, args, jac, bounds, callback, **default_options
         )
     else:
