@@ -241,8 +241,11 @@ class OptimizedAdamWMinimizer:
         self.weight_decay_factor = 1 - lr * weight_decay
 
     @numba.njit
-    def _step_core(x, m, v, t, grad, beta1, beta2, one_minus_beta1, one_minus_beta2, 
-                   weight_decay_factor, lr, eps):
+    def _step_core(
+        x, m, v, t, 
+        grad, beta1, beta2, one_minus_beta1, 
+        one_minus_beta2, weight_decay_factor, lr, eps
+        ):
         """Core step computation optimized with Numba"""
         # Update moments with better numerical stability
         m = beta1 * m + one_minus_beta1 * grad
@@ -268,16 +271,15 @@ class OptimizedAdamWMinimizer:
         
         # Use numba-optimized core function
         x_new, self.m, self.v = self._step_core(
-            x, self.m, self.v, self.t, grad, 
-            self.beta1, self.beta2, 
-            self.one_minus_beta1, self.one_minus_beta2,
-            self.weight_decay_factor, self.lr, self.eps
+            x, self.m, self.v, self.t, 
+            grad, self.beta1, self.beta2, self.one_minus_beta1, 
+            self.one_minus_beta2, self.weight_decay_factor, self.lr, self.eps
         )
         
         return x_new
 
     def minimize(
-        self, fun, x0, args=(), jac=None, bounds=None, callback=None, n_jobs=-1
+        self, fun, x0, args=(), jac=None, bounds=None, callback=None
     ):
         """Minimization with early stopping and learning rate scheduling."""
         # Convert to contiguous array for better memory access patterns
