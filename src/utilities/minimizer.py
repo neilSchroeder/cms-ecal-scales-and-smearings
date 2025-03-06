@@ -226,8 +226,6 @@ def minimize(data, mc, cats_df, options):
             zcats=__ZCATS__,
             __GUESS__=empty_guess,
             cats=cats_df,
-            num_smears=__num_smears__,
-            num_scales=__num_scales__,
             **options,
         )
 
