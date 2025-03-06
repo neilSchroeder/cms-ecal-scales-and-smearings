@@ -141,7 +141,7 @@ def target_function(x, *args, verbose=False, **options):
 
 
 def spsa_gradient(x, *args, c=1e-6, a=1.0, alpha=0.602, gamma=0.101, n_iter=2, 
-                 timeout=300, cache_size=1000, n_jobs=1, **options):
+                 cache_size=1000, **options):
     """
     Gradient estimation using Simultaneous Perturbation Stochastic Approximation (SPSA).
     Requires only 2*n_iter function evaluations regardless of parameter dimension.
@@ -242,17 +242,18 @@ def spsa_gradient(x, *args, c=1e-6, a=1.0, alpha=0.602, gamma=0.101, n_iter=2,
 
 
 def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cache_size=1000, 
-                 use_spsa=False, spsa_iterations=5, **options):
+                 use_spsa=True, spsa_iterations=5, **options):
     """
-    Optimized gradient calculation using either standard finite differences or SPSA.
+    Sequential gradient calculation using either standard finite differences or SPSA.
+    Parallel processing has been removed to avoid backend configuration issues.
     
     Args:
         x: Parameter vector
         args: Additional arguments for target_function
         h: Step size for finite difference (used when use_spsa=False)
-        n_jobs: Number of parallel jobs (-1 for all cores)
+        n_jobs: Number of parallel jobs (-1 for all cores) - kept for API compatibility 
         batch_size: Size of parameter batches to process together (None for auto-sizing)
-        timeout: Timeout in seconds for worker processes (default: 300s)
+        timeout: Timeout in seconds for worker processes - kept for API compatibility
         cache_size: Maximum size of function evaluation cache (default: 1000)
         use_spsa: Whether to use SPSA gradient estimation (faster but less precise)
         spsa_iterations: Number of SPSA iterations to average (higher = more accurate)
@@ -267,11 +268,9 @@ def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cac
                             timeout=timeout, cache_size=cache_size, 
                             n_jobs=n_jobs, **options)
     
-    # Otherwise, use the original parallel finite differences implementation
-    from joblib import parallel_backend
+    # Otherwise, use sequential finite differences implementation
     import gc
     import threading
-    import multiprocessing
     
     # Create a thread-safe cache for function evaluations
     cache_lock = threading.RLock()
@@ -311,19 +310,18 @@ def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cac
     # Number of parameters
     n_params = len(x)
     
-    # Auto-determine batch size if not specified - use larger batches to reduce overhead
+    # Auto-determine batch size if not specified - use smaller batches for sequential processing
     if batch_size is None:
         if n_params > 1000:
-            batch_size = min(200, max(20, n_params // 10))
+            batch_size = min(100, max(20, n_params // 20))
         else:
-            batch_size = min(40, max(10, n_params // 5))
+            batch_size = min(20, max(10, n_params // 10))
     
     # Create batch indices
     batch_indices = [(i, min(i + batch_size, n_params)) 
                      for i in range(0, n_params, batch_size)]
     
     # Function to compute gradients for a batch of parameters
-    # Optimized to reduce memory allocations and minimize overhead
     def compute_batch_gradient(batch_start, batch_end):
         batch_size_actual = batch_end - batch_start
         batch_grad = np.zeros(batch_size_actual)
@@ -338,9 +336,9 @@ def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cac
             # Pre-allocate variations for this sub-batch
             x_variations = np.empty((sub_size, len(x)), dtype=x.dtype)
             
-            # Fill variations more efficiently
+            # Fill variations
             for i in range(sub_size):
-                x_variations[i] = x.copy()  # Fast NumPy copy
+                x_variations[i] = x.copy()
                 x_variations[i, sub_start + i] += h
             
             # Calculate forward difference for each variation
@@ -354,58 +352,13 @@ def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cac
                 
         return batch_start, batch_grad
     
-    # Determine effective number of cores with a cap to avoid too much overhead
-    max_cores = 16  # Cap to avoid diminishing returns and excessive memory usage
-    if n_jobs == -1:
-        n_jobs = min(multiprocessing.cpu_count(), max_cores)
-    effective_n_jobs = min(len(batch_indices), n_jobs)
-    
-    # Optimize thread/process count based on problem size
-    if n_params < 100:  # For very small problems, use fewer workers
-        effective_n_jobs = min(effective_n_jobs, 4)
-    
-    # Set up backend configuration
-    backend_config = {
-        'timeout': timeout,
-        'max_nbytes': '100M',
-        'mmap_mode': 'r',
-        'temp_folder': '/tmp',
-        'inner_max_num_threads': 1  # Prevent nested parallelism
-    }
-    
+    # Initialize gradient array
     gradient = np.zeros(n_params)
     
-    # Use parallel processing for the batches with explicit context manager
-    if effective_n_jobs > 1:
-        try:
-            # Use loky backend with configured settings
-            with parallel_backend('loky', n_jobs=effective_n_jobs, **backend_config):
-                # Configure Parallel to reduce overhead
-                results = Parallel(
-                    verbose=0,
-                    batch_size='auto', 
-                    pre_dispatch='2*n_jobs',
-                    return_as='generator'
-                )(delayed(compute_batch_gradient)(start, end) for start, end in batch_indices)
-                
-                # Process results immediately to free memory
-                for start, batch_grad in results:
-                    end = start + len(batch_grad)
-                    gradient[start:end] = batch_grad
-                    # Free memory immediately
-                    del batch_grad
-                    
-        except Exception as e:
-            # Fall back to sequential execution on parallel failures
-            print(f"Warning: parallel execution failed ({str(e)}), falling back to sequential")
-            for start, end in batch_indices:
-                start_idx, batch_grad = compute_batch_gradient(start, end)
-                gradient[start:end] = batch_grad
-    else:
-        # Sequential computation for small problems or if n_jobs=1
-        for start, end in batch_indices:
-            start_idx, batch_grad = compute_batch_gradient(start, end)
-            gradient[start:end] = batch_grad
+    # Sequential computation for all batches
+    for start, end in batch_indices:
+        start_idx, batch_grad = compute_batch_gradient(start, end)
+        gradient[start:end] = batch_grad
     
     # Force garbage collection to clean up memory
     gc.collect()
@@ -415,7 +368,6 @@ def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cac
         evaluation_cache.clear()
     
     return gradient
-
 
 class OptimizedAdamWMinimizer:
     """
