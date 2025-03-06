@@ -307,7 +307,7 @@ class OptimizedAdamWMinimizer:
         # Setup gradient function
         if jac is None:
             # Assuming fast_gradient is defined elsewhere
-            grad_fn = lambda x_new: fast_gradient(x_new, *args, n_jobs=1)  # Force single thread
+            grad_fn = lambda x_new: fast_gradient_optimized(x_new, *args)  # Force single thread
         else:
             grad_fn = lambda x_new: jac(x_new, *args)
 
@@ -517,7 +517,7 @@ def optimized_scan_nll(x, **options):
         n_jobs = max(1, multiprocessing.cpu_count() - 1)  # Leave one core free
 
     # Get the loss function wrapper
-    loss_function, reset_loss_initial_guess = target_function_wrapper(
+    loss_function, reset_loss_initial_guess, _ = enhanced_target_function_wrapper(
         guess, __ZCATS__, **options
     )
 
