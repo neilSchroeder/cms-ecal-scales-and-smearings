@@ -23,7 +23,7 @@ Author:
 """
 
 
-def minimize(data, mc, cats_df, args):
+def minimize(data, mc, cats_df, options):
     """
     Main function for the minimization of the scales and smearings
     using the zcat class defined in python/zcat_class.py
@@ -75,21 +75,15 @@ def minimize(data, mc, cats_df, args):
     -------------------------------------------------------------
     """
 
-    ignore_cats = args["ignore"]  # categories to ignore
-    hist_min = round(float(args["hist_min"]), 2)  # bottom edge of histogram
-    hist_max = round(float(args["hist_max"]), 2)  # top edge of histogram
-    bin_size = round(float(args["bin_size"]), 2)  # bin size
-    start_style = args["start_style"]  # seed method for scales/smearings
-    scan_min = args["scan_min"]  # min value in scan
-    scan_max = args["scan_max"]  # max value in scan
-    scan_step = args["scan_step"]  # step size of scan
-    min_step = args["min_step_size"]  # step size of minimizer
-    _kClosure = args["_kClosure"]  # closure flag
-    scales = args["scales"]  # scales file
-    _kPlot = args["_kPlot"]  # plot flag
-    plot_dir = args["plot_dir"]  # directory to put plots
-    _kTestMethodAccuracy = args["_kTestMethodAccuracy"]  # test method flag
-    _kScanNLL = args["_kScanNLL"]  # scan nll flag
+    ignore_cats = options.get("ignore_cats", "")  # ignore categories
+    min_step = options.get("min_step", None)  # minimum step
+    start_style = options.get("start_style", "scan")  # start style
+    scales = options.get("scales", "")  # scales file
+    plot_dir = options.get("plot_dir", "")  # directory to put plots
+    _kClosure = options.get("_kClosure", False)  # closure flag
+    _kPlot = options.get("_kPlot", False)  # plot flag
+    _kTestMethodAccuracy = options.get("_kTestMethodAccuracy", False)  # test method flag
+    _kScanNLL = options.get("_kScanNLL", False) # scan nll flag
 
     # don't let the minimizer start with a bad start_style
     allowed_start_styles = ("scan", "random", "specify")
@@ -114,7 +108,7 @@ def minimize(data, mc, cats_df, args):
 
     # extract the categories
     __ZCATS__ = data_loader.categorize_data_and_mc(
-        data, mc, cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **args
+        data, mc, cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **options
     )
 
     __ZCATS__ = [
@@ -128,7 +122,7 @@ def minimize(data, mc, cats_df, args):
 
     # set up boundaries on starting location of scales
     bounds = set_bounds(
-        cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **args
+        cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **options
     )
 
     # it is important to test the accuracy with which a known scale can be recovered,
@@ -182,7 +176,7 @@ def minimize(data, mc, cats_df, args):
     # set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.001 for x in range(__num_smears__)]
     empty_guess = [0 for x in guess]
-    loss_function, reset_initial_guess, calculate_gradient = target_function_wrapper(empty_guess, __ZCATS__)
+    loss_function, reset_initial_guess, calculate_gradient = target_function_wrapper(empty_guess, __ZCATS__, __num_scales__, __num_smears__, **options)
 
     # It is sometimes necessary to demonstrate a likelihood scan.
     if _kScanNLL:
@@ -232,7 +226,7 @@ def minimize(data, mc, cats_df, args):
             cats=cats_df,
             num_smears=__num_smears__,
             num_scales=__num_scales__,
-            **args,
+            **options,
         )
 
     print(
@@ -330,18 +324,18 @@ def set_bounds(cats, **options):
         bounds (list): list of bounds for the minimizer
     """
     bounds = []
-    if options["_kClosure"]:
-        bounds = [(0.99, 1.01) for i in range(options["num_scales"])]
+    if options.get("_kClosure", False):
+        bounds = [(0.99, 1.01) for i in range(options.get("num_scales", 0))]
         if cats.iloc[1, cc.i_r9_min] != cc.empty or cats.iloc[1, cc.i_gain] != cc.empty:
-            bounds = [(0.95, 1.05) for i in range(options["num_scales"])]
-    elif options["_kTestMethodAccuracy"]:
-        bounds = [(0.96, 1.04) for i in range(options["num_scales"])]
-        bounds += [(0.000001, 0.03) for i in range(options["num_smears"])]
-    elif options["_kFixScales"]:
-        bounds = [(0.999999999, 1.000000001) for i in range(options["num_scales"])]
-        bounds += [(0.000001, 0.03) for i in range(options["num_smears"])]
+            bounds = [(0.95, 1.05) for i in range(options.get("num_scales",0))]
+    elif options.get("_kTestMethodAccuracy", False):
+        bounds = [(0.96, 1.04) for i in range(options.get("num_scales", 0))]
+        bounds += [(0.000001, 0.03) for i in range(options.get("num_smears", 0))]
+    elif options.get("_kFixScales", False):
+        bounds = [(0.999999999, 1.000000001) for i in range(options.get("num_scales", 0))]
+        bounds += [(0.000001, 0.03) for i in range(options.get("num_smears", 0))]
     else:
-        bounds = [(0.96, 1.04) for i in range(options["num_scales"])]
-        bounds += [(0.000001, 0.03) for i in range(options["num_smears"])]
+        bounds = [(0.96, 1.04) for i in range(options.get("num_scales", 0))]
+        bounds += [(0.000001, 0.03) for i in range(options.get("num_smears", 0))]
 
     return bounds
