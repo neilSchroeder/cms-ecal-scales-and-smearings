@@ -139,45 +139,282 @@ def target_function(x, *args, verbose=False, **options):
     return final_value
 
 
-def fast_gradient(x, *args, h=1e-6, n_jobs=-1, **options):
-    """
-    Optimized gradient calculation using parallel processing and forward differences.
 
+def spsa_gradient(x, *args, c=1e-6, a=1.0, alpha=0.602, gamma=0.101, n_iter=2, 
+                 timeout=300, cache_size=1000, n_jobs=1, **options):
+    """
+    Gradient estimation using Simultaneous Perturbation Stochastic Approximation (SPSA).
+    Requires only 2*n_iter function evaluations regardless of parameter dimension.
+    
     Args:
         x: Parameter vector
         args: Additional arguments for target_function
-        h: Step size for finite difference
-        n_jobs: Number of parallel jobs (-1 for all cores)
+        c: Perturbation size (analogous to h in finite difference)
+        a: Step size for SPSA iterations
+        alpha: Decay rate for step size
+        gamma: Decay rate for perturbation size
+        n_iter: Number of SPSA iterations to average (more iterations = more accuracy)
+        timeout: Timeout in seconds for worker processes
+        cache_size: Maximum size of function evaluation cache
+        n_jobs: Number of parallel jobs (not used in standard SPSA, but kept for interface consistency)
         options: Additional options for target_function
+        
+    Returns:
+        gradient: Approximated gradient vector using SPSA
+    """
+    import threading
+    import gc
+    
+    # Create a thread-safe cache for function evaluations
+    cache_lock = threading.RLock()
+    evaluation_cache = {}
+    
+    def cached_target_function(x_eval, *inner_args, **inner_options):
+        """Thread-safe cached version of target_function for gradient calculation"""
+        try:
+            # Convert numpy array to tuple for hashing
+            x_tuple = tuple(float(v) for v in x_eval)
+            
+            with cache_lock:
+                if x_tuple in evaluation_cache:
+                    return evaluation_cache[x_tuple]
+                
+                # Call the actual target function
+                result = target_function(x_eval, *inner_args, **inner_options)
+                
+                # Maintain cache size limit
+                if len(evaluation_cache) >= cache_size:
+                    # Remove a random item if cache is full
+                    try:
+                        evaluation_cache.pop(next(iter(evaluation_cache)))
+                    except (StopIteration, KeyError):
+                        pass
+                
+                # Store result in cache
+                evaluation_cache[x_tuple] = result
+                return result
+        except (TypeError, ValueError):
+            # Fallback for unhashable types or other errors
+            return target_function(x_eval, *inner_args, **inner_options)
+    
+    # Get dimension of parameter vector
+    n_params = len(x)
+    
+    # Initialize gradient estimate
+    gradient_estimate = np.zeros(n_params)
+    
+    # Base function value at current point
+    base_loss = cached_target_function(x, *args, **options)
+    
+    # Perform multiple SPSA iterations and average results for better accuracy
+    for k in range(1, n_iter + 1):
+        # Decay perturbation size and step size with iteration
+        ck = c / (k ** gamma)
+        ak = a / (k ** alpha)
+        
+        # Generate random perturbation vector (±1 with equal probability)
+        # Using Rademacher distribution as recommended for SPSA
+        delta = np.random.choice([-1, 1], size=n_params)
+        
+        # Generate perturbed parameter vectors
+        x_plus = x + ck * delta
+        x_minus = x - ck * delta
+        
+        # Evaluate function at perturbed points
+        y_plus = cached_target_function(x_plus, *args, **options)
+        y_minus = cached_target_function(x_minus, *args, **options)
+        
+        # Compute two-sided gradient approximation
+        # This is more accurate than one-sided approximation
+        gradient_iter = (y_plus - y_minus) / (2 * ck * delta)
+        
+        # Update gradient estimate (simple average across iterations)
+        gradient_estimate += gradient_iter / n_iter
+    
+    # Clean up memory
+    gc.collect()
+    
+    # Clear the cache to avoid memory leaks
+    with cache_lock:
+        evaluation_cache.clear()
+    
+    return gradient_estimate
 
+
+def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cache_size=1000, 
+                 use_spsa=False, spsa_iterations=5, **options):
+    """
+    Optimized gradient calculation using either standard finite differences or SPSA.
+    
+    Args:
+        x: Parameter vector
+        args: Additional arguments for target_function
+        h: Step size for finite difference (used when use_spsa=False)
+        n_jobs: Number of parallel jobs (-1 for all cores)
+        batch_size: Size of parameter batches to process together (None for auto-sizing)
+        timeout: Timeout in seconds for worker processes (default: 300s)
+        cache_size: Maximum size of function evaluation cache (default: 1000)
+        use_spsa: Whether to use SPSA gradient estimation (faster but less precise)
+        spsa_iterations: Number of SPSA iterations to average (higher = more accurate)
+        options: Additional options for target_function
+        
     Returns:
         gradient: Approximated gradient vector
     """
-    # Base function value
-    base_loss = target_function(x, *args, **options)
-
+    # Use SPSA if requested (dramatically reduces function evaluations)
+    if use_spsa:
+        return spsa_gradient(x, *args, c=h, n_iter=spsa_iterations, 
+                            timeout=timeout, cache_size=cache_size, 
+                            n_jobs=n_jobs, **options)
+    
+    # Otherwise, use the original parallel finite differences implementation
+    from joblib import parallel_backend
+    import gc
+    import threading
+    import multiprocessing
+    
+    # Create a thread-safe cache for function evaluations
+    cache_lock = threading.RLock()
+    evaluation_cache = {}
+    
+    def cached_target_function(x_eval, *inner_args, **inner_options):
+        """Thread-safe cached version of target_function for gradient calculation"""
+        try:
+            # Convert numpy array to tuple for hashing
+            x_tuple = tuple(float(v) for v in x_eval)
+            
+            with cache_lock:
+                if x_tuple in evaluation_cache:
+                    return evaluation_cache[x_tuple]
+                
+                # Call the actual target function
+                result = target_function(x_eval, *inner_args, **inner_options)
+                
+                # Maintain cache size limit (LRU-like behavior)
+                if len(evaluation_cache) >= cache_size:
+                    # Remove a random item if cache is full (simple strategy)
+                    try:
+                        evaluation_cache.pop(next(iter(evaluation_cache)))
+                    except (StopIteration, KeyError):
+                        pass  # Cache might be emptied by another thread
+                
+                # Store result in cache
+                evaluation_cache[x_tuple] = result
+                return result
+        except (TypeError, ValueError):
+            # Fallback for unhashable types or other errors
+            return target_function(x_eval, *inner_args, **inner_options)
+    
+    # Base function value - cache this too for repeated calls with same x
+    base_loss = cached_target_function(x, *args, **options)
+    
     # Number of parameters
     n_params = len(x)
-
-    # Use forward difference instead of central difference (2x faster)
-    def compute_partial_derivative(i):
-        x_plus = x.copy()
-        x_plus[i] += h
-
-        loss_plus = target_function(x_plus, *args, **options)
-        return (loss_plus - base_loss) / h
-
-    # Parallel computation of gradients
-    if n_jobs != 1:
-        n_cores = multiprocessing.cpu_count() if n_jobs == -1 else n_jobs
-        gradient = Parallel(n_jobs=n_cores)(
-            delayed(compute_partial_derivative)(i) for i in range(n_params)
-        )
+    
+    # Auto-determine batch size if not specified - use larger batches to reduce overhead
+    if batch_size is None:
+        if n_params > 1000:
+            batch_size = min(200, max(20, n_params // 10))
+        else:
+            batch_size = min(40, max(10, n_params // 5))
+    
+    # Create batch indices
+    batch_indices = [(i, min(i + batch_size, n_params)) 
+                     for i in range(0, n_params, batch_size)]
+    
+    # Function to compute gradients for a batch of parameters
+    # Optimized to reduce memory allocations and minimize overhead
+    def compute_batch_gradient(batch_start, batch_end):
+        batch_size_actual = batch_end - batch_start
+        batch_grad = np.zeros(batch_size_actual)
+        
+        # Process in sub-batches to optimize cache usage
+        sub_batch_size = min(10, batch_size_actual)
+        
+        for sub_start in range(batch_start, batch_end, sub_batch_size):
+            sub_end = min(sub_start + sub_batch_size, batch_end)
+            sub_size = sub_end - sub_start
+            
+            # Pre-allocate variations for this sub-batch
+            x_variations = np.empty((sub_size, len(x)), dtype=x.dtype)
+            
+            # Fill variations more efficiently
+            for i in range(sub_size):
+                x_variations[i] = x.copy()  # Fast NumPy copy
+                x_variations[i, sub_start + i] += h
+            
+            # Calculate forward difference for each variation
+            for i in range(sub_size):
+                # Use the cached version of target_function
+                loss_plus = cached_target_function(x_variations[i], *args, **options)
+                batch_grad[sub_start - batch_start + i] = (loss_plus - base_loss) / h
+                
+            # Help garbage collector
+            del x_variations
+                
+        return batch_start, batch_grad
+    
+    # Determine effective number of cores with a cap to avoid too much overhead
+    max_cores = 16  # Cap to avoid diminishing returns and excessive memory usage
+    if n_jobs == -1:
+        n_jobs = min(multiprocessing.cpu_count(), max_cores)
+    effective_n_jobs = min(len(batch_indices), n_jobs)
+    
+    # Optimize thread/process count based on problem size
+    if n_params < 100:  # For very small problems, use fewer workers
+        effective_n_jobs = min(effective_n_jobs, 4)
+    
+    # Set up backend configuration
+    backend_config = {
+        'timeout': timeout,
+        'max_nbytes': '100M',
+        'mmap_mode': 'r',
+        'temp_folder': '/tmp',
+        'inner_max_num_threads': 1  # Prevent nested parallelism
+    }
+    
+    gradient = np.zeros(n_params)
+    
+    # Use parallel processing for the batches with explicit context manager
+    if effective_n_jobs > 1:
+        try:
+            # Use loky backend with configured settings
+            with parallel_backend('loky', n_jobs=effective_n_jobs, **backend_config):
+                # Configure Parallel to reduce overhead
+                results = Parallel(
+                    verbose=0,
+                    batch_size='auto', 
+                    pre_dispatch='2*n_jobs',
+                    return_as='generator'
+                )(delayed(compute_batch_gradient)(start, end) for start, end in batch_indices)
+                
+                # Process results immediately to free memory
+                for start, batch_grad in results:
+                    end = start + len(batch_grad)
+                    gradient[start:end] = batch_grad
+                    # Free memory immediately
+                    del batch_grad
+                    
+        except Exception as e:
+            # Fall back to sequential execution on parallel failures
+            print(f"Warning: parallel execution failed ({str(e)}), falling back to sequential")
+            for start, end in batch_indices:
+                start_idx, batch_grad = compute_batch_gradient(start, end)
+                gradient[start:end] = batch_grad
     else:
-        # Sequential computation
-        gradient = [compute_partial_derivative(i) for i in range(n_params)]
-
-    return np.array(gradient)
+        # Sequential computation for small problems or if n_jobs=1
+        for start, end in batch_indices:
+            start_idx, batch_grad = compute_batch_gradient(start, end)
+            gradient[start:end] = batch_grad
+    
+    # Force garbage collection to clean up memory
+    gc.collect()
+    
+    # Clear the cache as a precaution to avoid memory leaks
+    with cache_lock:
+        evaluation_cache.clear()
+    
+    return gradient
 
 
 class OptimizedAdamWMinimizer:
@@ -1101,7 +1338,8 @@ def adaptive_scan_nll(x, **options):
     """
     Advanced version of scan_nll with adaptive grid refinement for more accurate results.
     This uses a coarse-to-fine approach to efficiently find optimal parameter values.
-
+    Uses a three-stage approach: smearings → scales → smearings again for better convergence.
+    
     Args:
         x (iterable): iterable of floats, representing the scales and smearings
         **options: keyword arguments
@@ -1109,161 +1347,93 @@ def adaptive_scan_nll(x, **options):
     Returns:
         guess (numpy.ndarray): Optimized initial guess for scales and smearings
     """
+    from joblib import parallel_backend
+    import multiprocessing
+    import numpy as np
+    
     __ZCATS__ = options["zcats"]
     __GUESS__ = options["__GUESS__"]
     guess = np.array(x).copy()
-    n_jobs = options.get("n_jobs", 1)  # default to 1 core to avoid memory issues
-
+    
+    # Configure parallel processing
+    n_jobs = options.get("n_jobs", 1)
+    if n_jobs == -1:
+        n_jobs = max(1, multiprocessing.cpu_count() - 1)  # Leave one core free
+    
+    # Backend configuration for efficient parallelism
+    backend_config = {
+        'timeout': 300,             # 5-minute timeout
+        'max_nbytes': '100M',       # Memory limit per worker
+        'mmap_mode': 'r',           # Read-only memory mapping
+        'temp_folder': '/tmp',      # Use /tmp for temporary files
+        'inner_max_num_threads': 1  # Prevent nested parallelism
+    }
+    
     # Create the loss function wrapper
     loss_function, reset_loss_initial_guess = target_function_wrapper(
         guess, __ZCATS__, **options
     )
-
-    # -------------------------------------------------
-    # Adaptive smearing optimization
-    # -------------------------------------------------
-    if options["num_smears"] > 0:
-        print("[INFO][python/helper_minimizer/scan_nll] adaptively scanning smearings")
-
-        # Similar approach for smearing parameters
-        smear_diagonal_cats = [
-            (cat.weight, cat.lead_smear_index)
-            for cat in __ZCATS__
-            if cat.valid and cat.lead_smear_index == cat.sublead_smear_index
-        ]
-        smear_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
-
-        scanned_smears = set()
-
-        # Batch processing for smearings
-        batch_size = 3  # Process fewer at a time for better convergence
-
-        for i in range(0, len(smear_diagonal_cats), batch_size):
-            batch = smear_diagonal_cats[i : i + batch_size]
-
-            for weight, smear_index in batch:
-                if smear_index in scanned_smears:
-                    continue
-
-                scanned_smears.add(smear_index)
-
-                # Multi-stage adaptive search
-                min_val = options.get("smear_scan_min", 0.00025)
-                max_val = options.get("smear_scan_max", 0.025)
-
-                # Stage 1: Logarithmic coarse scan (better for smearing parameters)
-                n_points = 10
-                # Use logarithmic spacing for smearing (often works better)
-                if min_val <= 0:
-                    min_val = 1e-6  # Avoid log(0)
-                coarse_grid = np.logspace(
-                    np.log10(min_val), np.log10(max_val), n_points
-                )
-
-                def evaluate_smear(val):
-                    test_guess = guess.copy()
-                    test_guess[smear_index] = val
-                    nll = loss_function(
-                        test_guess,
-                        __GUESS__,
-                        __ZCATS__,
-                        options["num_scales"],
-                        options["num_smears"],
-                    )
-                    return val, nll
-
-                # Evaluate coarse grid
-                results = Parallel(n_jobs=n_jobs)(
-                    delayed(evaluate_smear)(val) for val in coarse_grid
-                )
-
-                vals, nlls = zip(*results)
-                vals = np.array(vals)
-                nlls = np.array(nlls)
-
-                # Filter invalid values
-                mask = (nlls > 0) & (nlls < 1e10)
-                if not np.any(mask):
-                    continue
-
-                filtered_vals = vals[mask]
-                filtered_nlls = nlls[mask]
-
-                # Find best region
-                best_idx = np.argmin(filtered_nlls)
-                best_val = filtered_vals[best_idx]
-
-                # Stage 2: Refine around best value
-                # Use linear spacing for the refined grid
-                window_factor = 2.0  # Wider window for smearing
-                refined_min = best_val / window_factor
-                refined_max = best_val * window_factor
-
-                # Create refined grid (linear spacing for final precision)
-                n_points = 15
-                refined_grid = np.linspace(refined_min, refined_max, n_points)
-
-                # Evaluate refined grid
-                refined_results = Parallel(n_jobs=n_jobs)(
-                    delayed(evaluate_smear)(val) for val in refined_grid
-                )
-
-                refined_vals, refined_nlls = zip(*refined_results)
-                refined_vals = np.array(refined_vals)
-                refined_nlls = np.array(refined_nlls)
-
-                # Filter and find best value
-                mask = (refined_nlls > 0) & (refined_nlls < 1e10)
-                if np.any(mask):
-                    filtered_vals = refined_vals[mask]
-                    filtered_nlls = refined_nlls[mask]
-                    best_idx = np.argmin(filtered_nlls)
-                    best_val = filtered_vals[best_idx]
-
-                    # Update guess
-                    guess[smear_index] = best_val
-                    print(
-                        f"[INFO][python/nll] best guess for smearing {smear_index} is {best_val:.6f}"
-                    )
-
-            # Reset cache after each batch
-            reset_loss_initial_guess(guess)
-
-    # -------------------------------------------------
-    # Adaptive scale optimization
-    # -------------------------------------------------
-    if not options["_kFixScales"]:
-        print("[INFO][python/helper_minimizer/scan_ll] adaptively scanning scales")
-
-        # Get diagonal categories for scales
-        diagonal_cats = [
-            (cat.weight, cat.lead_index)
-            for cat in __ZCATS__
-            if cat.valid and cat.lead_index == cat.sublead_index
-        ]
-        diagonal_cats.sort(key=lambda x: x[0], reverse=True)
-
-        # Track scanned scales
-        scanned_scales = set()
-
-        for weight, scale_index in diagonal_cats:
-            if scale_index in scanned_scales:
+    
+    # Define a helper function for parameter optimization that works for both scales and smearings
+    def optimize_parameters(param_list, param_type, batch_size):
+        """
+        Helper function to optimize a set of parameters (either scales or smearings)
+        
+        Args:
+            param_list: List of (weight, index) tuples for parameters
+            param_type: "scale" or "smear" to determine search strategy
+            batch_size: Number of parameters to process in each batch
+        """
+        scanned_params = set()
+        
+        # Process parameters in batches
+        for i in range(0, len(param_list), batch_size):
+            batch = param_list[i:i+batch_size]
+            batch_params = []
+            
+            # Collect unprocessed parameters in this batch
+            for weight, param_index in batch:
+                if param_index not in scanned_params:
+                    scanned_params.add(param_index)
+                    batch_params.append(param_index)
+            
+            if not batch_params:
                 continue
-
-            scanned_scales.add(scale_index)
-
-            # Multi-stage adaptive grid refinement
-            # Start with a coarse grid
-            min_val = options.get("scan_min", 0.8)
-            max_val = options.get("scan_max", 1.2)
-
-            # Stage 1: Coarse scan
-            n_points = 11  # Use fewer points for initial scan
-            coarse_grid = np.linspace(min_val, max_val, n_points)
-
-            def evaluate_point(val):
-                test_guess = guess.copy()
-                test_guess[scale_index] = val
+            
+            # Configure grid search based on parameter type
+            param_configs = []
+            for param_index in batch_params:
+                if param_type == "smear":
+                    min_val = max(1e-6, options.get("smear_scan_min", 0.00025))
+                    max_val = options.get("smear_scan_max", 0.025)
+                    # Use logarithmic grid for smearings
+                    n_points = 10
+                    coarse_grid = np.logspace(np.log10(min_val), np.log10(max_val), n_points)
+                else:  # scale
+                    min_val = options.get("scan_min", 0.8)
+                    max_val = options.get("scan_max", 1.2)
+                    # Use linear grid for scales
+                    n_points = 11
+                    coarse_grid = np.linspace(min_val, max_val, n_points)
+                
+                param_configs.append((param_index, coarse_grid))
+            
+            # Evaluate parameters in this batch using batched workers
+            _process_parameter_batch(param_configs, guess, param_type)
+            
+            # Reset cache after each parameter batch
+            reset_loss_initial_guess(guess)
+    
+    def _process_parameter_batch(param_configs, current_guess, param_type):
+        """
+        Process a batch of parameters with coarse-to-fine grid search
+        """
+        # Function to evaluate all parameter values in one batch - more efficient
+        def evaluate_batch(configs):
+            results = []
+            for param_idx, param_val in configs:
+                test_guess = current_guess.copy()
+                test_guess[param_idx] = param_val
                 nll = loss_function(
                     test_guess,
                     __GUESS__,
@@ -1271,173 +1441,138 @@ def adaptive_scan_nll(x, **options):
                     options["num_scales"],
                     options["num_smears"],
                 )
-                return val, nll
-
-            # Evaluate coarse grid in parallel
-            results = Parallel(n_jobs=n_jobs)(
-                delayed(evaluate_point)(val) for val in coarse_grid
-            )
-
-            # Find promising region
+                results.append((param_idx, param_val, nll))
+            return results
+        
+        # Prepare batches for efficiency - each worker gets multiple evaluations
+        max_evals_per_worker = 5  # Balance parallelism and overhead
+        all_evals = [(p_idx, val) for p_idx, grid in param_configs for val in grid]
+        eval_batches = [all_evals[j:j+max_evals_per_worker] 
+                        for j in range(0, len(all_evals), max_evals_per_worker)]
+        
+        # Execute parallel evaluation with optimized backend
+        with parallel_backend('loky', n_jobs=n_jobs, **backend_config):
+            batch_results = Parallel(
+                verbose=0,
+                batch_size='auto',
+                pre_dispatch='2*n_jobs',
+            )(delayed(evaluate_batch)(batch) for batch in eval_batches)
+        
+        # Organize results by parameter for efficient processing
+        param_results = {}
+        for batch_result in batch_results:
+            for param_idx, param_val, nll in batch_result:
+                if param_idx not in param_results:
+                    param_results[param_idx] = []
+                param_results[param_idx].append((param_val, nll))
+        
+        # Process each parameter's results and do refinement
+        for param_index, results in param_results.items():
+            # Filter invalid values
             vals, nlls = zip(*results)
             vals = np.array(vals)
             nlls = np.array(nlls)
-
-            # Filter invalid values
+            
             mask = (nlls > 0) & (nlls < 1e10)
             if not np.any(mask):
-                continue  # Skip if all values are invalid
-
+                continue
+                
             filtered_vals = vals[mask]
             filtered_nlls = nlls[mask]
-
-            # Find best value and narrow search region
+            
+            # Find best region from coarse scan
             best_idx = np.argmin(filtered_nlls)
             best_val = filtered_vals[best_idx]
-
-            # Stage 2: Refine around best value
-            # Define a narrower region around the best value
-            window = (max_val - min_val) / 10  # 10% of original range
-            refined_min = max(min_val, best_val - window)
-            refined_max = min(max_val, best_val + window)
-
-            # Create a finer grid
-            n_points = 15  # More points for refined scan
-            refined_grid = np.linspace(refined_min, refined_max, n_points)
-
-            # Evaluate refined grid
-            refined_results = Parallel(n_jobs=n_jobs)(
-                delayed(evaluate_point)(val) for val in refined_grid
-            )
-
-            refined_vals, refined_nlls = zip(*refined_results)
-            refined_vals = np.array(refined_vals)
-            refined_nlls = np.array(refined_nlls)
-
-            # Filter and find best value
-            mask = (refined_nlls > 0) & (refined_nlls < 1e10)
-            if np.any(mask):
-                filtered_vals = refined_vals[mask]
-                filtered_nlls = refined_nlls[mask]
-                best_idx = np.argmin(filtered_nlls)
-                best_val = filtered_vals[best_idx]
-
-                # Update guess
-                guess[scale_index] = best_val
-                print(
-                    f"[INFO][python/nll] best guess for scale {scale_index} is {best_val:.6f}"
-                )
-
-    # -------------------------------------------------
-    # Adaptive smearing optimization
-    # -------------------------------------------------
-    if options["num_smears"] > 0:
-        print("[INFO][python/helper_minimizer/scan_nll] adaptively scanning smearings")
-
-        # Similar approach for smearing parameters
-        smear_diagonal_cats = [
-            (cat.weight, cat.lead_smear_index)
-            for cat in __ZCATS__
-            if cat.valid and cat.lead_smear_index == cat.sublead_smear_index
-        ]
-        smear_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
-
-        scanned_smears = set()
-
-        # Batch processing for smearings
-        batch_size = 3  # Process fewer at a time for better convergence
-
-        for i in range(0, len(smear_diagonal_cats), batch_size):
-            batch = smear_diagonal_cats[i : i + batch_size]
-
-            for weight, smear_index in batch:
-                if smear_index in scanned_smears:
-                    continue
-
-                scanned_smears.add(smear_index)
-
-                # Multi-stage adaptive search
-                min_val = options.get("smear_scan_min", 0.00025)
-                max_val = options.get("smear_scan_max", 0.025)
-
-                # Stage 1: Logarithmic coarse scan (better for smearing parameters)
-                n_points = 10
-                # Use logarithmic spacing for smearing (often works better)
-                if min_val <= 0:
-                    min_val = 1e-6  # Avoid log(0)
-                coarse_grid = np.logspace(
-                    np.log10(min_val), np.log10(max_val), n_points
-                )
-
-                def evaluate_smear(val):
-                    test_guess = guess.copy()
-                    test_guess[smear_index] = val
-                    nll = loss_function(
-                        test_guess,
-                        __GUESS__,
-                        __ZCATS__,
-                        options["num_scales"],
-                        options["num_smears"],
-                    )
-                    return val, nll
-
-                # Evaluate coarse grid
-                results = Parallel(n_jobs=n_jobs)(
-                    delayed(evaluate_smear)(val) for val in coarse_grid
-                )
-
-                vals, nlls = zip(*results)
-                vals = np.array(vals)
-                nlls = np.array(nlls)
-
-                # Filter invalid values
-                mask = (nlls > 0) & (nlls < 1e10)
-                if not np.any(mask):
-                    continue
-
-                filtered_vals = vals[mask]
-                filtered_nlls = nlls[mask]
-
-                # Find best region
-                best_idx = np.argmin(filtered_nlls)
-                best_val = filtered_vals[best_idx]
-
-                # Stage 2: Refine around best value
-                # Use linear spacing for the refined grid
-                window_factor = 2.0  # Wider window for smearing
+            
+            # Define refined grid around best value - different strategy for scales vs smearings
+            if param_type == "smear":
+                window_factor = 2.0
                 refined_min = best_val / window_factor
                 refined_max = best_val * window_factor
-
-                # Create refined grid (linear spacing for final precision)
                 n_points = 15
                 refined_grid = np.linspace(refined_min, refined_max, n_points)
-
-                # Evaluate refined grid
-                refined_results = Parallel(n_jobs=n_jobs)(
-                    delayed(evaluate_smear)(val) for val in refined_grid
-                )
-
-                refined_vals, refined_nlls = zip(*refined_results)
+            else:  # scale
+                window = (options.get("scan_max", 1.2) - options.get("scan_min", 0.8)) / 10
+                refined_min = max(options.get("scan_min", 0.8), best_val - window)
+                refined_max = min(options.get("scan_max", 1.2), best_val + window)
+                n_points = 15
+                refined_grid = np.linspace(refined_min, refined_max, n_points)
+            
+            # Prepare refinement evaluation in batches
+            refined_evals = [(param_index, val) for val in refined_grid]
+            refined_batches = [refined_evals[j:j+max_evals_per_worker] 
+                              for j in range(0, len(refined_evals), max_evals_per_worker)]
+            
+            # Execute parallel refinement evaluation
+            with parallel_backend('loky', n_jobs=n_jobs, **backend_config):
+                refined_results_batches = Parallel(
+                    verbose=0,
+                    batch_size='auto',
+                )(delayed(evaluate_batch)(batch) for batch in refined_batches)
+            
+            # Collect results for this parameter
+            param_refined_results = []
+            for batch_result in refined_results_batches:
+                for p_idx, param_val, nll in batch_result:
+                    if p_idx == param_index:
+                        param_refined_results.append((param_val, nll))
+            
+            if param_refined_results:
+                # Find best value from refined search
+                refined_vals, refined_nlls = zip(*param_refined_results)
                 refined_vals = np.array(refined_vals)
                 refined_nlls = np.array(refined_nlls)
-
-                # Filter and find best value
+                
                 mask = (refined_nlls > 0) & (refined_nlls < 1e10)
                 if np.any(mask):
                     filtered_vals = refined_vals[mask]
                     filtered_nlls = refined_nlls[mask]
                     best_idx = np.argmin(filtered_nlls)
                     best_val = filtered_vals[best_idx]
-
-                    # Update guess
-                    guess[smear_index] = best_val
-                    print(
-                        f"[INFO][python/nll] best guess for smearing {smear_index} is {best_val:.6f}"
-                    )
-
-            # Reset cache after each batch
-            reset_loss_initial_guess(guess)
+                    
+                    # Update guess with best value
+                    current_guess[param_index] = best_val
+                    type_str = "smearing" if param_type == "smear" else "scale"
+                    print(f"[INFO][python/nll] best guess for {type_str} {param_index} is {best_val:.6f}")
+    
+    # Collect categories for parameter optimization
+    if options["num_smears"] > 0:
+        smear_diagonal_cats = [
+            (cat.weight, cat.lead_smear_index)
+            for cat in __ZCATS__
+            if cat.valid and cat.lead_smear_index == cat.sublead_smear_index
+        ]
+        smear_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
+    
+    if not options["_kFixScales"]:
+        scale_diagonal_cats = [
+            (cat.weight, cat.lead_index)
+            for cat in __ZCATS__
+            if cat.valid and cat.lead_index == cat.sublead_index
+        ]
+        scale_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
+    
+    # -------------------------------------------------
+    # STAGE 1: First smearing optimization
+    # -------------------------------------------------
+    if options["num_smears"] > 0:
+        print("[INFO][python/helper_minimizer/scan_nll] stage 1: adaptively scanning smearings")
+        optimize_parameters(smear_diagonal_cats, "smear", batch_size=5)
+    
+    # -------------------------------------------------
+    # STAGE 2: Scale optimization
+    # -------------------------------------------------
+    if not options["_kFixScales"]:
+        print("[INFO][python/helper_minimizer/scan_ll] stage 2: adaptively scanning scales")
+        optimize_parameters(scale_diagonal_cats, "scale", batch_size=10)
+    
+    # -------------------------------------------------
+    # STAGE 3: Second smearing optimization (refinement)
+    # -------------------------------------------------
+    if options["num_smears"] > 0:
+        print("[INFO][python/helper_minimizer/scan_nll] stage 3: refining smearings")
+        # Use smaller batch size for refinement stage to focus more on individual parameters
+        optimize_parameters(smear_diagonal_cats, "smear", batch_size=3)
 
     print("[INFO][python/nll] adaptive scan complete")
     return guess
-
