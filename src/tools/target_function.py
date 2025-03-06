@@ -154,7 +154,6 @@ def spsa_gradient(x, *args, c=1e-6, a=1.0, alpha=0.602, gamma=0.101, n_iter=2,
         alpha: Decay rate for step size
         gamma: Decay rate for perturbation size
         n_iter: Number of SPSA iterations to average (more iterations = more accuracy)
-        timeout: Timeout in seconds for worker processes
         cache_size: Maximum size of function evaluation cache
         n_jobs: Number of parallel jobs (not used in standard SPSA, but kept for interface consistency)
         options: Additional options for target_function
@@ -241,7 +240,7 @@ def spsa_gradient(x, *args, c=1e-6, a=1.0, alpha=0.602, gamma=0.101, n_iter=2,
     return gradient_estimate
 
 
-def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cache_size=1000, 
+def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, cache_size=1000, 
                  use_spsa=True, spsa_iterations=5, **options):
     """
     Sequential gradient calculation using either standard finite differences or SPSA.
@@ -253,7 +252,6 @@ def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cac
         h: Step size for finite difference (used when use_spsa=False)
         n_jobs: Number of parallel jobs (-1 for all cores) - kept for API compatibility 
         batch_size: Size of parameter batches to process together (None for auto-sizing)
-        timeout: Timeout in seconds for worker processes - kept for API compatibility
         cache_size: Maximum size of function evaluation cache (default: 1000)
         use_spsa: Whether to use SPSA gradient estimation (faster but less precise)
         spsa_iterations: Number of SPSA iterations to average (higher = more accurate)
@@ -265,8 +263,8 @@ def fast_gradient(x, *args, h=1e-6, n_jobs=-1, batch_size=None, timeout=300, cac
     # Use SPSA if requested (dramatically reduces function evaluations)
     if use_spsa:
         return spsa_gradient(x, *args, c=h, n_iter=spsa_iterations, 
-                            timeout=timeout, cache_size=cache_size, 
-                            n_jobs=n_jobs, **options)
+                            cache_size=cache_size, 
+                            **options)
     
     # Otherwise, use sequential finite differences implementation
     import gc
@@ -1399,7 +1397,6 @@ def adaptive_scan_nll(x, **options):
                 verbose=0,
                 batch_size='auto',
                 pre_dispatch='2*n_jobs',
-                timeout=300,
                 max_nbytes='100M',
                 mmap_mode='r',
                 temp_folder='/tmp'
@@ -1455,7 +1452,6 @@ def adaptive_scan_nll(x, **options):
                 refined_results_batches = Parallel(
                     verbose=0,
                     batch_size='auto',
-                    timeout=300,
                     max_nbytes='100M',
                     mmap_mode='r',
                     temp_folder='/tmp'
