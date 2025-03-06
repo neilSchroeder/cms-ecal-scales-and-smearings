@@ -518,7 +518,7 @@ def optimized_scan_nll(x, **options):
 
     # Get the loss function wrapper
     loss_function, reset_loss_initial_guess, _ = enhanced_target_function_wrapper(
-        guess, __ZCATS__, options.get("num_scales", -1), options.get("num_smears", -1) **options
+        guess, __ZCATS__, **options
     )
 
     # -------------------------------------------------
@@ -710,7 +710,7 @@ def adaptive_scan_nll(x, **options):
     
     # Create the loss function wrapper
     loss_function, reset_loss_initial_guess, _ = enhanced_target_function_wrapper(
-        guess, __ZCATS__, num_scales=options.get('num_scales', -1), num_smears=options.get('num_smears', -1), **options
+        guess, __ZCATS__, options.get('num_scales', -1), options.get('num_smears', -1), **options
     )
     
     # Define a helper function for parameter optimization that works for both scales and smearings
