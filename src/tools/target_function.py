@@ -709,8 +709,8 @@ def adaptive_scan_nll(x, **options):
         n_jobs = max(1, multiprocessing.cpu_count() - 1)  # Leave one core free
     
     # Create the loss function wrapper
-    loss_function, reset_loss_initial_guess = enhanced_target_function_wrapper(
-        guess, __ZCATS__, options.get('num_scales', -1), options.get('num_smears', -1), **options
+    loss_function, reset_loss_initial_guess, _ = enhanced_target_function_wrapper(
+        guess, __ZCATS__, num_scales=options.get('num_scales', -1), num_smears=options.get('num_smears', -1), **options
     )
     
     # Define a helper function for parameter optimization that works for both scales and smearings

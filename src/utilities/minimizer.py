@@ -97,6 +97,8 @@ def minimize(data, mc, cats_df, options):
     # count the number of categories which are a scale or a smearing
     __num_scales__ = np.sum(cats_df.iloc[:, 0].values == "scale")
     __num_smears__ = np.sum(cats_df.iloc[:, 0].values == "smear")
+    options['num_scales'] = __num_scales__
+    options['num_smears'] = __num_smears__
 
     if _kClosure:
         __num_smears__ = 0
