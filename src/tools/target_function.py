@@ -16,15 +16,13 @@ from joblib import Parallel, delayed
 # Import the gradient optimization utilities
 from src.tools.gradients import fast_gradient_optimized
 
-def enhanced_target_function_wrapper(initial_guess, ZCATS, num_scales, num_smears, **kwargs):
+def enhanced_target_function_wrapper(initial_guess, ZCATS, **kwargs):
     """
     Enhanced wrapper for the target function with improved caching and gradient computation.
     
     Args:
         initial_guess: Initial parameter vector
         ZCATS: Category objects
-        num_scales: Number of scales
-        num_smears: Number of smears
         **kwargs: Additional keyword arguments
         
     Returns:
@@ -34,6 +32,8 @@ def enhanced_target_function_wrapper(initial_guess, ZCATS, num_scales, num_smear
         - A function for gradient computation
     """
     previous_guess = [initial_guess.copy()]
+    num_scales = kwargs.get('num_scales', 0)
+    num_smears = kwargs.get('num_smears', 0)
     
     # Cache for the wrapped function
     function_cache = {}

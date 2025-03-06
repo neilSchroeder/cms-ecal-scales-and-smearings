@@ -178,7 +178,7 @@ def minimize(data, mc, cats_df, options):
     # set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.001 for x in range(__num_smears__)]
     empty_guess = [0 for x in guess]
-    loss_function, reset_initial_guess, calculate_gradient = target_function_wrapper(empty_guess, __ZCATS__, __num_scales__, __num_smears__, **options)
+    loss_function, reset_initial_guess, calculate_gradient = target_function_wrapper(empty_guess, __ZCATS__, **options)
 
     # It is sometimes necessary to demonstrate a likelihood scan.
     if _kScanNLL:
