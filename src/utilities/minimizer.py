@@ -75,7 +75,7 @@ def minimize(data, mc, cats_df, options):
     -------------------------------------------------------------
     """
 
-    ignore_cats = options.get("ignore_cats", "")  # ignore categories
+    ignore_cats = options.get("ignore_cats", None)  # ignore categories
     min_step = options.get("min_step", None)  # minimum step
     start_style = options.get("start_style", "scan")  # start style
     scales = options.get("scales", "")  # scales file
