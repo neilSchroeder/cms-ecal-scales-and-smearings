@@ -11,9 +11,8 @@ import src.tools.data_loader as data_loader
 from src.classes.constant_classes import CategoryConstants as cc
 from src.classes.constant_classes import DataConstants as dc
 from src.tools.target_function import adaptive_scan_nll as scan_nll
-from src.tools.target_function import fast_gradient as calculate_gradient
 from src.tools.target_function import minimize as minz
-from src.tools.target_function import target_function_wrapper
+from src.tools.target_function import enhanced_target_function_wrapper as target_function_wrapper
 
 __num_scales__ = 0
 __num_smears__ = 0
@@ -183,7 +182,7 @@ def minimize(data, mc, cats_df, args):
     # set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.001 for x in range(__num_smears__)]
     empty_guess = [0 for x in guess]
-    loss_function, reset_initial_guess = target_function_wrapper(empty_guess, __ZCATS__)
+    loss_function, reset_initial_guess, calculate_gradient = target_function_wrapper(empty_guess, __ZCATS__)
 
     # It is sometimes necessary to demonstrate a likelihood scan.
     if _kScanNLL:
