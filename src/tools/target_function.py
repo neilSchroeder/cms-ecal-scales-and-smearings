@@ -1347,7 +1347,7 @@ def adaptive_scan_nll(x, **options):
     Returns:
         guess (numpy.ndarray): Optimized initial guess for scales and smearings
     """
-    from joblib import parallel_backend
+    from joblib import parallel_backend, Parallel, delayed
     import multiprocessing
     import numpy as np
     
@@ -1359,15 +1359,6 @@ def adaptive_scan_nll(x, **options):
     n_jobs = options.get("n_jobs", 1)
     if n_jobs == -1:
         n_jobs = max(1, multiprocessing.cpu_count() - 1)  # Leave one core free
-    
-    # Backend configuration for efficient parallelism
-    backend_config = {
-        'timeout': 300,             # 5-minute timeout
-        'max_nbytes': '100M',       # Memory limit per worker
-        'mmap_mode': 'r',           # Read-only memory mapping
-        'temp_folder': '/tmp',      # Use /tmp for temporary files
-        'inner_max_num_threads': 1  # Prevent nested parallelism
-    }
     
     # Create the loss function wrapper
     loss_function, reset_loss_initial_guess = target_function_wrapper(
@@ -1451,11 +1442,15 @@ def adaptive_scan_nll(x, **options):
                         for j in range(0, len(all_evals), max_evals_per_worker)]
         
         # Execute parallel evaluation with optimized backend
-        with parallel_backend('loky', n_jobs=n_jobs, **backend_config):
+        with parallel_backend('loky', n_jobs=n_jobs):
             batch_results = Parallel(
                 verbose=0,
                 batch_size='auto',
                 pre_dispatch='2*n_jobs',
+                timeout=300,
+                max_nbytes='100M',
+                mmap_mode='r',
+                temp_folder='/tmp'
             )(delayed(evaluate_batch)(batch) for batch in eval_batches)
         
         # Organize results by parameter for efficient processing
@@ -1504,10 +1499,14 @@ def adaptive_scan_nll(x, **options):
                               for j in range(0, len(refined_evals), max_evals_per_worker)]
             
             # Execute parallel refinement evaluation
-            with parallel_backend('loky', n_jobs=n_jobs, **backend_config):
+            with parallel_backend('loky', n_jobs=n_jobs):
                 refined_results_batches = Parallel(
                     verbose=0,
                     batch_size='auto',
+                    timeout=300,
+                    max_nbytes='100M',
+                    mmap_mode='r',
+                    temp_folder='/tmp'
                 )(delayed(evaluate_batch)(batch) for batch in refined_batches)
             
             # Collect results for this parameter
