@@ -110,7 +110,7 @@ def minimize(data, mc, cats_df, options):
 
     # extract the categories
     __ZCATS__ = data_loader.categorize_data_and_mc(
-        data, mc, cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **options
+        data, mc, cats_df, **options
     )
 
     __ZCATS__ = [
