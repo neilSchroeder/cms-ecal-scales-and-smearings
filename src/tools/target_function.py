@@ -454,7 +454,7 @@ def optimized_adamw_minimize(
         verbose=verbose,
     )
 
-    return optimizer.minimize(fun, x0, args, jac, bounds, callback, n_jobs=n_jobs)
+    return optimizer.minimize(fun, x0, args, jac, bounds, callback)
 
 
 def minimize(
