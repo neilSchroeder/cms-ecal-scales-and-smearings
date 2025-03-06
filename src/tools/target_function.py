@@ -194,6 +194,25 @@ def target_function(x, previous, ZCATS, num_scales, num_smears, verbose=False, *
 
     return final_value
 
+@numba.njit
+    def _step_core(
+        x, m, v, t, 
+        grad, beta1, beta2, one_minus_beta1, 
+        one_minus_beta2, weight_decay_factor, lr, eps
+        ):
+        """Core step computation optimized with Numba"""
+        # Update moments with better numerical stability
+        m = beta1 * m + one_minus_beta1 * grad
+        v = beta2 * v + one_minus_beta2 * (np.square(grad) + eps)
+
+        # Bias correction
+        m_hat = m / (1 - beta1 ** t)
+        v_hat = v / (1 - beta2 ** t)
+
+        # AdamW update (combined operations)
+        x_new = weight_decay_factor * x - lr * m_hat / (np.sqrt(v_hat) + eps)
+        
+        return x_new, m, v
 
 class OptimizedAdamWMinimizer:
     """
@@ -239,26 +258,6 @@ class OptimizedAdamWMinimizer:
         self.one_minus_beta1 = 1 - betas[0]
         self.one_minus_beta2 = 1 - betas[1]
         self.weight_decay_factor = 1 - lr * weight_decay
-
-    @numba.njit
-    def _step_core(
-        x, m, v, t, 
-        grad, beta1, beta2, one_minus_beta1, 
-        one_minus_beta2, weight_decay_factor, lr, eps
-        ):
-        """Core step computation optimized with Numba"""
-        # Update moments with better numerical stability
-        m = beta1 * m + one_minus_beta1 * grad
-        v = beta2 * v + one_minus_beta2 * (np.square(grad) + eps)
-
-        # Bias correction
-        m_hat = m / (1 - beta1 ** t)
-        v_hat = v / (1 - beta2 ** t)
-
-        # AdamW update (combined operations)
-        x_new = weight_decay_factor * x - lr * m_hat / (np.sqrt(v_hat) + eps)
-        
-        return x_new, m, v
     
     def _step(self, x, grad, func_val):
         """Optimized step function with cached computations"""
