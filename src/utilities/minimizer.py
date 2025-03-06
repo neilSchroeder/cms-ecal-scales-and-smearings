@@ -124,7 +124,7 @@ def minimize(data, mc, cats_df, options):
 
     # set up boundaries on starting location of scales
     bounds = set_bounds(
-        cats_df, num_scales=__num_scales__, num_smears=__num_smears__, **options
+        cats_df, **options
     )
 
     # it is important to test the accuracy with which a known scale can be recovered,
