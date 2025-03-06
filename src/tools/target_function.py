@@ -1351,8 +1351,8 @@ def adaptive_scan_nll(x, **options):
                     n_points = 10
                     coarse_grid = np.logspace(np.log10(min_val), np.log10(max_val), n_points)
                 else:  # scale
-                    min_val = options.get("scan_min", 0.8)
-                    max_val = options.get("scan_max", 1.2)
+                    min_val = options.get("scan_min", 0.9)
+                    max_val = options.get("scan_max", 1.1)
                     # Use linear grid for scales
                     n_points = 11
                     coarse_grid = np.linspace(min_val, max_val, n_points)
