@@ -270,7 +270,8 @@ class OptimizedAdamWMinimizer:
         self.t += 1
         
         # Use numba-optimized core function
-        x_new, self.m, self.v = self._step_core(
+        
+        x_new, self.m, self.v = _step_core(
             x, self.m, self.v, self.t, 
             grad, self.beta1, self.beta2, self.one_minus_beta1, 
             self.one_minus_beta2, self.weight_decay_factor, self.lr, self.eps
