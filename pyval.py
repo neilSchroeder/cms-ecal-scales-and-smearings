@@ -15,7 +15,7 @@ import uproot3 as up
 import src.classes.config_class as config_class
 import src.plotters.make_plots as make_plots
 import src.core.reweight_pt_y as reweight_pt_y
-import src.utilities.scale_data_test as scale_data_test
+import src.core.scale_data as scale_data
 import src.core.smear_mc as smear_mc
 from src.classes.constant_classes import DataConstants as dc
 from src.classes.constant_classes import PyValConstants as pvc
@@ -161,7 +161,7 @@ def main():
         if len(dict_config[pvc.KEY_SC]) > 0:
             print("[INFO] scaling data")
             print(f"events before scaling: {len(df_data)}")
-            df_data = scale_data_test.scale(df_data, dict_config[pvc.KEY_SC][0])
+            df_data = scale_data.scale(df_data, dict_config[pvc.KEY_SC][0])
             print(f"events after scaling: {len(df_data)}")
 
     # load and handle mc next
