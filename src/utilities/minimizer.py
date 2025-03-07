@@ -10,7 +10,7 @@ import src.plotters.plot_cats as plotter
 import src.core.data_loader as data_loader
 from src.classes.constant_classes import CategoryConstants as cc
 from src.classes.constant_classes import DataConstants as dc
-from src.core.target_function import adaptive_scan_nll as scan_nll
+from src.core.scan_nll import adaptive_scan_nll as scan_nll
 from src.core.target_function import minimize as minz
 from src.core.target_function import enhanced_target_function_wrapper as target_function_wrapper
 
