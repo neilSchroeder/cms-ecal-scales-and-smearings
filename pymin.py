@@ -9,7 +9,6 @@ import src.helpers.helper_pymin as helper_pymin
 import src.utilities.divide_by_run as divide_by_run
 import src.utilities.minimizer as minimizer
 import src.core.scale_data as scale_data
-import src.utilities.scale_data_test as scale_data_test
 import src.core.smear_mc as smear_mc
 import src.utilities.pruner as pruner
 import src.utilities.time_stability as time_stability
@@ -433,7 +432,7 @@ def main():
     # scale the data
     if args.scales and os.path.isfile(args.scales):
         print(f"[INFO] applying {args.scales} to the data")
-        data = scale_data_test.scale(data, args.scales)
+        data = scale_data.scale(data, args.scales)
     else:
         print(f"[INFO] no scales file provided, skipping data scaling")
 
