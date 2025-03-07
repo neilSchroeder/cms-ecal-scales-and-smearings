@@ -409,7 +409,7 @@ def adaptive_scan_nll(x, **options):
     # -------------------------------------------------
     # STAGE 1: First smearing optimization
     # -------------------------------------------------
-    if options["num_smears"] > 0:
+    if options["num_smears"] > 0 and not options["_kClosure"]:
         print("[INFO][python/helper_minimizer/scan_nll] stage 1: adaptively scanning smearings")
         optimize_parameters(smear_diagonal_cats, "smear", batch_size=5)
     
@@ -423,7 +423,7 @@ def adaptive_scan_nll(x, **options):
     # -------------------------------------------------
     # STAGE 3: Second smearing optimization (refinement)
     # -------------------------------------------------
-    if options["num_smears"] > 0:
+    if options["num_smears"] > 0 and not options["_kClosure"]:
         print("[INFO][python/helper_minimizer/scan_nll] stage 3: refining smearings")
         # Use smaller batch size for refinement stage to focus more on individual parameters
         optimize_parameters(smear_diagonal_cats, "smear", batch_size=3)
