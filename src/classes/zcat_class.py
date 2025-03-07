@@ -12,13 +12,22 @@ EPSILON = 1e-15
 UNSET = object()
 
 
-@numba.njit
-def apply_scale(data, lead_scale, sublead_scale):
-    """Apply scaling factors to data"""
-    return data * np.sqrt(lead_scale * sublead_scale)
+@numba.njit(fastmath=True)
+def multiply_arr_by_sqrt_m1_times_m2(arr, m1, m2) -> np.ndarray:
+    """
+    Multiply Array by sqrt(m1 * m2)
+    
+    Args:
+        arr (float | np.array)
+        m1 (float | np.array)
+        m2 (float | np.array)
+    Returns:
+        float | np.array
+    """
+    return arr * np.sqrt(m1 * m2)
 
 
-@numba.njit
+@numba.njit(fastmath=True)
 def compute_loss(binned_data, binned_mc):
     """
     Optimized EMD computation
@@ -113,7 +122,7 @@ class zcat:
         sublead_scale = 1.0 if sublead_scale == 0 else sublead_scale
 
         if self.lead_scale != lead_scale or self.sublead_scale != sublead_scale:
-            self.temp_data = apply_scale(self.data, lead_scale, sublead_scale)
+            self.temp_data = multiply_arr_by_sqrt_m1_times_m2(self.data, lead_scale, sublead_scale)
             self.lead_scale = lead_scale
             self.sublead_scale = sublead_scale
             self.data_mask = (self.hist_min <= self.temp_data) & (
@@ -140,7 +149,7 @@ class zcat:
                 update_smearing = True
 
         if update_smearing:
-            self.temp_mc = apply_scale(
+            self.temp_mc = multiply_arr_by_sqrt_m1_times_m2(
                 self.mc, self.lead_smearings, self.sublead_smearings
             ) / (1 - (lead_smear * sublead_smear / 8))
 

@@ -1,102 +1,97 @@
 import numpy as np
 import numba
-from numba import njit, prange
+from numba import njit
 from numba.typed import Dict
 from numba.core import types
 import gc
 
-# Simple LRU cache implementation compatible with Numba
-class NumbaCompatibleCache:
-    """Thread-safe simple cache implementation that works with Numba"""
+# Optimized caching for SPSA - using tuple hash directly
+class SPSACache:
+    """Optimized cache implementation for SPSA gradients"""
     
     def __init__(self, max_size=1000):
         self.cache = {}
         self.max_size = max_size
-        self.keys_order = []  # Simple LRU tracking
+        self.access_count = {}  # Track access frequency instead of order
     
-    def get(self, key):
-        """Get value from cache if it exists"""
-        if key in self.cache:
-            # Move key to end (most recently used)
-            self.keys_order.remove(key)
-            self.keys_order.append(key)
-            return self.cache[key], True
+    def get(self, x):
+        """Get value from cache if it exists using a more efficient hash"""
+        # Create a hash from the array values - more efficient than converting to tuple
+        x_hash = hash(x.tobytes())
+        
+        if x_hash in self.cache:
+            # Update access count
+            self.access_count[x_hash] = self.access_count.get(x_hash, 0) + 1
+            return self.cache[x_hash], True
         return None, False
     
-    def set(self, key, value):
-        """Add value to cache with LRU eviction policy"""
-        if key not in self.cache:
-            # If cache is full, remove least recently used item
-            if len(self.cache) >= self.max_size:
-                if self.keys_order:
-                    oldest_key = self.keys_order.pop(0)
-                    if oldest_key in self.cache:
-                        del self.cache[oldest_key]
-            
-            self.keys_order.append(key)
-        else:
-            # Move key to end (most recently used)
-            self.keys_order.remove(key)
-            self.keys_order.append(key)
-            
-        self.cache[key] = value
+    def set(self, x, value):
+        """Add value to cache with frequency-based eviction policy"""
+        x_hash = hash(x.tobytes())
+        
+        # If cache is full, remove least frequently used item
+        if len(self.cache) >= self.max_size and x_hash not in self.cache:
+            if self.access_count:
+                # Find the key with minimum access count
+                min_key = min(self.access_count.items(), key=lambda x: x[1])[0]
+                del self.cache[min_key]
+                del self.access_count[min_key]
+        
+        # Set the value and initialize/update access count
+        self.cache[x_hash] = value
+        self.access_count[x_hash] = self.access_count.get(x_hash, 0) + 1
     
     def clear(self):
         """Clear the cache"""
         self.cache.clear()
-        self.keys_order.clear()
+        self.access_count.clear()
 
 
-# Numba-compatible target function wrapper
+# Optimized target function wrapper with improved caching
 def create_target_function_wrapper(target_function):
-    """Creates a wrapper around the target function that works with the cache"""
+    """Creates a more efficient wrapper around the target function"""
     
-    # Create cache instance for this wrapper
-    cache = NumbaCompatibleCache(1000)
+    # Create cache instance
+    cache = SPSACache(1000)
     
     def cached_target_function(x, *args, **kwargs):
-        """Cache-enabled target function"""
-        # Convert numpy array to tuple for hashing
-        try:
-            x_tuple = tuple(float(v) for v in x)
+        """Cache-enabled target function with numpy array caching"""
+        # Check if array is contiguous for better performance
+        if not x.flags['C_CONTIGUOUS']:
+            x = np.ascontiguousarray(x)
             
-            # Check if result is in cache
-            result, found = cache.get(x_tuple)
-            if found:
-                return result
-                
-            # Call the actual target function
-            result = target_function(x, *args, **kwargs)
-            
-            # Store in cache
-            cache.set(x_tuple, result)
+        # Check if result is in cache
+        result, found = cache.get(x)
+        if found:
             return result
-        except (TypeError, ValueError):
-            # Fallback for unhashable types or other errors
-            return target_function(x, *args, **kwargs)
+            
+        # Call the actual target function
+        result = target_function(x, *args, **kwargs)
+        
+        # Store in cache
+        cache.set(x, result)
+        return result
     
     def clear_cache():
         """Clear the cache"""
         cache.clear()
         
-    # Return the wrapped function and a method to clear the cache
     return cached_target_function, clear_cache
 
 
-# Core SPSA calculation that can be JIT-compiled
-@njit
-def _spsa_core_calculation(x, delta, ck, y_plus, y_minus):
-    """Core SPSA gradient calculation step"""
-    # Calculate gradient using the SPSA formula
-    gradient = (y_plus - y_minus) / (2 * ck * delta)
-    return gradient
+# Core SPSA calculation with optimized Numba compilation
+@njit(fastmath=True)
+def _spsa_core_calculation(delta, ck, y_plus, y_minus):
+    """Optimized core SPSA gradient calculation"""
+    # Use fastmath for better performance
+    return (y_plus - y_minus) / (2 * ck * delta)
 
 
-# SPSA gradient estimation with Numba optimization where possible
+# Optimized SPSA gradient estimation
 def spsa_gradient_optimized(target_function, x, *args, c=1e-6, a=1.0, alpha=0.602, 
                            gamma=0.101, n_iter=2, cache_size=1000, **options):
     """
-    Optimized SPSA gradient estimation with partial Numba acceleration.
+    Highly optimized SPSA gradient estimation.
     
     Args:
         target_function: Function to approximate gradient for
@@ -112,157 +107,59 @@ def spsa_gradient_optimized(target_function, x, *args, c=1e-6, a=1.0, alpha=0.60
     Returns:
         Approximated gradient vector using SPSA
     """
+    # Ensure x is a numpy array with proper dtype
+    x = np.asarray(x, dtype=np.float64)
+    
     # Create cached version of target function
     cached_func, clear_cache = create_target_function_wrapper(target_function)
     
-    # Get dimension of parameter vector
+    # Pre-allocate memory for gradient estimate
     n_params = len(x)
+    gradient_estimate = np.zeros(n_params, dtype=np.float64)
     
-    # Initialize gradient estimate
-    gradient_estimate = np.zeros(n_params)
+    # Pre-compute decay values for all iterations to avoid repeated calculations
+    ck_values = np.array([c / (k ** gamma) for k in range(1, n_iter + 1)], dtype=np.float64)
     
-    # Base function value at current point (not strictly needed for SPSA)
-    base_loss = cached_func(x, *args, **options)
-    
-    # Perform multiple SPSA iterations and average results
-    for k in range(1, n_iter + 1):
-        # Decay perturbation size and step size with iteration
-        ck = c / (k ** gamma)
-        ak = a / (k ** alpha)
+    try:
+        # Perform multiple SPSA iterations and average results
+        for k in range(n_iter):
+            # Get pre-computed perturbation size
+            ck = ck_values[k]
+            
+            # Generate random perturbation vector (±1 with equal probability)
+            # Pre-allocate for better memory efficiency
+            delta = np.random.choice([-1.0, 1.0], size=n_params).astype(np.float64)
+            
+            # Generate perturbed parameter vectors efficiently
+            # Use in-place operations to avoid extra memory allocations
+            x_plus = x + ck * delta  # This creates a new array
+            x_minus = x - ck * delta  # This creates a new array
+            
+            # Evaluate function at perturbed points
+            y_plus = cached_func(x_plus, *args, **options)
+            y_minus = cached_func(x_minus, *args, **options)
+            
+            # Use optimized core calculation
+            # Calculate gradient for each parameter using vectorized operations
+            gradient_iter = _spsa_core_calculation(delta, ck, y_plus, y_minus)
+            
+            # Accumulate gradient (divide by n_iter at the end for better precision)
+            gradient_estimate += gradient_iter
+            
+        # Divide by number of iterations at the end (more numerically stable)
+        if n_iter > 0:
+            gradient_estimate /= n_iter
+    finally:
+        # Clean up memory and clear cache
+        clear_cache()
         
-        # Generate random perturbation vector (±1 with equal probability)
-        delta = np.random.choice([-1, 1], size=n_params)
-        
-        # Generate perturbed parameter vectors
-        x_plus = x + ck * delta
-        x_minus = x - ck * delta
-        
-        # Evaluate function at perturbed points
-        y_plus = cached_func(x_plus, *args, **options)
-        y_minus = cached_func(x_minus, *args, **options)
-        
-        # Use Numba-optimized core calculation
-        gradient_iter = _spsa_core_calculation(x, delta, ck, y_plus, y_minus)
-        
-        # Update gradient estimate (average across iterations)
-        gradient_estimate += gradient_iter / n_iter
-    
-    # Clean up memory and clear cache
-    clear_cache()
-    
     return gradient_estimate
 
 
-# Optimized batch gradient computation with Numba
-@njit(parallel=True)
-def _compute_batch_gradient_numba(x, h, base_loss, batch_start, batch_end, function_values):
-    """
-    Numba-accelerated batch gradient computation.
-    
-    Args:
-        x: Parameter vector
-        h: Step size
-        base_loss: Function value at x
-        batch_start: Start index of batch
-        batch_end: End index of batch
-        function_values: Array of function values for perturbed points
-        
-    Returns:
-        Gradient for the batch
-    """
-    batch_size = batch_end - batch_start
-    batch_grad = np.zeros(batch_size)
-    
-    for i in prange(batch_size):  # Parallel loop with Numba
-        # Calculate the gradient for this parameter using forward difference
-        batch_grad[i] = (function_values[i] - base_loss) / h
-        
-    return batch_grad
-
-
-# Fast finite difference gradient with Numba acceleration
-def fast_gradient_optimized(target_function, x, *args, h=1e-6, batch_size=None, 
-                           cache_size=1000, use_spsa=True, spsa_iterations=5, **options):
-    """
-    Optimized gradient calculation using either SPSA or finite differences.
-    
-    Args:
-        target_function: Function to approximate gradient for
-        x: Parameter vector
-        args: Additional arguments for target_function
-        h: Step size for finite difference
-        batch_size: Size of parameter batches
-        cache_size: Maximum size of function evaluation cache
-        use_spsa: Whether to use SPSA gradient estimation
-        spsa_iterations: Number of SPSA iterations
-        options: Additional options for target_function
-        
-    Returns:
-        Approximated gradient vector
-    """
-    # Use SPSA for higher dimensions or when explicitly requested
-    if use_spsa:
-        return spsa_gradient_optimized(target_function, x, *args, c=h, n_iter=spsa_iterations, 
-                                      cache_size=cache_size, **options)
-    
-    # Create cached version of target function
-    cached_func, clear_cache = create_target_function_wrapper(target_function)
-    
-    # Get number of parameters
-    n_params = len(x)
-    
-    # Auto-determine batch size if not specified
-    if batch_size is None:
-        if n_params > 1000:
-            batch_size = min(100, max(20, n_params // 20))
-        else:
-            batch_size = min(20, max(10, n_params // 10))
-    
-    # Create batch indices
-    batch_indices = [(i, min(i + batch_size, n_params)) 
-                     for i in range(0, n_params, batch_size)]
-    
-    # Base function value at current point
-    base_loss = cached_func(x, *args, **options)
-    
-    # Initialize gradient array
-    gradient = np.zeros(n_params)
-    
-    # Process each batch
-    for start, end in batch_indices:
-        batch_size_actual = end - start
-        
-        # Function values for the perturbed parameter vectors
-        function_values = np.zeros(batch_size_actual)
-        
-        # Evaluate function at perturbed points
-        for i in range(batch_size_actual):
-            # Create perturbed parameter vector
-            x_perturbed = x.copy()
-            x_perturbed[start + i] += h
-            
-            # Evaluate function at perturbed point
-            function_values[i] = cached_func(x_perturbed, *args, **options)
-        
-        # Compute batch gradient using Numba-accelerated function
-        batch_grad = _compute_batch_gradient_numba(
-            x, h, base_loss, start, end, function_values
-        )
-        
-        # Store results in gradient array
-        gradient[start:end] = batch_grad
-    
-    # Clean up memory and clear cache
-    clear_cache()
-    gc.collect()
-    
-    return gradient
-
-
-# Decorator to make the gradient function compatible with the optimizer
+# Simplified decorator for the gradient function
 def gradient_function(target_func):
     """
-    Creates a gradient function compatible with the optimizer interface.
+    Creates an optimized gradient function compatible with optimizers.
     
     Args:
         target_func: The target function to optimize
@@ -271,33 +168,30 @@ def gradient_function(target_func):
         A gradient function that matches the optimizer's expected interface
     """
     def grad_fn(x, *args, **kwargs):
-        # Extract gradient-specific parameters
+        # Extract gradient-specific parameters with improved defaults
         h = kwargs.pop('h', 1e-6)
         use_spsa = kwargs.pop('use_spsa', True)
         spsa_iterations = kwargs.pop('spsa_iterations', 5)
-        batch_size = kwargs.pop('batch_size', None)
         cache_size = kwargs.pop('cache_size', 1000)
         
-        # Call the optimized gradient function
-        return fast_gradient_optimized(
-            target_func, x, *args, 
-            h=h, 
-            batch_size=batch_size,
-            cache_size=cache_size,
-            use_spsa=use_spsa, 
-            spsa_iterations=spsa_iterations,
-            **kwargs
-        )
+        # Use only SPSA for gradient estimation
+        if use_spsa:
+            return spsa_gradient_optimized(
+                target_func, x, *args, 
+                c=h, 
+                n_iter=spsa_iterations,
+                cache_size=cache_size,
+                **kwargs
+            )
+        else:
+            # Fallback to another gradient method if needed
+            raise ValueError("Only SPSA gradient estimation is supported in this optimized version")
     
     return grad_fn
 
 
-# Usage example:
+# Example usage:
 # @gradient_function
 # def my_objective_function(x, *args, **kwargs):
 #     # Your objective function implementation
 #     return function_value
-#
-# Then use with AdamW optimizer:
-# optimizer = OptimizedAdamWMinimizer(...)
-# result = optimizer.minimize(my_objective_function, x0, jac=my_objective_function)
