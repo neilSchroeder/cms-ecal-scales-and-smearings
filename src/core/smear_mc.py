@@ -4,7 +4,7 @@ import pandas as pd
 
 from src.classes.constant_classes import CategoryConstants as cc
 from src.classes.constant_classes import DataConstants as dc
-from src.tools.data_loader import apply_custom_event_selection
+from src.core.data_loader import apply_custom_event_selection
 
 
 @numba.njit

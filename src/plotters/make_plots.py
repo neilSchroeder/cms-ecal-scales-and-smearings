@@ -11,7 +11,7 @@ from src.plotters.plots import (
     plot_style_paper,
     plot_style_validation_mc,
 )
-from src.tools.data_loader import apply_custom_event_selection
+from src.core.data_loader import apply_custom_event_selection
 
 config = SSConfig()
 pc.plotting_functions = {

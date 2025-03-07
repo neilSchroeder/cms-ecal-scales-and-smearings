@@ -1,7 +1,7 @@
 import pandas as pd
 import argparse as ap
 
-import src.tools.write_files as write_files
+import src.core.write_files as write_files
 
 
 def congruent(cat, origin, target):

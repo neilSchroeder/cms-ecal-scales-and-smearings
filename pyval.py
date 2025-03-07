@@ -14,15 +14,15 @@ import uproot3 as up
 
 import src.classes.config_class as config_class
 import src.plotters.make_plots as make_plots
-import src.tools.reweight_pt_y as reweight_pt_y
+import src.core.reweight_pt_y as reweight_pt_y
 import src.utilities.scale_data_test as scale_data_test
-import src.utilities.smear_mc as smear_mc
+import src.core.smear_mc as smear_mc
 from src.classes.constant_classes import DataConstants as dc
 from src.classes.constant_classes import PyValConstants as pvc
 
 # project functions
 from src.helpers.helper_pyval import check_args, extract_files  # get_dataframe,
-from src.tools.data_loader import apply_custom_event_selection, get_dataframe
+from src.core.data_loader import apply_custom_event_selection, get_dataframe
 from src.utilities.evaluate_systematics import evaluate_systematics
 
 ss_config = config_class.SSConfig()

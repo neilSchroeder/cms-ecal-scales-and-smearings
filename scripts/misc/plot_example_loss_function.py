@@ -15,7 +15,7 @@ from scipy.special import rel_entr
 from src.classes.constant_classes import CategoryConstants as cc
 from src.classes.constant_classes import DataConstants as dc
 from src.classes.zcat_class import zcat
-from src.tools.data_loader import get_dataframe
+from src.core.data_loader import get_dataframe
 
 
 def jensen_shannon_divergence(p, q):

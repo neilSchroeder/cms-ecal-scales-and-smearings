@@ -6,7 +6,7 @@ import time
 from src.classes.constant_classes import DataConstants as dc
 from src.classes.constant_classes import CategoryConstants as cc
 from src.classes.zcat_class import zcat
-from src.tools.data_loader import add_transverse_energy
+from src.core.data_loader import add_transverse_energy
 
 
 def deactivate_cats(__ZCATS__, ignore_cats):

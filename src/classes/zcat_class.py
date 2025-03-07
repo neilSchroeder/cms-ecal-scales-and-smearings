@@ -5,7 +5,7 @@ import numba
 import numpy as np
 from scipy import stats
 
-import src.tools.numba_hist as numba_hist
+import src.core.numba_hist as numba_hist
 from src.classes.constant_classes import CategoryConstants as cc
 
 EPSILON = 1e-15

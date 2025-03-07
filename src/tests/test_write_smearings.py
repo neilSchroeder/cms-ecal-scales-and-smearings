@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-import src.tools.write_files as wf
+import src.core.write_files as wf
 
 
 def test_wf_write_smearings():

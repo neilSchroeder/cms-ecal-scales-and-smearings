@@ -7,12 +7,12 @@ import pandas as pd
 
 import src.helpers.helper_minimizer as helper_minimizer
 import src.plotters.plot_cats as plotter
-import src.tools.data_loader as data_loader
+import src.core.data_loader as data_loader
 from src.classes.constant_classes import CategoryConstants as cc
 from src.classes.constant_classes import DataConstants as dc
-from src.tools.target_function import adaptive_scan_nll as scan_nll
-from src.tools.target_function import minimize as minz
-from src.tools.target_function import enhanced_target_function_wrapper as target_function_wrapper
+from src.core.target_function import adaptive_scan_nll as scan_nll
+from src.core.target_function import minimize as minz
+from src.core.target_function import enhanced_target_function_wrapper as target_function_wrapper
 
 __num_scales__ = 0
 __num_smears__ = 0

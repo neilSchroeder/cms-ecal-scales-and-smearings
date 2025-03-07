@@ -2,7 +2,7 @@ import matplotlib
 import numpy as np
 import seaborn as sns
 
-from src.tools.data_loader import apply_custom_event_selection, get_dataframe
+from src.core.data_loader import apply_custom_event_selection, get_dataframe
 
 matplotlib.use("Agg")
 import pandas as pd
@@ -39,7 +39,7 @@ def main():
     )
 
     # derive pt y weights
-    from src.tools.reweight_pt_y import add_pt_y_weights, derive_pt_y_weights, get_zpt
+    from src.core.reweight_pt_y import add_pt_y_weights, derive_pt_y_weights, get_zpt
 
     weights_file = derive_pt_y_weights(df_data, df_mc, "ul18")
     df_mc = add_pt_y_weights(df_data, weights_file)

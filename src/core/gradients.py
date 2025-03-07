@@ -149,7 +149,6 @@ def spsa_gradient_optimized(target_function, x, *args, c=1e-6, a=1.0, alpha=0.60
     
     # Clean up memory and clear cache
     clear_cache()
-    gc.collect()
     
     return gradient_estimate
 

@@ -10,7 +10,7 @@ import time
 
 import tqdm
 
-import src.tools.data_loader as data_loader
+import src.core.data_loader as data_loader
 from src.classes.constant_classes import DataConstants as dc
 from src.classes.constant_classes import PyValConstants as pvc
 

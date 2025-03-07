@@ -11,8 +11,8 @@ import uproot3 as up
 
 from src.classes.constant_classes import DataConstants as dc
 from src.classes.config_class import SSConfig
-from src.tools.data_loader import get_dataframe
-import src.tools.write_files as write_files
+from src.core.data_loader import get_dataframe
+import src.core.write_files as write_files
 
 config = SSConfig()
 

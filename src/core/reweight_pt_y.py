@@ -8,7 +8,7 @@ from typing import Tuple
 
 from src.classes.config_class import SSConfig
 from src.classes.constant_classes import DataConstants as dc
-from src.tools.write_files import write_weights
+from src.core.write_files import write_weights
 
 pd.options.mode.chained_assignment = None
 ss_config = SSConfig()
