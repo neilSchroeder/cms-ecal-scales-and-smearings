@@ -14,7 +14,7 @@ import multiprocessing
 from joblib import Parallel, delayed
 
 # Import the gradient optimization utilities
-from src.core.gradients import gradient_function
+from src.core.gradients import fast_gradient_optimized
 from src.core.adamw import optimized_adamw_minimize
 
 def enhanced_target_function_wrapper(initial_guess, ZCATS, **kwargs):
@@ -89,7 +89,7 @@ def enhanced_target_function_wrapper(initial_guess, ZCATS, **kwargs):
         Returns:
             Gradient vector
         """
-        return gradient_function(
+        fast_gradient_optimized(
             wrapped_target_function, x, *args,
             h=h, 
             use_spsa=use_spsa, 

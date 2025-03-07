@@ -1,6 +1,6 @@
 import numpy as np
 import numba
-from numba import njit
+from numba import njit, prange
 from numba.typed import Dict
 from numba.core import types
 import gc
@@ -154,6 +154,111 @@ def spsa_gradient_optimized(target_function, x, *args, c=1e-6, a=1.0, alpha=0.60
         clear_cache()
         
     return gradient_estimate
+
+
+@njit(parallel=True)
+def _compute_batch_gradient_numba(x, h, base_loss, batch_start, batch_end, function_values):
+    """
+    Numba-accelerated batch gradient computation.
+    
+    Args:
+        x: Parameter vector
+        h: Step size
+        base_loss: Function value at x
+        batch_start: Start index of batch
+        batch_end: End index of batch
+        function_values: Array of function values for perturbed points
+        
+    Returns:
+        Gradient for the batch
+    """
+    batch_size = batch_end - batch_start
+    batch_grad = np.zeros(batch_size)
+    
+    for i in prange(batch_size):  # Parallel loop with Numba
+        # Calculate the gradient for this parameter using forward difference
+        batch_grad[i] = (function_values[i] - base_loss) / h
+        
+    return batch_grad
+
+
+# Fast finite difference gradient with Numba acceleration
+def fast_gradient_optimized(target_function, x, *args, h=1e-6, batch_size=None, 
+                           cache_size=1000, use_spsa=True, spsa_iterations=5, **options):
+    """
+    Optimized gradient calculation using either SPSA or finite differences.
+    
+    Args:
+        target_function: Function to approximate gradient for
+        x: Parameter vector
+        args: Additional arguments for target_function
+        h: Step size for finite difference
+        batch_size: Size of parameter batches
+        cache_size: Maximum size of function evaluation cache
+        use_spsa: Whether to use SPSA gradient estimation
+        spsa_iterations: Number of SPSA iterations
+        options: Additional options for target_function
+        
+    Returns:
+        Approximated gradient vector
+    """
+    # Use SPSA for higher dimensions or when explicitly requested
+    if use_spsa:
+        return spsa_gradient_optimized(target_function, x, *args, c=h, n_iter=spsa_iterations, 
+                                      cache_size=cache_size, **options)
+    
+    # Create cached version of target function
+    cached_func, clear_cache = create_target_function_wrapper(target_function)
+    
+    # Get number of parameters
+    n_params = len(x)
+    
+    # Auto-determine batch size if not specified
+    if batch_size is None:
+        if n_params > 1000:
+            batch_size = min(100, max(20, n_params // 20))
+        else:
+            batch_size = min(20, max(10, n_params // 10))
+    
+    # Create batch indices
+    batch_indices = [(i, min(i + batch_size, n_params)) 
+                     for i in range(0, n_params, batch_size)]
+    
+    # Base function value at current point
+    base_loss = cached_func(x, *args, **options)
+    
+    # Initialize gradient array
+    gradient = np.zeros(n_params)
+    
+    # Process each batch
+    for start, end in batch_indices:
+        batch_size_actual = end - start
+        
+        # Function values for the perturbed parameter vectors
+        function_values = np.zeros(batch_size_actual)
+        
+        # Evaluate function at perturbed points
+        for i in range(batch_size_actual):
+            # Create perturbed parameter vector
+            x_perturbed = x.copy()
+            x_perturbed[start + i] += h
+            
+            # Evaluate function at perturbed point
+            function_values[i] = cached_func(x_perturbed, *args, **options)
+        
+        # Compute batch gradient using Numba-accelerated function
+        batch_grad = _compute_batch_gradient_numba(
+            x, h, base_loss, start, end, function_values
+        )
+        
+        # Store results in gradient array
+        gradient[start:end] = batch_grad
+    
+    # Clean up memory and clear cache
+    clear_cache()
+    gc.collect()
+    
+    return gradient
 
 
 # Simplified decorator for the gradient function
