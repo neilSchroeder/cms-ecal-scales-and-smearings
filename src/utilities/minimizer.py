@@ -264,7 +264,8 @@ def minimize(data, mc, cats_df, options):
     s = io.StringIO()
     ps = pstats.Stats(pr, stream=s).sort_stats("cumulative")
     ps.print_stats()
-    print(s.getvalue())
+    with open("profile.txt", "w+") as f:
+        f.write(s.getvalue())
 
     print(
         "[INFO][python/nll] the optimal values returned by scypi.optimize.minimize are:"
