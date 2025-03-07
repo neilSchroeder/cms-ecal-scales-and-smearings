@@ -1,7 +1,4 @@
 import gc
-import logging
-import os
-
 import numpy as np
 import pandas as pd
 
@@ -13,14 +10,6 @@ from src.classes.constant_classes import DataConstants as dc
 from src.core.scan_nll import adaptive_scan_nll as scan_nll
 from src.core.target_function import minimize as minz
 from src.core.target_function import enhanced_target_function_wrapper as target_function_wrapper
-
-__num_scales__ = 0
-__num_smears__ = 0
-
-"""
-Author: 
-    Neil Schroeder, schr1077@umn.edu, neil.raymond.schroeder@cern.ch
-"""
 
 
 def minimize(data, mc, cats_df, options):
