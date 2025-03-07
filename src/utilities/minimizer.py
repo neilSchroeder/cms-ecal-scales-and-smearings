@@ -90,8 +90,8 @@ def minimize(data, mc, cats_df, options):
     options['num_smears'] = __num_smears__
 
     if _kClosure:
+        options['num_smears'] = 0
         __num_smears__ = 0
-
     # check to see if transverse energy columns need to be added
     data, mc = data_loader.clean_up(data, mc, cats_df)
 
