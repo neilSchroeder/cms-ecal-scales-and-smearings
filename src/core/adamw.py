@@ -57,7 +57,7 @@ class OptimizedAdamWMinimizer:
         self.verbose = verbose
         self.gradient_batch_size = gradient_batch_size
 
-        # States - pre-allocate arrays
+        # States - initialize to None but will be allocated properly in _step
         self.m = None
         self.v = None
         self.t = 0
@@ -72,14 +72,22 @@ class OptimizedAdamWMinimizer:
     def _step(self, x, grad, func_val):
         """Optimized step function with cached computations"""
         # Initialize moments if first step
-        if self.m is None:
+        if self.m is None or self.v is None:
             self.m = np.zeros_like(x)
             self.v = np.zeros_like(x)
 
         self.t += 1
         
-        # Use numba-optimized core function
+        # Make sure all inputs to _step_core are properly defined and not None
+        if any(v is None for v in [x, self.m, self.v, grad]):
+            raise ValueError("One of the required arrays is None before calling _step_core")
+            
+        # Make sure all scalar inputs are proper Python scalars, not None
+        if any(v is None for v in [self.t, self.beta1, self.beta2, self.one_minus_beta1, 
+                                 self.one_minus_beta2, self.weight_decay_factor, self.lr, self.eps]):
+            raise ValueError("One of the required scalar parameters is None before calling _step_core")
         
+        # Use numba-optimized core function
         x_new, self.m, self.v = _step_core(
             x, self.m, self.v, self.t, 
             grad, self.beta1, self.beta2, self.one_minus_beta1, 
@@ -118,8 +126,8 @@ class OptimizedAdamWMinimizer:
 
         # Setup gradient function
         if jac is None:
-            # Assuming fast_gradient is defined elsewhere
-            grad_fn = lambda x_new: gradient_function(x_new, *args)  # Force single thread
+            # Assuming gradient_function is defined elsewhere
+            grad_fn = lambda x_new: gradient_function(fun, x_new, *args)
         else:
             grad_fn = lambda x_new: jac(x_new, *args)
 
