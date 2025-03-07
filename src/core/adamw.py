@@ -2,7 +2,7 @@ import numba
 import numpy as np
 from scipy.optimize import OptimizeResult
 
-from src.core.gradients import fast_gradient_optimized
+from src.core.gradients import gradient_function
 
 @numba.njit
 def _step_core(
@@ -119,7 +119,7 @@ class OptimizedAdamWMinimizer:
         # Setup gradient function
         if jac is None:
             # Assuming fast_gradient is defined elsewhere
-            grad_fn = lambda x_new: fast_gradient_optimized(x_new, *args)  # Force single thread
+            grad_fn = lambda x_new: gradient_function(x_new, *args)  # Force single thread
         else:
             grad_fn = lambda x_new: jac(x_new, *args)
 
