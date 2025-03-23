@@ -436,8 +436,8 @@ def adaptive_scan_nll(x, **options):
                     break
 
             if diagonal_cat:
-                data_events = diagonal_cat.n_data
-                mc_events = diagonal_cat.n_mc
+                data_events = len(diagonal_cat.data)
+                mc_events = len(diagonal_cat.mc)
                 ratio = data_events / mc_events if mc_events > 0 else float("inf")
 
                 # Evaluate sensitivity - low events or extreme ratio may indicate insensitivity
