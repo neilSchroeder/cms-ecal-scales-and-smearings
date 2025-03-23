@@ -89,10 +89,10 @@ class zcat:
 
         # Initialize other attributes
         self.updated = False
+        self.valid = True
         self.NLL = self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
         self.weight = 1 if i == j else 0.1
         self.seed = 3543136929
-        self.valid = True
         self.history = []
         self.lead_smear = 0.001
         self.sublead_smear = 0.001
