@@ -220,7 +220,6 @@ class OptimizedAdamWMinimizer:
         # Initial evaluation
         f = fun(x, *args)
         g = grad_fn(x)
-        print(x, g)
         fun_history.append(f)
 
         if f < best_fun:
