@@ -1,31 +1,28 @@
 import multiprocessing
 from functools import lru_cache
 
+import numba
 import numpy as np
 import scipy.optimize
 from joblib import Parallel, delayed
+from numba import njit, prange
 from scipy.optimize import OptimizeResult
 
-
-import numpy as np
-import numba
-from numba import njit, prange
-import multiprocessing
-from joblib import Parallel, delayed
+from src.core.adamw import optimized_adamw_minimize
 
 # Import the gradient optimization utilities
 from src.core.gradients import fast_gradient_optimized
-from src.core.adamw import optimized_adamw_minimize
+
 
 def enhanced_target_function_wrapper(initial_guess, ZCATS, **kwargs):
     """
     Enhanced wrapper for the target function with improved caching and gradient computation.
-    
+
     Args:
         initial_guess: Initial parameter vector
         ZCATS: Category objects
         **kwargs: Additional keyword arguments
-        
+
     Returns:
         A tuple containing:
         - The wrapped target function
@@ -33,31 +30,36 @@ def enhanced_target_function_wrapper(initial_guess, ZCATS, **kwargs):
         - A function for gradient computation
     """
     previous_guess = [initial_guess.copy()]
-    num_scales = kwargs.get('num_scales', 0)
-    num_smears = kwargs.get('num_smears', 0)
-    
+    num_scales = kwargs.get("num_scales", 0)
+    num_smears = kwargs.get("num_smears", 0)
+
     # Cache for the wrapped function
     function_cache = {}
-    
+
     def wrapped_target_function(x, *args, **options):
         """Target function with caching and optimization"""
         # Try to use cache
         key = tuple(float(v) for v in x)
         if key in function_cache:
             return function_cache[key]
-        
+
         # Extract whether verbose flag is set
-        verbose = options.get('verbose', False)
-        
+        verbose = options.get("verbose", False)
+
         # Use the actual target function
         ret = target_function(
-            x, previous_guess[0], ZCATS, num_scales, num_smears, 
-            verbose=verbose, **options
+            x,
+            previous_guess[0],
+            ZCATS,
+            num_scales,
+            num_smears,
+            verbose=verbose,
+            **options,
         )
-        
+
         # Update previous guess
         previous_guess[0] = x.copy()
-        
+
         # Cache result
         if len(function_cache) > 1000:  # Limit cache size
             # Remove a random key (simple strategy)
@@ -65,45 +67,49 @@ def enhanced_target_function_wrapper(initial_guess, ZCATS, **kwargs):
                 function_cache.pop(next(iter(function_cache)))
             except (StopIteration, KeyError):
                 pass
-                
+
         function_cache[key] = ret
         return ret
-    
+
     def reset(x=None):
         """Reset the previous guess and clear cache"""
         previous_guess[0] = x.copy() if x is not None else initial_guess.copy()
         function_cache.clear()
-    
+
     # Create a gradient computation function specifically for this target function
     def compute_gradient(x, *args, h=1e-6, use_spsa=True, spsa_iterations=3, **options):
         """
         Compute the gradient of the target function.
-        
+
         Args:
             x: Parameter vector
             h: Step size for finite difference
             use_spsa: Whether to use SPSA for gradient estimation
             spsa_iterations: Number of SPSA iterations
             **options: Additional options
-            
+
         Returns:
             Gradient vector
         """
         fast_gradient_optimized(
-            wrapped_target_function, x, *args,
-            h=h, 
-            use_spsa=use_spsa, 
+            wrapped_target_function,
+            x,
+            *args,
+            h=h,
+            use_spsa=use_spsa,
             spsa_iterations=spsa_iterations,
-            **options
+            **options,
         )
-    
+
     return wrapped_target_function, reset, compute_gradient
 
 
-def target_function(x, previous, ZCATS, num_scales, num_smears, verbose=False, **options):
+def target_function(
+    x, previous, ZCATS, num_scales, num_smears, verbose=False, **options
+):
     """
     Optimized target function with faster category updates.
-    
+
     Args:
         x: Current parameter vector
         previous: Previous parameter vector
@@ -112,7 +118,7 @@ def target_function(x, previous, ZCATS, num_scales, num_smears, verbose=False, *
         num_smears: Number of smears
         verbose: Whether to print verbose output
         **options: Additional options
-        
+
     Returns:
         The computed negative log-likelihood
     """
@@ -188,6 +194,7 @@ def target_function(x, previous, ZCATS, num_scales, num_smears, verbose=False, *
     ret = np.sum(weighted_nlls)
 
     final_value = ret / tot if tot != 0 else 9e30
+    print(final_value, x)
 
     # Cache the result
     if hasattr(x, "_cached_result"):
@@ -235,5 +242,3 @@ def minimize(
             callback=callback,
             options=options,
         )
-
-
