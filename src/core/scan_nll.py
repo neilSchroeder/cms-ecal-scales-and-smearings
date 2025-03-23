@@ -217,7 +217,7 @@ def adaptive_scan_nll(x, **options):
 
     # Create the loss function wrapper
     loss_function, reset_loss_initial_guess, _ = enhanced_target_function_wrapper(
-        guess, __ZCATS__, options["num_scales"], options["num_smears"]
+        guess, __ZCATS__, **options
     )
 
     print(
