@@ -451,7 +451,7 @@ def adaptive_scan_nll(x, **options):
                     sensitivity += " (IMBALANCED)"
 
                 print(
-                    f"{scale_index:<8} {diagonal_cat.name:<12} {weight:<10.4f} {data_events:<15.1f} {mc_events:<15.1f} {ratio:<15.4f} {sensitivity}"
+                    f"{scale_index:<8} {weight:<10.4f} {data_events:<15.1f} {mc_events:<15.1f} {ratio:<15.4f} {sensitivity}"
                 )
 
     # -------------------------------------------------
