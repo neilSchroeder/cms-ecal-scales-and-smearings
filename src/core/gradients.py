@@ -100,6 +100,7 @@ def spsa_gradient_optimized(
     gamma=0.101,
     n_iter=2,
     cache_size=1000,
+    verbose=False,
     **options,
 ):
     """
@@ -142,6 +143,11 @@ def spsa_gradient_optimized(
     # Ensure x is a numpy array with proper dtype
     x = np.asarray(x, dtype=np.float64)
 
+    if verbose:
+        # print locals
+        for k, v in locals().items():
+            print(f"{k}: {v}")
+
     # Create cached version of target function
     cached_func, clear_cache = create_target_function_wrapper(target_function)
 
@@ -177,7 +183,11 @@ def spsa_gradient_optimized(
                 print(f"Warning: Invalid function values in SPSA iteration {k}")
                 # Use a small default gradient instead of None
                 return np.ones(n_params) * 1e-6
-            print(f"{delta=}\n{ck=}\n{y_plus=}\n{y_minus=}\n{gradient_estimate=}")
+            if verbose:
+                print(f"y_plus: {y_plus}")
+                print(f"y_minus: {y_minus}")
+                print(f"ck: {ck}")
+                print(f"delta: {delta}")
             try:
                 gradient_iter = _spsa_core_calculation(delta, ck, y_plus, y_minus)
                 gradient_estimate += gradient_iter
@@ -187,17 +197,21 @@ def spsa_gradient_optimized(
                 # Return a small default gradient rather than failing
                 return np.ones(n_params) * 1e-6
 
-            print(f"{gradient_estimate=}")
+            if verbose:
+                print(f"gradient_estimate: {gradient_estimate}")
 
         # Divide by number of iterations
         if n_iter > 0:
             gradient_estimate /= n_iter
-        print(f"{gradient_estimate=}")
+
+    except Exception as e:
+        print(f"Error in SPSA gradient estimation: {e}")
 
     finally:
         clear_cache()
 
-    print(gradient_estimate)
+    if verbose:
+        print(f"gradient_estimate: {gradient_estimate}")
     return gradient_estimate
 
 
