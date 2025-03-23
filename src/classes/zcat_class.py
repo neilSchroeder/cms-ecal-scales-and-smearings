@@ -93,10 +93,10 @@ class zcat:
         self.weight = len(self.data)
         self.seed = 3543136929
         self.history = []
-        self.lead_smear = 0.001
-        self.sublead_smear = 0.001
-        self.lead_scale = 1
-        self.sublead_scale = 1
+        self.lead_smear = UNSET
+        self.sublead_smear = UNSET
+        self.lead_scale = UNSET
+        self.sublead_scale = UNSET
         self.top_and_bottom = np.array([self.hist_min, self.hist_max])
         rand = UNSET
         self.lead_smearings = UNSET
