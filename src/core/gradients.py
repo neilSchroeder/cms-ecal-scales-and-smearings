@@ -177,7 +177,7 @@ def spsa_gradient_optimized(
                 print(f"Warning: Invalid function values in SPSA iteration {k}")
                 # Use a small default gradient instead of None
                 return np.ones(n_params) * 1e-6
-            print(delta, ck, y_plus, y_minus, gradient_estimate)
+            print(f"{delta=}\n{ck=}\n{y_plus=}\n{y_minus=}\n{gradient_estimate=}")
             try:
                 gradient_iter = _spsa_core_calculation(delta, ck, y_plus, y_minus)
                 gradient_estimate += gradient_iter
@@ -187,12 +187,12 @@ def spsa_gradient_optimized(
                 # Return a small default gradient rather than failing
                 return np.ones(n_params) * 1e-6
 
-            print(gradient_estimate)
+            print(f"{gradient_estimate=}")
 
         # Divide by number of iterations
         if n_iter > 0:
             gradient_estimate /= n_iter
-        print(gradient_estimate)
+        print(f"{gradient_estimate=}")
 
     finally:
         clear_cache()
