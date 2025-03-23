@@ -193,22 +193,13 @@ def optimized_scan_nll(x, **options):
 
 
 def adaptive_scan_nll(x, **options):
-    """
-    Advanced version of scan_nll with adaptive grid refinement for more accurate results.
-    This uses a coarse-to-fine approach to efficiently find optimal parameter values.
-    Uses a three-stage approach: smearings → scales → smearings again for better convergence.
-
-    Args:
-        x (iterable): iterable of floats, representing the scales and smearings
-        **options: keyword arguments
-
-    Returns:
-        guess (numpy.ndarray): Optimized initial guess for scales and smearings
-    """
+    """Advanced version of scan_nll with adaptive grid refinement for more accurate results."""
 
     __ZCATS__ = options["zcats"]
     __GUESS__ = options["__GUESS__"]
-    guess = np.array(x).copy()
+
+    # Ensure we're using float64 for all parameters
+    guess = np.array(x, dtype=np.float64).copy()
 
     # Configure parallel processing
     n_jobs = options.get("n_jobs", 1)
@@ -287,17 +278,20 @@ def adaptive_scan_nll(x, **options):
             reset_loss_initial_guess(guess)
 
     def _process_parameter_batch(param_configs, current_guess, param_type):
-        """
-        Process a batch of parameters with coarse-to-fine grid search
-        """
+        """Process a batch of parameters with coarse-to-fine grid search"""
 
         # Function to evaluate all parameter values in one batch - more efficient
         def evaluate_batch(configs):
             results = []
             for param_idx, param_val in configs:
-                test_guess = current_guess.copy()
-                test_guess[param_idx] = param_val
-                print(test_guess)
+                # Create a float copy of the guess to avoid integer conversion
+                test_guess = current_guess.copy().astype(np.float64)
+                # Explicitly cast param_val to float
+                test_guess[param_idx] = float(param_val)
+
+                # For debugging
+                print(f"Testing param {param_idx} = {param_val}, guess: {test_guess}")
+
                 nll = loss_function(
                     test_guess,
                     __GUESS__,
