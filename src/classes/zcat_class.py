@@ -16,7 +16,7 @@ UNSET = object()
 def multiply_arr_by_sqrt_m1_times_m2(arr, m1, m2) -> np.ndarray:
     """
     Multiply Array by sqrt(m1 * m2)
-    
+
     Args:
         arr (float | np.array)
         m1 (float | np.array)
@@ -89,7 +89,7 @@ class zcat:
 
         # Initialize other attributes
         self.updated = False
-        self.NLL = 0
+        self.NLL = self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
         self.weight = 1 if i == j else 0.1
         self.seed = 3543136929
         self.valid = True
@@ -99,9 +99,13 @@ class zcat:
         self.lead_scale = 1
         self.sublead_scale = 1
         self.top_and_bottom = np.array([self.hist_min, self.hist_max])
-        rand = np.random.Generator(np.random.PCG64(self.seed))
-        self.lead_smearings = rand.normal(1, self.lead_smear, len(self.mc))
-        self.sublead_smearings = rand.normal(1, self.sublead_smear, len(self.mc))
+        rand = UNSET
+        self.lead_smearings = UNSET
+        self.sublead_smearings = UNSET
+        if self.lead_smear_index != -1:
+            rand = np.random.Generator(np.random.PCG64(self.seed))
+            self.lead_smearings = rand.normal(1, self.lead_smear, len(self.mc))
+            self.sublead_smearings = rand.normal(1, self.sublead_smear, len(self.mc))
 
         if self.auto_bin and self.bin_size == 0.25:
             self.set_bin_size()
@@ -122,7 +126,9 @@ class zcat:
         sublead_scale = 1.0 if sublead_scale == 0 else sublead_scale
 
         if self.lead_scale != lead_scale or self.sublead_scale != sublead_scale:
-            self.temp_data = multiply_arr_by_sqrt_m1_times_m2(self.data, lead_scale, sublead_scale)
+            self.temp_data = multiply_arr_by_sqrt_m1_times_m2(
+                self.data, lead_scale, sublead_scale
+            )
             self.lead_scale = lead_scale
             self.sublead_scale = sublead_scale
             self.data_mask = (self.hist_min <= self.temp_data) & (

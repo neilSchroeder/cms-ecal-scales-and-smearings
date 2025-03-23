@@ -1,12 +1,9 @@
 import multiprocessing
 from functools import lru_cache
 
-import numba
 import numpy as np
 import scipy.optimize
 from joblib import Parallel, delayed
-from numba import njit, prange
-from scipy.optimize import OptimizeResult
 
 from src.core.adamw import optimized_adamw_minimize
 
