@@ -191,8 +191,9 @@ def target_function(
     ret = np.sum(weighted_nlls)
 
     final_value = ret / tot if tot != 0 else 9e30
-    print(final_value, x)
-
+    print(f"Current NLL: {final_value}")
+    print(f"Current Parameters: {x}")
+    print(f"Previous Parameters: {previous}")
     # Cache the result
     if hasattr(x, "_cached_result"):
         x._cached_result = final_value
