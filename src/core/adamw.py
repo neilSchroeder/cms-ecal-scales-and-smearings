@@ -4,25 +4,36 @@ from scipy.optimize import OptimizeResult
 
 from src.core.gradients import gradient_function
 
+
 @numba.njit
 def _step_core(
-    x, m, v, t, 
-    grad, beta1, beta2, one_minus_beta1, 
-    one_minus_beta2, weight_decay_factor, lr, eps
-    ):
+    x,
+    m,
+    v,
+    t,
+    grad,
+    beta1,
+    beta2,
+    one_minus_beta1,
+    one_minus_beta2,
+    weight_decay_factor,
+    lr,
+    eps,
+):
     """Core step computation optimized with Numba"""
     # Update moments with better numerical stability
     m = beta1 * m + one_minus_beta1 * grad
     v = beta2 * v + one_minus_beta2 * (np.square(grad) + eps)
 
     # Bias correction
-    m_hat = m / (1 - beta1 ** t)
-    v_hat = v / (1 - beta2 ** t)
+    m_hat = m / (1 - beta1**t)
+    v_hat = v / (1 - beta2**t)
 
     # AdamW update (combined operations)
     x_new = weight_decay_factor * x - lr * m_hat / (np.sqrt(v_hat) + eps)
-    
+
     return x_new, m, v
+
 
 class OptimizedAdamWMinimizer:
     """
@@ -61,14 +72,14 @@ class OptimizedAdamWMinimizer:
         self.m = None
         self.v = None
         self.t = 0
-        
+
         # Cache for performance
         self.beta1 = betas[0]
         self.beta2 = betas[1]
         self.one_minus_beta1 = 1 - betas[0]
         self.one_minus_beta2 = 1 - betas[1]
         self.weight_decay_factor = 1 - lr * weight_decay
-    
+
     def _step(self, x, grad, func_val):
         """Optimized step function with cached computations"""
         # Initialize moments if first step
@@ -77,32 +88,58 @@ class OptimizedAdamWMinimizer:
             self.v = np.zeros_like(x)
 
         self.t += 1
-        
-        # Make sure all inputs to _step_core are properly defined and not None
-        if any(v is None for v in [x, self.m, self.v, grad]):
-            raise ValueError("One of the required arrays is None before calling _step_core")
-            
+
+        # Better error messaging
+        if x is None:
+            raise ValueError("Input array 'x' is None")
+        if grad is None:
+            raise ValueError(
+                "Gradient array 'grad' is None - check your gradient function"
+            )
+        if self.m is None:
+            raise ValueError("Momentum array 'm' is None")
+        if self.v is None:
+            raise ValueError("Velocity array 'v' is None")
+
         # Make sure all scalar inputs are proper Python scalars, not None
-        if any(v is None for v in [self.t, self.beta1, self.beta2, self.one_minus_beta1, 
-                                 self.one_minus_beta2, self.weight_decay_factor, self.lr, self.eps]):
-            raise ValueError("One of the required scalar parameters is None before calling _step_core")
-        
+        scalar_params = {
+            "t": self.t,
+            "beta1": self.beta1,
+            "beta2": self.beta2,
+            "one_minus_beta1": self.one_minus_beta1,
+            "one_minus_beta2": self.one_minus_beta2,
+            "weight_decay_factor": self.weight_decay_factor,
+            "lr": self.lr,
+            "eps": self.eps,
+        }
+
+        for name, value in scalar_params.items():
+            if value is None:
+                raise ValueError(f"Scalar parameter '{name}' is None")
+
         # Use numba-optimized core function
         x_new, self.m, self.v = _step_core(
-            x, self.m, self.v, self.t, 
-            grad, self.beta1, self.beta2, self.one_minus_beta1, 
-            self.one_minus_beta2, self.weight_decay_factor, self.lr, self.eps
+            x,
+            self.m,
+            self.v,
+            self.t,
+            grad,
+            self.beta1,
+            self.beta2,
+            self.one_minus_beta1,
+            self.one_minus_beta2,
+            self.weight_decay_factor,
+            self.lr,
+            self.eps,
         )
-        
+
         return x_new
 
-    def minimize(
-        self, fun, x0, args=(), jac=None, bounds=None, callback=None
-    ):
+    def minimize(self, fun, x0, args=(), jac=None, bounds=None, callback=None):
         """Minimization with early stopping and learning rate scheduling."""
         # Convert to contiguous array for better memory access patterns
         x = np.ascontiguousarray(x0, dtype=np.float64)
-        
+
         # Pre-compute bound arrays if needed
         if bounds is not None:
             lb, ub = np.asarray(list(zip(*bounds)))
@@ -120,7 +157,7 @@ class OptimizedAdamWMinimizer:
         self.m = None
         self.v = None
         self.t = 0
-        
+
         # Update cached values
         self.weight_decay_factor = 1 - self.lr * self.weight_decay
 
@@ -176,7 +213,7 @@ class OptimizedAdamWMinimizer:
                     # Update the cached weight decay factor
                     self.weight_decay_factor = 1 - self.lr * self.weight_decay
                     lr_reduce_count += 1
-                    
+
                     if self.verbose:
                         print(f"Reducing learning rate to {self.lr:.8f}")
 
