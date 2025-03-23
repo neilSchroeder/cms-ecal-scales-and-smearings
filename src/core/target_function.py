@@ -145,41 +145,17 @@ def target_function(
 
     cats_to_update = np.array(ZCATS)[mask]
 
-    # Update only the necessary categories (in parallel if possible)
-    if len(cats_to_update) > 1000:  # Only use parallelization for enough work
-        num_cores = min(multiprocessing.cpu_count(), len(cats_to_update))
-
-        def update_cat(cat):
-            if num_smears == 0:
-                cat.update(x[cat.lead_index], x[cat.sublead_index])
-            else:
-                cat.update(
-                    x[cat.lead_index],
-                    x[cat.sublead_index],
-                    lead_smear=x[cat.lead_smear_index],
-                    sublead_smear=x[cat.sublead_smear_index],
-                )
-            return cat
-
-        updated_cats = Parallel(n_jobs=num_cores)(
-            delayed(update_cat)(cat) for cat in cats_to_update
-        )
-
-        # Put the updated cats back
-        for i, updated in zip(np.where(mask)[0], updated_cats):
-            ZCATS[i] = updated
-    else:
-        # Sequential update for small number of categories
-        for cat in cats_to_update:
-            if num_smears == 0:
-                cat.update(x[cat.lead_index], x[cat.sublead_index])
-            else:
-                cat.update(
-                    x[cat.lead_index],
-                    x[cat.sublead_index],
-                    lead_smear=x[cat.lead_smear_index],
-                    sublead_smear=x[cat.sublead_smear_index],
-                )
+    # Update only the necessary categories
+    for cat in cats_to_update:
+        if num_smears == 0:
+            cat.update(x[cat.lead_index], x[cat.sublead_index])
+        else:
+            cat.update(
+                x[cat.lead_index],
+                x[cat.sublead_index],
+                lead_smear=x[cat.lead_smear_index],
+                sublead_smear=x[cat.sublead_smear_index],
+            )
 
     # Calculate NLL with vectorized operations where possible
     valid_cats = [cat for cat in ZCATS if cat.valid]
