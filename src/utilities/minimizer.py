@@ -1,15 +1,18 @@
 import gc
+
 import numpy as np
 import pandas as pd
 
+import src.core.data_loader as data_loader
 import src.helpers.helper_minimizer as helper_minimizer
 import src.plotters.plot_cats as plotter
-import src.core.data_loader as data_loader
 from src.classes.constant_classes import CategoryConstants as cc
 from src.classes.constant_classes import DataConstants as dc
 from src.core.scan_nll import adaptive_scan_nll as scan_nll
+from src.core.target_function import (
+    enhanced_target_function_wrapper as target_function_wrapper,
+)
 from src.core.target_function import minimize as minz
-from src.core.target_function import enhanced_target_function_wrapper as target_function_wrapper
 
 
 def minimize(data, mc, cats_df, options):
@@ -71,8 +74,10 @@ def minimize(data, mc, cats_df, options):
     plot_dir = options.get("plot_dir", "")  # directory to put plots
     _kClosure = options.get("_kClosure", False)  # closure flag
     _kPlot = options.get("_kPlot", False)  # plot flag
-    _kTestMethodAccuracy = options.get("_kTestMethodAccuracy", False)  # test method flag
-    _kScanNLL = options.get("_kScanNLL", False) # scan nll flag
+    _kTestMethodAccuracy = options.get(
+        "_kTestMethodAccuracy", False
+    )  # test method flag
+    _kScanNLL = options.get("_kScanNLL", False)  # scan nll flag
 
     # don't let the minimizer start with a bad start_style
     allowed_start_styles = ("scan", "random", "specify")
@@ -86,11 +91,11 @@ def minimize(data, mc, cats_df, options):
     # count the number of categories which are a scale or a smearing
     __num_scales__ = np.sum(cats_df.iloc[:, 0].values == "scale")
     __num_smears__ = np.sum(cats_df.iloc[:, 0].values == "smear")
-    options['num_scales'] = __num_scales__
-    options['num_smears'] = __num_smears__
+    options["num_scales"] = __num_scales__
+    options["num_smears"] = __num_smears__
 
     if _kClosure:
-        options['num_smears'] = 0
+        options["num_smears"] = 0
         __num_smears__ = 0
     # check to see if transverse energy columns need to be added
     data, mc = data_loader.clean_up(data, mc, cats_df)
@@ -98,9 +103,7 @@ def minimize(data, mc, cats_df, options):
     print("[INFO][python/nll] extracting lists from category definitions")
 
     # extract the categories
-    __ZCATS__ = data_loader.categorize_data_and_mc(
-        data, mc, cats_df, **options
-    )
+    __ZCATS__ = data_loader.categorize_data_and_mc(data, mc, cats_df, **options)
 
     __ZCATS__ = [
         cat for cat in __ZCATS__ if cat.valid
@@ -112,9 +115,7 @@ def minimize(data, mc, cats_df, options):
     gc.collect()
 
     # set up boundaries on starting location of scales
-    bounds = set_bounds(
-        cats_df, **options
-    )
+    bounds = set_bounds(cats_df, **options)
 
     # it is important to test the accuracy with which a known scale can be recovered,
     # here we assign the known scales and inject them.
@@ -167,7 +168,9 @@ def minimize(data, mc, cats_df, options):
     # set up and run a basic nll scan for the initial guess
     guess = [1 for x in range(__num_scales__)] + [0.001 for x in range(__num_smears__)]
     empty_guess = [0 for x in guess]
-    loss_function, reset_initial_guess, calculate_gradient = target_function_wrapper(empty_guess, __ZCATS__, **options)
+    loss_function, reset_initial_guess, calculate_gradient = target_function_wrapper(
+        empty_guess, __ZCATS__, **options
+    )
 
     # It is sometimes necessary to demonstrate a likelihood scan.
     if _kScanNLL:
@@ -213,7 +216,7 @@ def minimize(data, mc, cats_df, options):
         guess = scan_nll(
             guess,
             zcats=__ZCATS__,
-            __GUESS__=empty_guess,
+            __GUESS__=guess,
             cats=cats_df,
             **options,
         )
@@ -317,12 +320,14 @@ def set_bounds(cats, **options):
     if options.get("_kClosure", False):
         bounds = [(0.99, 1.01) for i in range(options.get("num_scales", 0))]
         if cats.iloc[1, cc.i_r9_min] != cc.empty or cats.iloc[1, cc.i_gain] != cc.empty:
-            bounds = [(0.95, 1.05) for i in range(options.get("num_scales",0))]
+            bounds = [(0.95, 1.05) for i in range(options.get("num_scales", 0))]
     elif options.get("_kTestMethodAccuracy", False):
         bounds = [(0.96, 1.04) for i in range(options.get("num_scales", 0))]
         bounds += [(0.000001, 0.03) for i in range(options.get("num_smears", 0))]
     elif options.get("_kFixScales", False):
-        bounds = [(0.999999999, 1.000000001) for i in range(options.get("num_scales", 0))]
+        bounds = [
+            (0.999999999, 1.000000001) for i in range(options.get("num_scales", 0))
+        ]
         bounds += [(0.000001, 0.03) for i in range(options.get("num_smears", 0))]
     else:
         bounds = [(0.96, 1.04) for i in range(options.get("num_scales", 0))]

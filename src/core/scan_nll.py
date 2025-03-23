@@ -220,6 +220,26 @@ def adaptive_scan_nll(x, **options):
         guess, __ZCATS__, **options
     )
 
+    # check loss function and reset_loss_initial_guess
+    print(loss_function)
+    print(reset_loss_initial_guess)
+
+    # test loss function with two different guesses
+    print(
+        loss_function(
+            guess, __GUESS__, __ZCATS__, options["num_scales"], options["num_smears"]
+        )
+    )
+    print(
+        loss_function(
+            guess + 0.01,
+            __GUESS__,
+            __ZCATS__,
+            options["num_scales"],
+            options["num_smears"],
+        )
+    )
+
     # Define a helper function for parameter optimization that works for both scales and smearings
     def optimize_parameters(param_list, param_type, batch_size):
         """
