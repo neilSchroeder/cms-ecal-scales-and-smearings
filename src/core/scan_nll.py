@@ -1,9 +1,10 @@
-import numpy as np
 import multiprocessing
 
+import numpy as np
 from joblib import Parallel, delayed
 
 from src.core.target_function import enhanced_target_function_wrapper
+
 
 def optimized_scan_nll(x, **options):
     """
@@ -196,7 +197,7 @@ def adaptive_scan_nll(x, **options):
     Advanced version of scan_nll with adaptive grid refinement for more accurate results.
     This uses a coarse-to-fine approach to efficiently find optimal parameter values.
     Uses a three-stage approach: smearings → scales → smearings again for better convergence.
-    
+
     Args:
         x (iterable): iterable of floats, representing the scales and smearings
         **options: keyword arguments
@@ -204,50 +205,51 @@ def adaptive_scan_nll(x, **options):
     Returns:
         guess (numpy.ndarray): Optimized initial guess for scales and smearings
     """
-    from joblib import parallel_backend, Parallel, delayed
     import multiprocessing
+
     import numpy as np
-    
+    from joblib import Parallel, delayed, parallel_backend
+
     __ZCATS__ = options["zcats"]
     __GUESS__ = options["__GUESS__"]
     guess = np.array(x).copy()
-    
+
     # Configure parallel processing
     n_jobs = options.get("n_jobs", 1)
     if n_jobs == -1:
         n_jobs = max(1, multiprocessing.cpu_count() - 1)  # Leave one core free
-    
+
     # Create the loss function wrapper
     loss_function, reset_loss_initial_guess, _ = enhanced_target_function_wrapper(
         guess, __ZCATS__, **options
     )
-    
+
     # Define a helper function for parameter optimization that works for both scales and smearings
     def optimize_parameters(param_list, param_type, batch_size):
         """
         Helper function to optimize a set of parameters (either scales or smearings)
-        
+
         Args:
             param_list: List of (weight, index) tuples for parameters
             param_type: "scale" or "smear" to determine search strategy
             batch_size: Number of parameters to process in each batch
         """
         scanned_params = set()
-        
+
         # Process parameters in batches
         for i in range(0, len(param_list), batch_size):
-            batch = param_list[i:i+batch_size]
+            batch = param_list[i : i + batch_size]
             batch_params = []
-            
+
             # Collect unprocessed parameters in this batch
             for weight, param_index in batch:
                 if param_index not in scanned_params:
                     scanned_params.add(param_index)
                     batch_params.append(param_index)
-            
+
             if not batch_params:
                 continue
-            
+
             # Configure grid search based on parameter type
             param_configs = []
             for param_index in batch_params:
@@ -256,26 +258,29 @@ def adaptive_scan_nll(x, **options):
                     max_val = options.get("smear_scan_max", 0.025)
                     # Use logarithmic grid for smearings
                     n_points = 10
-                    coarse_grid = np.logspace(np.log10(min_val), np.log10(max_val), n_points)
+                    coarse_grid = np.logspace(
+                        np.log10(min_val), np.log10(max_val), n_points
+                    )
                 else:  # scale
                     min_val = options.get("scan_min", 0.9)
                     max_val = options.get("scan_max", 1.1)
                     # Use linear grid for scales
                     n_points = 11
                     coarse_grid = np.linspace(min_val, max_val, n_points)
-                
+
                 param_configs.append((param_index, coarse_grid))
-            
+
             # Evaluate parameters in this batch using batched workers
             _process_parameter_batch(param_configs, guess, param_type)
-            
+
             # Reset cache after each parameter batch
             reset_loss_initial_guess(guess)
-    
+
     def _process_parameter_batch(param_configs, current_guess, param_type):
         """
         Process a batch of parameters with coarse-to-fine grid search
         """
+
         # Function to evaluate all parameter values in one batch - more efficient
         def evaluate_batch(configs):
             results = []
@@ -291,24 +296,26 @@ def adaptive_scan_nll(x, **options):
                 )
                 results.append((param_idx, param_val, nll))
             return results
-        
+
         # Prepare batches for efficiency - each worker gets multiple evaluations
         max_evals_per_worker = 5  # Balance parallelism and overhead
         all_evals = [(p_idx, val) for p_idx, grid in param_configs for val in grid]
-        eval_batches = [all_evals[j:j+max_evals_per_worker] 
-                        for j in range(0, len(all_evals), max_evals_per_worker)]
-        
+        eval_batches = [
+            all_evals[j : j + max_evals_per_worker]
+            for j in range(0, len(all_evals), max_evals_per_worker)
+        ]
+
         # Execute parallel evaluation with optimized backend
-        with parallel_backend('loky', n_jobs=n_jobs):
+        with parallel_backend("loky", n_jobs=n_jobs):
             batch_results = Parallel(
                 verbose=0,
-                batch_size='auto',
-                pre_dispatch='2*n_jobs',
-                max_nbytes='100M',
-                mmap_mode='r',
-                temp_folder='/tmp'
+                batch_size="auto",
+                pre_dispatch="2*n_jobs",
+                max_nbytes="100M",
+                mmap_mode="r",
+                temp_folder="/tmp",
             )(delayed(evaluate_batch)(batch) for batch in eval_batches)
-        
+
         # Organize results by parameter for efficient processing
         param_results = {}
         for batch_result in batch_results:
@@ -316,25 +323,25 @@ def adaptive_scan_nll(x, **options):
                 if param_idx not in param_results:
                     param_results[param_idx] = []
                 param_results[param_idx].append((param_val, nll))
-        
+
         # Process each parameter's results and do refinement
         for param_index, results in param_results.items():
             # Filter invalid values
             vals, nlls = zip(*results)
             vals = np.array(vals)
             nlls = np.array(nlls)
-            
+
             mask = (nlls > 0) & (nlls < 1e10)
             if not np.any(mask):
                 continue
-                
+
             filtered_vals = vals[mask]
             filtered_nlls = nlls[mask]
-            
+
             # Find best region from coarse scan
             best_idx = np.argmin(filtered_nlls)
             best_val = filtered_vals[best_idx]
-            
+
             # Define refined grid around best value - different strategy for scales vs smearings
             if param_type == "smear":
                 window_factor = 2.0
@@ -343,61 +350,67 @@ def adaptive_scan_nll(x, **options):
                 n_points = 15
                 refined_grid = np.linspace(refined_min, refined_max, n_points)
             else:  # scale
-                window = (options.get("scan_max", 1.2) - options.get("scan_min", 0.8)) / 10
+                window = (
+                    options.get("scan_max", 1.2) - options.get("scan_min", 0.8)
+                ) / 10
                 refined_min = max(options.get("scan_min", 0.8), best_val - window)
                 refined_max = min(options.get("scan_max", 1.2), best_val + window)
                 n_points = 15
                 refined_grid = np.linspace(refined_min, refined_max, n_points)
-            
+
             # Prepare refinement evaluation in batches
             refined_evals = [(param_index, val) for val in refined_grid]
-            refined_batches = [refined_evals[j:j+max_evals_per_worker] 
-                              for j in range(0, len(refined_evals), max_evals_per_worker)]
-            
+            refined_batches = [
+                refined_evals[j : j + max_evals_per_worker]
+                for j in range(0, len(refined_evals), max_evals_per_worker)
+            ]
+
             # Execute parallel refinement evaluation
-            with parallel_backend('loky', n_jobs=n_jobs):
+            with parallel_backend("loky", n_jobs=n_jobs):
                 refined_results_batches = Parallel(
                     verbose=0,
-                    batch_size='auto',
-                    max_nbytes='100M',
-                    mmap_mode='r',
-                    temp_folder='/tmp'
+                    batch_size="auto",
+                    max_nbytes="100M",
+                    mmap_mode="r",
+                    temp_folder="/tmp",
                 )(delayed(evaluate_batch)(batch) for batch in refined_batches)
-            
+
             # Collect results for this parameter
             param_refined_results = []
             for batch_result in refined_results_batches:
                 for p_idx, param_val, nll in batch_result:
                     if p_idx == param_index:
                         param_refined_results.append((param_val, nll))
-            
+
             if param_refined_results:
                 # Find best value from refined search
                 refined_vals, refined_nlls = zip(*param_refined_results)
                 refined_vals = np.array(refined_vals)
                 refined_nlls = np.array(refined_nlls)
-                
+
                 mask = (refined_nlls > 0) & (refined_nlls < 1e10)
                 if np.any(mask):
                     filtered_vals = refined_vals[mask]
                     filtered_nlls = refined_nlls[mask]
                     best_idx = np.argmin(filtered_nlls)
                     best_val = filtered_vals[best_idx]
-                    
+
                     # Update guess with best value
                     current_guess[param_index] = best_val
                     type_str = "smearing" if param_type == "smear" else "scale"
-                    print(f"[INFO][python/nll] best guess for {type_str} {param_index} is {best_val:.6f}")
-    
+                    print(
+                        f"[INFO][python/nll] best guess for {type_str} {param_index} is {best_val:.6f}"
+                    )
+
     # Collect categories for parameter optimization
-    if options["num_smears"] > 0:
+    if options["num_smears"] > 0 and not options["_kClosure"]:
         smear_diagonal_cats = [
             (cat.weight, cat.lead_smear_index)
             for cat in __ZCATS__
             if cat.valid and cat.lead_smear_index == cat.sublead_smear_index
         ]
         smear_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
-    
+
     if not options["_kFixScales"]:
         scale_diagonal_cats = [
             (cat.weight, cat.lead_index)
@@ -405,21 +418,25 @@ def adaptive_scan_nll(x, **options):
             if cat.valid and cat.lead_index == cat.sublead_index
         ]
         scale_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
-    
+
     # -------------------------------------------------
     # STAGE 1: First smearing optimization
     # -------------------------------------------------
     if options["num_smears"] > 0 and not options["_kClosure"]:
-        print("[INFO][python/helper_minimizer/scan_nll] stage 1: adaptively scanning smearings")
+        print(
+            "[INFO][python/helper_minimizer/scan_nll] stage 1: adaptively scanning smearings"
+        )
         optimize_parameters(smear_diagonal_cats, "smear", batch_size=5)
-    
+
     # -------------------------------------------------
     # STAGE 2: Scale optimization
     # -------------------------------------------------
     if not options["_kFixScales"]:
-        print("[INFO][python/helper_minimizer/scan_ll] stage 2: adaptively scanning scales")
+        print(
+            "[INFO][python/helper_minimizer/scan_ll] stage 2: adaptively scanning scales"
+        )
         optimize_parameters(scale_diagonal_cats, "scale", batch_size=10)
-    
+
     # -------------------------------------------------
     # STAGE 3: Second smearing optimization (refinement)
     # -------------------------------------------------
