@@ -187,8 +187,6 @@ class OptimizedAdamWMinimizer:
 
             grad_fn = safe_jac_fn
 
-        # Rest of the function implementation...
-
         # Pre-compute bound arrays if needed
         if bounds is not None:
             lb, ub = np.asarray(list(zip(*bounds)))
@@ -210,13 +208,6 @@ class OptimizedAdamWMinimizer:
         # Update cached values
         self.weight_decay_factor = 1 - self.lr * self.weight_decay
 
-        # Setup gradient function
-        if jac is None:
-            # Assuming gradient_function is defined elsewhere
-            grad_fn = lambda x_new: gradient_function(fun, x_new, *args)
-        else:
-            grad_fn = lambda x_new: jac(x_new, *args)
-
         # Initial evaluation
         f = fun(x, *args)
         g = grad_fn(x)
@@ -236,6 +227,7 @@ class OptimizedAdamWMinimizer:
         # Main optimization loop - avoid function calls in tight loop
         for i in range(self.max_iter):
             # Step with current parameters
+            print(x, g)
             x_new = self._step(x, g, f)
 
             # Apply bounds

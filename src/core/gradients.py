@@ -197,6 +197,7 @@ def spsa_gradient_optimized(
     finally:
         clear_cache()
 
+    print(gradient_estimate)
     return gradient_estimate
 
 
