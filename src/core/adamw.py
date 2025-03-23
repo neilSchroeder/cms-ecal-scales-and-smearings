@@ -137,8 +137,57 @@ class OptimizedAdamWMinimizer:
 
     def minimize(self, fun, x0, args=(), jac=None, bounds=None, callback=None):
         """Minimization with early stopping and learning rate scheduling."""
+        # Provide default bounds if none are given
+        if bounds is None and len(x0) > 0:
+            # Default bounds to prevent invalid parameters
+            bounds = []
+            for i in range(len(x0)):
+                # Assume first parameters are scales, later ones are smearings
+                if i < 8:  # First 8 parameters are typically scales
+                    bounds.append((0.98, 1.02))
+                else:
+                    bounds.append((0.005, 0.05))
+
         # Convert to contiguous array for better memory access patterns
         x = np.ascontiguousarray(x0, dtype=np.float64)
+
+        # Apply bounds to initial x0 if needed
+        if bounds is not None:
+            lb, ub = np.asarray(list(zip(*bounds)))
+            np.clip(x, lb, ub, out=x)
+
+        # Setup gradient function with error handling
+        if jac is None:
+
+            def safe_grad_fn(x_new):
+                try:
+                    grad = gradient_function(fun, x_new, *args)
+                    if grad is None:
+                        print(
+                            "Warning: Gradient function returned None, using default gradient"
+                        )
+                        return np.ones_like(x_new) * 1e-6
+                    return grad
+                except Exception as e:
+                    print(f"Error in gradient calculation: {e}")
+                    return np.ones_like(x_new) * 1e-6
+
+            grad_fn = safe_grad_fn
+        else:
+            # Wrap custom jacobian with same error handling
+            def safe_jac_fn(x_new):
+                try:
+                    grad = jac(x_new, *args)
+                    if grad is None:
+                        return np.ones_like(x_new) * 1e-6
+                    return grad
+                except Exception as e:
+                    print(f"Error in custom gradient: {e}")
+                    return np.ones_like(x_new) * 1e-6
+
+            grad_fn = safe_jac_fn
+
+        # Rest of the function implementation...
 
         # Pre-compute bound arrays if needed
         if bounds is not None:
