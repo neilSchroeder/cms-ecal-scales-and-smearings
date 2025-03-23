@@ -286,9 +286,6 @@ def adaptive_scan_nll(x, **options):
                 # Explicitly cast param_val to float
                 test_guess[param_idx] = float(param_val)
 
-                # For debugging
-                print(f"Testing param {param_idx} = {param_val}, guess: {test_guess}")
-
                 nll = loss_function(
                     test_guess,
                     __GUESS__,
