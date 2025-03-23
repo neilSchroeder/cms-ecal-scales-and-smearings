@@ -419,6 +419,41 @@ def adaptive_scan_nll(x, **options):
         ]
         scale_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
 
+        # Print diagnostic information about each diagonal category
+        print(
+            "[INFO][python/helper_minimizer/scan_nll] Examining scale category sensitivity:"
+        )
+        print(
+            f"{'Category':<8} {'Scale Index':<12} {'Weight':<10} {'Data Events':<15} {'MC Events':<15} {'Data/MC Ratio':<15} {'Sensitivity'}"
+        )
+
+        for weight, scale_index in scale_diagonal_cats:
+            # Find the corresponding category
+            diagonal_cat = None
+            for cat in __ZCATS__:
+                if cat.valid and cat.lead_index == cat.sublead_index == scale_index:
+                    diagonal_cat = cat
+                    break
+
+            if diagonal_cat:
+                data_events = diagonal_cat.n_data
+                mc_events = diagonal_cat.n_mc
+                ratio = data_events / mc_events if mc_events > 0 else float("inf")
+
+                # Evaluate sensitivity - low events or extreme ratio may indicate insensitivity
+                sensitivity = (
+                    "LOW"
+                    if data_events < 50 or mc_events < 50
+                    else ("MEDIUM" if data_events < 100 or mc_events < 100 else "HIGH")
+                )
+
+                if abs(ratio - 1.0) > 0.5:  # Data/MC differs by more than 50%
+                    sensitivity += " (IMBALANCED)"
+
+                print(
+                    f"{scale_index:<8} {diagonal_cat.name:<12} {weight:<10.4f} {data_events:<15.1f} {mc_events:<15.1f} {ratio:<15.4f} {sensitivity}"
+                )
+
     # -------------------------------------------------
     # STAGE 1: First smearing optimization
     # -------------------------------------------------

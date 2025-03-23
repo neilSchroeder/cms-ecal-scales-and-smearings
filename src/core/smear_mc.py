@@ -100,11 +100,12 @@ def smear(mc, smearings_file) -> pd.DataFrame:
             )
 
             mask = np.logical_and(lead_mask, sublead_mask)
-            mc.loc[mask, dc.E_LEAD] *= lead_smearings[mask]
-            mc.loc[mask, dc.E_SUB] *= sublead_smearings[mask]
-            mc.loc[mask, dc.INVMASS] *= np.sqrt(
-                lead_smearings[mask] * sublead_smearings[mask]
-            ) / (1 - current_smearing_lead * current_smearing_sublead / 8)
+            mc.loc[mask, dc.E_LEAD] *= lead_smearings[mask].astype(np.float32)
+            mc.loc[mask, dc.E_SUB] *= sublead_smearings[mask].astype(np.float32)
+            mc.loc[mask, dc.INVMASS] *= (
+                np.sqrt(lead_smearings[mask] * sublead_smearings[mask])
+                / (1 - current_smearing_lead * current_smearing_sublead / 8)
+            ).astype(np.float32)
 
     return apply_custom_event_selection(
         mc,
