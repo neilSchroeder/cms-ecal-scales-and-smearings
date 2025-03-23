@@ -144,6 +144,7 @@ def spsa_gradient_optimized(
 
     # Ensure no zeros in x when using closure testing
     # This prevents issues with division or invalid calculations
+    print(options["_kClosure"])
     if "_kClosure" in options and options["_kClosure"]:
         # Replace zeros with small values to maintain numerical stability
         zero_mask = np.abs(x) < 1e-10
