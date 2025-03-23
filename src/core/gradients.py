@@ -142,19 +142,6 @@ def spsa_gradient_optimized(
     # Ensure x is a numpy array with proper dtype
     x = np.asarray(x, dtype=np.float64)
 
-    # Ensure no zeros in x when using closure testing
-    # This prevents issues with division or invalid calculations
-    print(options["_kClosure"])
-    if "_kClosure" in options and options["_kClosure"]:
-        # Replace zeros with small values to maintain numerical stability
-        zero_mask = np.abs(x) < 1e-10
-        if np.any(zero_mask):
-            print(
-                f"Warning: Replacing {np.sum(zero_mask)} zero values with 0.98 for stability"
-            )
-            x = x.copy()  # Make a copy to avoid modifying the original
-            x[zero_mask] = 0.98  # Use 0.98 instead of zero
-
     # Create cached version of target function
     cached_func, clear_cache = create_target_function_wrapper(target_function)
 
