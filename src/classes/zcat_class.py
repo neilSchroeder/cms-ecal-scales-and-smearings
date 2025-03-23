@@ -90,7 +90,7 @@ class zcat:
         # Initialize other attributes
         self.updated = False
         self.valid = True
-        self.weight = 1 if i == j else 0.1
+        self.weight = len(self.data)
         self.seed = 3543136929
         self.history = []
         self.lead_smear = 0.001
@@ -98,7 +98,6 @@ class zcat:
         self.lead_scale = 1
         self.sublead_scale = 1
         self.top_and_bottom = np.array([self.hist_min, self.hist_max])
-        self.NLL = self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
         rand = UNSET
         self.lead_smearings = UNSET
         self.sublead_smearings = UNSET
@@ -109,6 +108,7 @@ class zcat:
 
         if self.auto_bin and self.bin_size == 0.25:
             self.set_bin_size()
+        self.NLL = self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
 
     def transform_smearings(self, distribution, original_smearing, new_smearing):
         """Transform smearing distribution from original to new smearing"""
