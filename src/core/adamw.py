@@ -179,6 +179,9 @@ class OptimizedAdamWMinimizer:
                 try:
                     grad = jac(x_new, *args)
                     if grad is None:
+                        print(
+                            "Warning: Custom gradient function returned None, using default gradient"
+                        )
                         return np.ones_like(x_new) * 1e-6
                     return grad
                 except Exception as e:
