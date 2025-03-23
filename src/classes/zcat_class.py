@@ -90,7 +90,6 @@ class zcat:
         # Initialize other attributes
         self.updated = False
         self.valid = True
-        self.NLL = self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
         self.weight = 1 if i == j else 0.1
         self.seed = 3543136929
         self.history = []
@@ -99,6 +98,7 @@ class zcat:
         self.lead_scale = 1
         self.sublead_scale = 1
         self.top_and_bottom = np.array([self.hist_min, self.hist_max])
+        self.NLL = self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
         rand = UNSET
         self.lead_smearings = UNSET
         self.sublead_smearings = UNSET
