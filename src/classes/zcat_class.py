@@ -90,6 +90,7 @@ class zcat:
         # Initialize other attributes
         self.updated = False
         self.valid = True
+        self.NLL = UNSET
         self.weight = len(self.data)
         self.seed = 3543136929
         self.history = []
@@ -108,7 +109,7 @@ class zcat:
 
         if self.auto_bin and self.bin_size == 0.25:
             self.set_bin_size()
-        self.NLL = self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
+        self.update(1.0, 1.0)  # Initialize NLL, assume no smearing
 
     def transform_smearings(self, distribution, original_smearing, new_smearing):
         """Transform smearing distribution from original to new smearing"""
