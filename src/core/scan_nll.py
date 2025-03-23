@@ -414,6 +414,9 @@ def adaptive_scan_nll(x, **options):
             if cat.valid and cat.lead_index == cat.sublead_index
         ]
         scale_diagonal_cats.sort(key=lambda x: x[0], reverse=True)
+        for cat in __ZCATS__:
+            if cat.valid and cat.lead_index == cat.sublead_index:
+                print(f"cat {cat.lead_index} {cat.sublead_index} {np.mean(cat.data)} {np.mean(cat.mc)}")}
 
     # -------------------------------------------------
     # STAGE 1: First smearing optimization
