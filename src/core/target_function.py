@@ -88,7 +88,7 @@ def enhanced_target_function_wrapper(initial_guess, ZCATS, **kwargs):
         Returns:
             Gradient vector
         """
-        fast_gradient_optimized(
+        return fast_gradient_optimized(
             wrapped_target_function,
             x,
             *args,
