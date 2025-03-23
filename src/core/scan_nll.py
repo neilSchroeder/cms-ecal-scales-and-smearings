@@ -269,9 +269,6 @@ def adaptive_scan_nll(x, **options):
                 param_configs.append((param_index, coarse_grid))
 
             # Evaluate parameters in this batch using batched workers
-            print(param_configs)
-            print(guess)
-            print(param_type)
             _process_parameter_batch(param_configs, guess, param_type)
 
             # Reset cache after each parameter batch
