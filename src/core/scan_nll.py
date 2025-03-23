@@ -217,21 +217,16 @@ def adaptive_scan_nll(x, **options):
 
     # Create the loss function wrapper
     loss_function, reset_loss_initial_guess, _ = enhanced_target_function_wrapper(
-        guess, __ZCATS__, **options
+        guess, __ZCATS__, options["num_scales"], options["num_smears"]
     )
 
     print(
-        loss_function(guess, __GUESS__, __ZCATS__, **options),
+        loss_function(guess, __ZCATS__, options["num_scales"], options["num_smears"]),
         guess,
     )
     guess[0] += 0.01
     print(
-        loss_function(
-            guess,
-            __GUESS__,
-            __ZCATS__,
-            **options,
-        ),
+        loss_function(guess, __ZCATS__, options["num_scales"], options["num_smears"]),
         guess,
     )
     guess[0] -= 0.01
@@ -299,7 +294,13 @@ def adaptive_scan_nll(x, **options):
             for param_idx, param_val in configs:
                 test_guess = current_guess.copy()
                 test_guess[param_idx] = param_val
-                nll = loss_function(test_guess, __GUESS__, __ZCATS__, **options)
+                nll = loss_function(
+                    test_guess,
+                    __GUESS__,
+                    __ZCATS__,
+                    options["num_scales"],
+                    options["num_smears"],
+                )
                 results.append((param_idx, param_val, nll))
             return results
 
