@@ -232,7 +232,6 @@ class OptimizedAdamWMinimizer:
         # Main optimization loop - avoid function calls in tight loop
         for i in range(self.max_iter):
             # Step with current parameters
-            print(f"{x=}, {g=}")
             x_new = self._step(x, g, f)
 
             # Apply bounds
@@ -241,6 +240,7 @@ class OptimizedAdamWMinimizer:
 
             # Evaluate at new point
             f_new = fun(x_new, *args)
+            print(f_new, x_new)
             g_new = grad_fn(x_new)
             fun_history.append(f_new)
 
