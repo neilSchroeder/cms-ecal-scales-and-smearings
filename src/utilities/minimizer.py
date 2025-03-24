@@ -238,6 +238,15 @@ def minimize(data, mc, cats_df, options):
     pr = cProfile.Profile()
     pr.enable()
 
+    options = {
+        "maxiter": 100000,
+        "maxfun": 100000,
+        "eps": 0.000001 if min_step is None else float(min_step),
+    }
+    if dc.MINIMIZATION_STRATEGY == "adamw":
+        if min_step is not None:
+            options["lr"] = min_step
+
     optimum = minz(
         loss_function,
         np.array(guess),
@@ -245,11 +254,7 @@ def minimize(data, mc, cats_df, options):
         method=dc.MINIMIZATION_STRATEGY,  # might be interesting to try Nelder-Mead
         bounds=bounds,
         jac=calculate_gradient,
-        options={
-            "maxiter": 100000,
-            "maxfun": 100000,
-            "eps": 0.000001 if min_step is None else float(min_step),
-        },
+        options=options,
     )
 
     pr.disable()

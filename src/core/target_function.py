@@ -5,6 +5,7 @@ import numpy as np
 import scipy.optimize
 from joblib import Parallel, delayed
 
+from src.classes.constant_classes import DataConstants as dc
 from src.core.adamw import optimized_adamw_minimize
 
 # Import the gradient optimization utilities
@@ -180,26 +181,13 @@ def minimize(
     """Enhanced minimize wrapper with optimized implementation."""
     if method.lower() == "adamw":
         # Default options
-        default_options = {
-            "lr": 5e-5,
-            "betas": (0.9, 0.999),
-            "eps": 1e-8,
-            "weight_decay": 0,
-            "max_iter": 1000,
-            "tol": 1e-5,
-            "patience": 100,
-            "lr_reduce_factor": 0.8,
-            "lr_reduce_patience": 10,
-            "verbose": False,
-            "n_jobs": options.get("n_jobs", 1),
-        }
 
         # Update with user options
         if options is not None:
-            default_options.update(options)
+            dc.ADAMW_OPTIONS.update(options)
 
         return optimized_adamw_minimize(
-            fun, x0, args, jac, bounds, callback, **default_options
+            fun, x0, args, jac, bounds, callback, **dc.ADAMW_OPTIONS
         )
     else:
         # Use scipy's implementation
