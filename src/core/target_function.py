@@ -181,15 +181,15 @@ def minimize(
     if method.lower() == "adamw":
         # Default options
         default_options = {
-            "lr": 1e-5,
+            "lr": 5e-5,
             "betas": (0.9, 0.999),
             "eps": 1e-8,
-            "weight_decay": 1e-6,
+            "weight_decay": 0,
             "max_iter": 1000,
             "tol": 1e-5,
             "patience": 100,
-            "lr_reduce_factor": 0.5,
-            "lr_reduce_patience": 5,
+            "lr_reduce_factor": 0.8,
+            "lr_reduce_patience": 10,
             "verbose": False,
             "n_jobs": options.get("n_jobs", 1),
         }
