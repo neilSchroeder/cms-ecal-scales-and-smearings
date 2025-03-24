@@ -104,6 +104,8 @@ class zcat:
         self.sublead_smearings = UNSET
         if self.lead_smear_index != -1:
             rand = np.random.Generator(np.random.PCG64(self.seed))
+            self.lead_smear = 0.001
+            self.sublead_smear = 0.001
             self.lead_smearings = rand.normal(1, self.lead_smear, len(self.mc))
             self.sublead_smearings = rand.normal(1, self.sublead_smear, len(self.mc))
 
