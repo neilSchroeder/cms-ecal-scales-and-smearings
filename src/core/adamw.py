@@ -340,6 +340,7 @@ class OptimizedAdamWMinimizer:
 
             g_new = grad_fn(x_new)  # Get new gradient
             fun_history.append(f_new)
+            print(f_new, x_new)
 
             # Update best solution without copying
             if f_new < best_fun:
