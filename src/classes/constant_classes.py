@@ -116,7 +116,7 @@ class DataConstants:
     MINIMIZATION_STRATEGY = "adamw"
 
     ADAMW_OPTIONS = {
-        "lr": 5e-5,
+        "lr": 1e-5,
         "betas": (0.9, 0.999),
         "eps": 1e-8,
         "weight_decay": 0,
