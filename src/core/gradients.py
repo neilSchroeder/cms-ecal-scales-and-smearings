@@ -81,7 +81,10 @@ def create_target_function_wrapper(target_function):
     return cached_target_function, clear_cache
 
 
-# Core SPSA calculation with optimized Numba compilation
+import numpy as np
+from numba import njit, prange
+
+
 @njit(fastmath=True)
 def _spsa_core_calculation(delta, ck, y_plus, y_minus):
     """Optimized core SPSA gradient calculation"""
@@ -89,17 +92,49 @@ def _spsa_core_calculation(delta, ck, y_plus, y_minus):
     return (y_plus - y_minus) / (2 * ck * delta)
 
 
-# Optimized SPSA gradient estimation
+@njit(fastmath=True)
+def _spsa_iteration(x, ck, delta, gradient_iteration):
+    """Optimized SPSA iteration computation"""
+    # Pre-calculate perturbed points
+    x_plus = x + ck * delta
+    x_minus = x - ck * delta
+
+    return x_plus, x_minus
+
+
+@njit(fastmath=True)
+def _process_gradient(delta, ck, y_plus, y_minus, gradient_estimate, iter_idx, n_iter):
+    """Process gradient update with Numba"""
+    n_params = len(delta)
+
+    # Vectorized core calculation
+    for i in range(n_params):
+        gradient_estimate[i] += (y_plus - y_minus) / (2 * ck * delta[i])
+
+    # If it's the last iteration, divide by number of iterations
+    if iter_idx == n_iter - 1:
+        for i in range(n_params):
+            gradient_estimate[i] /= n_iter
+
+    return gradient_estimate
+
+
+@njit(fastmath=True)
+def _precompute_ck_values(c, gamma, n_iter):
+    """Pre-compute ck values with Numba"""
+    ck_values = np.empty(n_iter, dtype=np.float64)
+    for k in range(n_iter):
+        ck_values[k] = c / ((k + 1) ** gamma)
+    return ck_values
+
+
 def spsa_gradient_optimized(
     target_function,
     x,
     *args,
     c=1e-6,
-    a=1.0,
-    alpha=0.602,
     gamma=0.101,
     n_iter=2,
-    cache_size=1000,
     verbose=False,
     **options,
 ):
@@ -116,10 +151,6 @@ def spsa_gradient_optimized(
         Additional arguments for the target function.
     c : float, optional
         The perturbation size for SPSA.
-    a : float, optional
-        The step size scaling factor.
-    alpha : float, optional
-        The decay factor for step size.
     gamma : float, optional
         The decay factor for perturbation size.
     n_iter : int, optional
@@ -140,38 +171,54 @@ def spsa_gradient_optimized(
     for accelerated numerical computations. It is suitable for high-
     dimensional optimization tasks.
     """
-    # Ensure x is a numpy array with proper dtype
-    x = np.asarray(x, dtype=np.float64)
+    # Ensure x is a contiguous numpy array with proper dtype
+    x = np.ascontiguousarray(x, dtype=np.float64)
 
-    if verbose:
-        # print locals
-        for k, v in locals().items():
-            print(f"{k}: {v}")
+    if verbose and verbose > 1:
+        print(f"Input parameters: x={x}, c={c}, gamma={gamma}, n_iter={n_iter}")
 
     # Create cached version of target function
     cached_func, clear_cache = create_target_function_wrapper(target_function)
 
-    # Pre-allocate memory for gradient estimate
+    # Pre-allocate memory for gradient estimate and intermediate arrays
     n_params = len(x)
     gradient_estimate = np.zeros(n_params, dtype=np.float64)
 
+    # Pre-allocate arrays for x_plus and x_minus to reuse
+    x_plus = np.empty_like(x)
+    x_minus = np.empty_like(x)
+
+    # Pre-allocate array for delta
+    delta_array = np.empty(n_params, dtype=np.float64)
+
     try:
-        # Pre-compute decay values for all iterations
-        ck_values = np.array(
-            [c / (k**gamma) for k in range(1, n_iter + 1)], dtype=np.float64
-        )
+        # Pre-compute ck values with Numba
+        ck_values = _precompute_ck_values(c, gamma, n_iter)
+
+        # Track valid iterations
+        valid_iters = 0
 
         # Perform multiple SPSA iterations and average results
         for k in range(n_iter):
             ck = ck_values[k]
-            delta = np.random.choice([-1.0, 1.0], size=n_params).astype(np.float64)
 
-            x_plus = x + ck * delta
-            x_minus = x - ck * delta
+            # Generate delta values (+1 or -1) and store in pre-allocated array
+            for i in range(n_params):
+                delta_array[i] = 2.0 * (np.random.random() > 0.5) - 1.0
+
+            # Calculate perturbed points
+            for i in range(n_params):
+                x_plus[i] = x[i] + ck * delta_array[i]
+                x_minus[i] = x[i] - ck * delta_array[i]
 
             # Evaluate function with error handling
-            y_plus = cached_func(x_plus, *args, **options)
-            y_minus = cached_func(x_minus, *args, **options)
+            try:
+                y_plus = cached_func(x_plus, *args, **options)
+                y_minus = cached_func(x_minus, *args, **options)
+            except Exception as e:
+                if verbose:
+                    print(f"Warning: Function evaluation error in iteration {k}: {e}")
+                continue
 
             # Verify valid outputs
             if (
@@ -179,39 +226,119 @@ def spsa_gradient_optimized(
                 or y_minus is None
                 or np.isnan(y_plus)
                 or np.isnan(y_minus)
+                or np.isinf(y_plus)
+                or np.isinf(y_minus)
             ):
-                print(f"Warning: Invalid function values in SPSA iteration {k}")
-                # Use a small default gradient instead of None
-                return np.ones(n_params) * 1e-6
-            if verbose:
-                print(f"y_plus: {y_plus}")
-                print(f"y_minus: {y_minus}")
-                print(f"ck: {ck}")
-                print(f"delta: {delta}")
+                if verbose:
+                    print(f"Warning: Invalid function values in SPSA iteration {k}")
+                continue
+
+            if verbose and verbose > 1:
+                print(f"Iteration {k}: y_plus={y_plus}, y_minus={y_minus}, ck={ck}")
+
+            # Update gradient estimate
             try:
-                gradient_iter = _spsa_core_calculation(delta, ck, y_plus, y_minus)
-                gradient_estimate += gradient_iter
-
+                # Use vectorized operation for better performance
+                gradient_estimate += (y_plus - y_minus) / (2 * ck * delta_array)
+                valid_iters += 1
             except Exception as e:
-                print(f"Error in SPSA gradient calculation: {e}")
-                # Return a small default gradient rather than failing
-                return np.ones(n_params) * 1e-6
+                if verbose:
+                    print(f"Error in gradient calculation: {e}")
+                continue
 
-            if verbose:
-                print(f"gradient_estimate: {gradient_estimate}")
+            if verbose and verbose > 2:
+                print(f"Current gradient estimate: {gradient_estimate}")
 
-        # Divide by number of iterations
-        if n_iter > 0:
-            gradient_estimate /= n_iter
+        # Divide by number of valid iterations
+        if valid_iters > 0:
+            gradient_estimate /= valid_iters
+        else:
+            # If no valid iterations, return a small default gradient
+            gradient_estimate = np.ones(n_params, dtype=np.float64) * 1e-6
 
     except Exception as e:
-        print(f"Error in SPSA gradient estimation: {e}")
+        if verbose:
+            print(f"Error in SPSA gradient estimation: {e}")
+        # Return a small default gradient
+        gradient_estimate = np.ones(n_params, dtype=np.float64) * 1e-6
 
     finally:
+        # Always clean up the cache
         clear_cache()
 
     if verbose:
-        print(f"gradient_estimate: {gradient_estimate}")
+        print(f"Final gradient estimate: {gradient_estimate}")
+
+    return gradient_estimate
+
+
+# Batch version for large parameter vectors
+def spsa_gradient_batch(
+    target_function,
+    x,
+    *args,
+    c=1e-6,
+    gamma=0.101,
+    n_iter=2,
+    batch_size=100,  # New parameter for batch processing
+    verbose=False,
+    **options,
+):
+    """Batched version of SPSA for very large parameter vectors"""
+    # Ensure x is a contiguous numpy array
+    x = np.ascontiguousarray(x, dtype=np.float64)
+    n_params = len(x)
+
+    # For small parameter vectors, just use the regular method
+    if n_params <= batch_size:
+        return spsa_gradient_optimized(
+            target_function,
+            x,
+            *args,
+            c=c,
+            gamma=gamma,
+            n_iter=n_iter,
+            verbose=verbose,
+            **options,
+        )
+
+    # Pre-allocate gradient estimate
+    gradient_estimate = np.zeros(n_params, dtype=np.float64)
+
+    # Wrap target function to work with masked parameters
+    def masked_target(x_masked, mask, x_full):
+        # Create a copy of the full parameter vector
+        x_temp = x_full.copy()
+        # Update only the masked elements
+        x_temp[mask] = x_masked
+        # Evaluate the original function
+        return target_function(x_temp, *args, **options)
+
+    # Process in batches
+    for start_idx in range(0, n_params, batch_size):
+        end_idx = min(start_idx + batch_size, n_params)
+        mask = np.zeros(n_params, dtype=bool)
+        mask[start_idx:end_idx] = True
+
+        # Extract the batch parameters
+        x_batch = x[mask]
+
+        # Create a specialized target function for this batch
+        batch_target = lambda x_b: masked_target(x_b, mask, x)
+
+        # Compute gradient for this batch
+        batch_gradient = spsa_gradient_optimized(
+            batch_target, x_batch, c=c, gamma=gamma, n_iter=n_iter, verbose=verbose
+        )
+
+        # Update the full gradient estimate
+        gradient_estimate[mask] = batch_gradient
+
+        if verbose:
+            print(
+                f"Completed batch {start_idx//batch_size + 1}/{(n_params+batch_size-1)//batch_size}"
+            )
+
     return gradient_estimate
 
 
