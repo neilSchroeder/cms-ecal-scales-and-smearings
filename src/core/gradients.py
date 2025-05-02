@@ -1,10 +1,7 @@
 import gc
 
-import numba
 import numpy as np
 from numba import njit, prange
-from numba.core import types
-from numba.typed import Dict
 
 
 # Optimized caching for SPSA - using tuple hash directly
@@ -79,10 +76,6 @@ def create_target_function_wrapper(target_function):
         cache.clear()
 
     return cached_target_function, clear_cache
-
-
-import numpy as np
-from numba import njit, prange
 
 
 @njit(fastmath=True)
