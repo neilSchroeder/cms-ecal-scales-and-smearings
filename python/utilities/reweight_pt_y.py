@@ -205,7 +205,16 @@ def add_pt_y_weights(df, weight_file):
     pool.close()
     pool.join()
 
-    df[dc.PTY_WEIGHT] = pd.concat(scaled_data).values
+    # Create a Series to hold all weights
+    all_weights = pd.Series(np.zeros(len(df)), index=df.index)
+
+    # Update weights for each rapidity bin, preserving the original indices
+    for weights_series in scaled_data:
+        all_weights.update(weights_series)
+
+    # Assign weights to the dataframe
+    df[dc.PTY_WEIGHT] = all_weights.values
+    print(df)
     df.drop([dc.PTZ, dc.RAPIDITY], axis=1, inplace=True)
 
     return df

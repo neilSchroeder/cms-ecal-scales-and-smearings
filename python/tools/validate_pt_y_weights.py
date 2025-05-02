@@ -1,149 +1,171 @@
-import os
 import sys
-import tempfile
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# Add project root to path
+# Add project root to path if needed
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from python.classes.constant_classes import DataConstants as dc
 from python.utilities.reweight_pt_y import add_weights_to_df
 
 
-def create_test_weight_file():
-    """Create a simple weight file with known values for testing"""
-    # Define column names
-    columns = [dc.YMIN, dc.YMAX, dc.PTMIN, dc.PTMAX, dc.WEIGHT]
-
-    # Create a grid of weights with clear pattern: y_bin*10 + pt_bin
-    data = []
-    # 3x3 grid of bins for y and pT
-    y_bins = [(0.0, 1.0), (1.0, 2.0), (2.0, 3.0)]
-    pt_bins = [(0.0, 30.0), (30.0, 60.0), (60.0, 90.0)]
-
-    for y_idx, (y_min, y_max) in enumerate(y_bins):
-        for pt_idx, (pt_min, pt_max) in enumerate(pt_bins):
-            weight = (y_idx + 1) * 10 + (
-                pt_idx + 1
-            )  # Create unique weight for each bin
-            data.append([y_min, y_max, pt_min, pt_max, weight])
-
-    df_weights = pd.DataFrame(data, columns=columns)
-
-    # Save to temporary file
-    temp_file = os.path.join(tempfile.gettempdir(), "test_weights.txt")
-    df_weights.to_csv(temp_file, sep="\t", index=False)
-
-    return temp_file, df_weights
-
-
-def test_weights_for_bin(y_bin, pt_values, weights_array):
-    """Test weight assignment for a specific y bin and set of pt values"""
-    # Create a series of pt values
-    pt_series = pd.Series(pt_values)
-
-    # Apply the add_weights_to_df function
-    result = add_weights_to_df((pt_series, weights_array))
-
-    return result.tolist()
-
-
 def validate_weight_assignment():
-    """Validate the weight assignment logic"""
-    # Create test weights file
-    weight_file, df_weights = create_test_weight_file()
+    """
+    Validate weight assignment using the sample dataframe values
+    """
+    # Sample data points from the dataframe (ptZ, rapidity, claimed_weight)
+    sample_data = [
+        [49.138512, 0.458971, 0.0024031],
+        [1.759194, 2.375784, 0.0020342],
+        [4.815937, 0.772624, 0.0028883],
+        [18.787357, 2.053268, 0.0024254],
+        [50.984127, 1.105904, 0.001377],
+        [29.718639, 1.590914, 0.001348],
+        [12.776674, 0.528377, 0.002419],
+        [51.830307, 1.565565, 0.001348],
+        [1.201921, 0.664620, 0.001408],
+        [17.850216, 0.946954, 0.001244],
+    ]
 
-    print("Test weight matrix:")
-    print(df_weights)
+    df = pd.DataFrame(sample_data, columns=["ptZ", "rapidity", "claimed_weight"])
 
-    # Test points - one for each bin center
-    test_points = []
-    expected_weights = []
+    # Load the weights file
+    weight_file = "ptz_x_rapidity_weights_step12_UL16_preVFP_pho_v10_EtaTune_R9Tune_EtTune_SmearTuneV3_fxedSmearingsNew_TEST.tsv"
+    print(f"Loading weights from: {weight_file}")
+    df_weight = pd.read_csv(weight_file, delimiter="\t", dtype=np.float32)
 
-    # Create test points for each bin
-    for y_idx in range(3):
-        y_min, y_max = (
-            df_weights[dc.YMIN].unique()[y_idx],
-            df_weights[dc.YMAX].unique()[y_idx],
-        )
-        weights_for_y = df_weights[df_weights[dc.YMIN] == y_min].values
+    # Process each sample point
+    results = []
+    for i, (ptZ, rapidity, claimed) in enumerate(
+        zip(df["ptZ"], df["rapidity"], df["claimed_weight"])
+    ):
+        # Find the expected weight directly from the weight file
+        expected_row = df_weight[
+            (df_weight[dc.YMIN] <= rapidity)
+            & (rapidity < df_weight[dc.YMAX])
+            & (df_weight[dc.PTMIN] <= ptZ)
+            & (ptZ < df_weight[dc.PTMAX])
+        ]
 
-        # Test points near the center of each pT bin
-        pt_values = [15.0, 45.0, 75.0]  # Centers of pT bins
-        expected = [(y_idx + 1) * 10 + (pt_idx + 1) for pt_idx in range(3)]
+        if len(expected_row) == 1:
+            expected_weight = expected_row[dc.WEIGHT].values[0]
 
-        # Get actual weights
-        actual = test_weights_for_bin(y_idx, pt_values, weights_for_y)
+            # Get the weights for this rapidity bin
+            y_weights = df_weight[
+                (df_weight[dc.YMIN] <= rapidity) & (rapidity < df_weight[dc.YMAX])
+            ].values
 
-        test_points.extend([(y_idx, pt) for pt in pt_values])
-        expected_weights.extend(expected)
+            # Create a Series with just the single ptZ value
+            pt_series = pd.Series([ptZ])
 
-        # Print results for this y bin
-        print(f"\nTesting y_bin {y_idx} ({y_min:.1f}-{y_max:.1f}):")
-        for i, (pt, exp, act) in enumerate(zip(pt_values, expected, actual)):
-            match = "✓" if np.isclose(exp, act) else "✗"
-            print(
-                f"  pT={pt:4.1f} - Expected: {exp:4.1f}, Actual: {act:4.1f} - {match}"
+            # Get the weight using our function
+            actual_weight = add_weights_to_df((pt_series, y_weights)).values[0]
+
+            # Determine the ptZ bin and y bin
+            pt_bin = (
+                f"{expected_row[dc.PTMIN].values[0]}-{expected_row[dc.PTMAX].values[0]}"
+            )
+            y_bin = (
+                f"{expected_row[dc.YMIN].values[0]}-{expected_row[dc.YMAX].values[0]}"
             )
 
-    # Visualize results
-    fig, ax = plt.subplots(figsize=(12, 8))
-
-    # Group by y bin for visualization
-    for y_idx in range(3):
-        indices = [i for i, (y, _) in enumerate(test_points) if y == y_idx]
-
-        # Get corresponding pt values, expected and actual weights
-        pts = [test_points[i][1] for i in indices]
-        exp = [expected_weights[i] for i in indices]
-        act = [actual[i % 3] for i in range(3)]  # Take from the actual results
-
-        # Plot as grouped bars
-        x = np.arange(len(pts)) + y_idx * 4
-        ax.bar(
-            x - 0.2,
-            exp,
-            width=0.4,
-            alpha=0.7,
-            label=f"Expected (y_bin={y_idx})" if y_idx == 0 else "",
-        )
-        ax.bar(
-            x + 0.2,
-            act,
-            width=0.4,
-            alpha=0.7,
-            label=f"Actual (y_bin={y_idx})" if y_idx == 0 else "",
-        )
-
-        # Add text labels
-        for i, (e, a) in enumerate(zip(exp, act)):
-            match = "✓" if np.isclose(e, a) else "✗"
-            color = "green" if np.isclose(e, a) else "red"
-            ax.text(
-                x[i], max(e, a) + 1, match, ha="center", color=color, fontweight="bold"
+            results.append(
+                {
+                    "index": i,
+                    "ptZ": ptZ,
+                    "rapidity": rapidity,
+                    "pt_bin": pt_bin,
+                    "y_bin": y_bin,
+                    "claimed_weight": claimed,
+                    "expected_weight": expected_weight,
+                    "actual_weight": actual_weight,
+                    "matches_expected": np.isclose(actual_weight, expected_weight),
+                    "matches_claimed": np.isclose(actual_weight, claimed),
+                }
             )
+        else:
+            print(f"Warning: No unique bin found for ptZ={ptZ}, rapidity={rapidity}")
 
+    # Create a results dataframe
+    df_results = pd.DataFrame(results)
+
+    # Print results
+    print("\nWeight Validation Results:")
+    print("=" * 110)
+    print(
+        f"{'Index':<6} {'ptZ':<10} {'y':<10} {'pt_bin':<12} {'y_bin':<10} {'Expected':<12} {'Actual':<12} {'Claimed':<12} {'Match?':<6}"
+    )
+    print("-" * 110)
+    for _, r in df_results.iterrows():
+        print(
+            f"{int(r['index']):<6d} {r['ptZ']:<10.2f} {r['rapidity']:<10.2f} {r['pt_bin']:<12} {r['y_bin']:<10} "
+            f"{r['expected_weight']:<12.8f} {r['actual_weight']:<12.8f} {r['claimed_weight']:<12.8f} "
+            f"{'✓' if r['matches_expected'] else '✗'}"
+        )
+
+    # Overall result
+    all_match = df_results["matches_expected"].all()
+    print("=" * 110)
+    print(f"Overall result: {'PASS' if all_match else 'FAIL'}")
+
+    # Create visualization
+    fig, ax = plt.subplots(figsize=(14, 8))
+    x = np.arange(len(df_results))
+    width = 0.3
+
+    # Plot bars for expected and actual weights
+    ax.bar(
+        x - width / 2,
+        df_results["expected_weight"],
+        width,
+        label="Expected Weight",
+        alpha=0.7,
+    )
+    ax.bar(
+        x + width / 2,
+        df_results["actual_weight"],
+        width,
+        label="Actual Weight",
+        alpha=0.7,
+    )
+
+    # Add match indicators
+    for i, r in enumerate(df_results.itertuples()):
+        color = "green" if r.matches_expected else "red"
+        ax.text(
+            i,
+            max(r.expected_weight, r.actual_weight) * 1.05,
+            "✓" if r.matches_expected else "✗",
+            ha="center",
+            color=color,
+            fontweight="bold",
+        )
+
+    ax.set_xlabel("Sample Index")
     ax.set_ylabel("Weight Value")
     ax.set_title("Weight Assignment Validation")
+    ax.set_xticks(x)
+    ax.set_xticklabels(
+        [
+            f"{i}: pt={r.ptZ:.1f}, y={r.rapidity:.2f}"
+            for i, r in enumerate(df_results.itertuples())
+        ],
+        rotation=45,
+        ha="right",
+    )
     ax.legend()
-
-    # Set x-ticks
-    all_x = np.array([i + j * 4 for j in range(3) for i in range(3)])
-    ax.set_xticks(all_x)
-    ax.set_xticklabels([f"y{p[0]},pt={p[1]}" for p in test_points], rotation=45)
 
     plt.tight_layout()
     plt.savefig("weight_validation.png")
 
-    # Cleanup
-    os.remove(weight_file)
+    print(f"\nValidation plot saved to: {Path('weight_validation.png').absolute()}")
 
-    print("\nValidation complete. Results saved to 'weight_validation.png'")
+    return all_match
 
 
 if __name__ == "__main__":
