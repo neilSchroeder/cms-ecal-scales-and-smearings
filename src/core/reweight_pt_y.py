@@ -1,10 +1,11 @@
 """Functions to reweight the pt and y of the mc to match the data."""
 
-from collections import OrderedDict
 import multiprocessing as mp
+from collections import OrderedDict
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Tuple
 
 from src.classes.config_class import SSConfig
 from src.classes.constant_classes import DataConstants as dc
@@ -241,7 +242,15 @@ def add_pt_y_weights(df, weight_file):
     pool.close()
     pool.join()
 
-    df[dc.PTY_WEIGHT] = pd.concat(scaled_data).values
+    all_weights = pd.Series(np.zeros(len(df)), index=df.index)
+
+    # Update weights for each rapidity bin, preserving the original indices
+    for weights_series in scaled_data:
+        all_weights.update(weights_series)
+
+    # Assign weights to the dataframe
+    df[dc.PTY_WEIGHT] = all_weights.values
+
     df.drop([dc.PTZ, dc.RAPIDITY], axis=1, inplace=True)
 
     return df
