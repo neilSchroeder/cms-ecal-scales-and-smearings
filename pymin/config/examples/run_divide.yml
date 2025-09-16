@@ -1,0 +1,83 @@
+# PyMin Run Divide Configuration
+# CMS ECAL Scales and Smearings Analysis - Step 2: Run Division
+#
+# This configuration creates run bins with sufficient statistics for time stability
+# corrections. Run division is essential for accounting for detector response
+# variations over time in CMS data-taking periods.
+
+# Input configuration - uses pruned TSV files from step 1
+input:
+  # Data files (required for run division - only need data, not MC)
+  data_files:
+    - "pruned_files/data_pruned_data.tsv.gz"
+  
+  # MC files not needed for run division but preserved for pipeline compatibility
+  mc_files: null
+  
+  # Categories file not used in run division step
+  categories_file: null
+  
+  # Previous scales/smearings not used in this step
+  scales_file: null
+  smearings_file: null
+  weights_file: null
+
+# Run division specific configuration
+run_divide:
+  # Enable run division operation
+  enabled: true
+  
+  # Minimum events required per run bin (critical parameter)
+  # Higher values = fewer bins with better statistics
+  # Lower values = more bins for finer time granularity
+  min_events: 10000
+  
+  # Output file path for run bins (legacy format for pipeline compatibility)
+  output_file: "datFiles/run_divide_step1.dat"
+
+# Workflow control flags
+workflow:
+  prune: false
+  run_divide: true  # Enable this step
+  time_stability: false
+  closure: false
+  plot: false
+
+# Output configuration
+output:
+  # Tag used for output file naming (run_divide_{tag}.dat)
+  tag: "step1"
+  
+  # Directory for diagnostic plots (if enabled)
+  plot_dir: "plots/"
+  
+
+# HTCondor batch system configuration (essential for production)
+condor:
+  # Enable HTCondor job submission for large datasets
+  enabled: false
+  
+  # Queue selection based on job urgency and resource requirements
+  # - "today": High priority, limited slots
+  # - "tomorrow": Standard priority, good availability  
+  # - "testmatch": Testing queue, immediate availability
+  # - "nextweek": Low priority, high throughput
+  queue: "tomorrow"
+
+# Advanced configuration
+advanced:
+  # Validation settings
+  validate_bins: true  # Verify all bins meet minimum event requirements
+  
+  # Summary statistics generation
+  generate_summary: true
+  
+  # Run range limits (optional - useful for specific run periods)
+  min_run_number: null  # e.g., 315000 for specific data period
+  max_run_number: null  # e.g., 325000 for specific data period
+  
+  # Run quality filters (advanced usage)
+  exclude_runs: []  # List of runs to exclude from binning
+  
+  # Debug output
+  save_run_statistics: true  # Save detailed run-by-run event counts

@@ -1,0 +1,126 @@
+# PyMin Base Configuration File
+# CMS ECAL Scales and Smearings Analysis Package
+#
+# This file contains all configurable parameters with their default values.
+# Copy and modify as needed for your specific analysis workflow.
+
+# Input file configuration
+input:
+  # Path to input file containing data and MC ROOT file paths (.dat format)
+  # Expected format:
+  # [DATA]
+  # /path/to/data1.root
+  # [MC] 
+  # /path/to/mc1.root
+  data_files: null
+  
+  # Path to categories file defining analysis bins (.tsv format)
+  # Format: type	etaMin	etaMax	r9Min	r9Max	gain	etMin	etMax
+  categories_file: null
+  
+  # Path to existing scales file for iterative corrections (.dat format)
+  scales_file: null
+  
+  # Path to MC smearing parameters file (.dat format)
+  smearings_file: null
+  
+  # Path to rapidity x pT weights file (.tsv format)
+  # If empty, weights will be derived automatically
+  weights_file: null
+
+# Workflow execution flags
+workflow:
+  # Convert ROOT files to TSV format
+  prune: false
+  
+  # Create run bins for time stability
+  run_divide: false
+  
+  # Perform time stability corrections (step1)
+  time_stability: false
+  
+  # Run closure tests to validate scale derivation
+  closure: false
+  
+  # Generate validation and diagnostic plots
+  plot: false
+
+# Minimization algorithm parameters
+minimization:
+  # Invariant mass histogram range (GeV)
+  hist_min: 80.0
+  hist_max: 100.0
+  
+  # Histogram bin size (GeV)
+  bin_size: 0.25
+  
+  # Enable Freedman-Diaconis automatic binning
+  auto_bin: true
+  
+  # Starting value strategy: "scan", "unity", "previous"
+  start_style: "scan"
+  
+  # Parameter scan range for initial values
+  scan_min: 0.98
+  scan_max: 1.02
+  scan_step: 0.001
+  
+  # Fix scale parameters during smearing derivation
+  fix_scales: false
+
+# Output configuration
+output:
+  # Output tag for file naming
+  tag: null
+  
+  # Directory for generated plots
+  plot_dir: "./"
+  
+  # Directory for pruned files
+  pruned_dir: "pruned_files"
+
+# HTCondor batch system configuration
+condor:
+  # Enable HTCondor job submission
+  enabled: false
+  
+  # HTCondor queue: "today", "tomorrow", "testmatch", "nextweek"
+  queue: "tomorrow"
+
+# Advanced configuration options
+advanced:
+  # Categories to ignore during minimization
+  ignore_categories: []
+  
+  # Rewrite scales file only (skip minimization)
+  rewrite_only: false
+  
+  # Combine two scale files (advanced operation)
+  combine_files: false
+  
+  # Test method accuracy with known scale injection
+  test_method_accuracy: false
+  
+  # Scan NLL phase space around given point
+  scan_nll: false
+  
+  # Custom scan center scales file
+  scan_scales: null
+  
+  # Minimum step size for L-BFGS-B minimizer
+  min_step: 1e-6
+  
+  # Maximum iterations for minimizer
+  max_iterations: 1000
+  
+  # Convergence tolerance
+  tolerance: 1e-8
+  
+  # Memory limit for large datasets (MB)
+  memory_limit: 8192
+  
+  # Enable numba compilation for performance
+  use_numba: true
+  
+  # Random seed for reproducibility
+  random_seed: 42

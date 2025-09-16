@@ -1,0 +1,70 @@
+# Prune configuration for converting ROOT files to TSV format
+# This reduces memory usage for subsequent calibration steps
+
+# Input configuration
+input:
+  # ROOT files containing the 'selected' tree
+  data_files:
+    - /path/to/data/EGamma_Run2018A.root
+    - /path/to/data/EGamma_Run2018B.root
+    - /path/to/data/EGamma_Run2018C.root
+    - /path/to/data/EGamma_Run2018D.root
+  
+  mc_files:
+    - /path/to/mc/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8.root
+    - /path/to/mc/DYJetsToLL_M-10to50_TuneCP5_13TeV-madgraphMLM-pythia8.root
+
+# Output configuration  
+output:
+  # Directory for pruned TSV files
+  output_dir: pruned_files/
+  
+  # Output file naming pattern
+  data_prefix: data_pruned
+  mc_prefix: mc_pruned
+  
+  # File format (tsv recommended for memory efficiency)
+  format: tsv
+
+# prune configuration
+prune:
+  # Enable pruning operation
+  prune_enabled: true
+  # Tree and branch selection
+  tree_config:
+    # Tree name in ROOT files
+    tree_name: selected
+    
+    # Essential branches for calibration
+    branches:
+      - R9Ele
+      - energy_ECAL_ele
+      - etaEle
+      - phiEle
+      - gainSeedSC
+      - invMass_ECAL_ele
+      - runNumber
+      - eleID
+      
+  # Optional filtering (applied during pruning to reduce file size)
+  selection:
+    # Basic quality cuts
+    r9_min: 0.0
+    r9_max: 1.0
+    eta_max: 2.5
+    et_min: 25.0
+    
+    # Mass window for Z peak analysis
+    mass_min: 60.0
+    mass_max: 120.0
+
+  # Processing options
+  options:
+    # Chunk size for memory management
+    chunk_size: 100000
+    
+    # Compression for output files
+    compress: true
+    
+    # Verbose output
+    verbose: true
