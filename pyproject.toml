@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pymin"
+version = "0.2.0"
+description = "CMS ECAL scales and smearings"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numba",
+    "numpy",
+    "pandas",
+    "pyyaml",
+    "scipy",
+    "uproot",
+    "ruff",
+    "joblib",
+]
+
+[project.scripts]
+pymin = "pymin.cli.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "mypy",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+]
+
+[tool.setuptools]
+packages = ["pymin"]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unreachable = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+warn_return_any = true
+warn_no_return = true
+warn_return_value = true
+
+[tool.pre-commit.hooks.ruff]
+id = "ruff"
+name = "ruff"
+entry = "ruff check . --fix"
+language = "python"
+types = ["python"]
+pass_filenames = false
+
+[tool.ruff]
+extend-select = [
+    "C4",  # comprehensions
+    "SIM", # simplification
+    "TCH", # type checking
+]
+ignore = []
+show-fixes = true
+target-version = "py312"
