@@ -161,6 +161,13 @@ def main():
         help="Size of bins for binned NLL evaluation",
     )
     parser.add_argument(
+        "--loss-weighting",
+        default="uniform",
+        choices=["uniform", "triangular"],
+        dest="loss_weighting",
+        help="Per-bin weighting inside the EMD loss. 'uniform': hard mass window defined by --hist-min/--hist-max, all bins weighted equally (default). 'triangular': legacy triangular kernel peaking at center with 0.1 floor.",
+    )
+    parser.add_argument(
         "--start-style",
         default="scan",
         type=str,

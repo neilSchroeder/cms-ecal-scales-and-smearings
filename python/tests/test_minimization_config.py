@@ -93,6 +93,7 @@ class TestMinimizationConfigFromArgs:
             closure_scale_bounds=(0.99, 1.01),
             off_diag_weight_scheme="constant",
             off_diag_weight=0.1,
+            loss_weighting="uniform",
         )
         defaults.update(overrides)
         return SimpleNamespace(**defaults)

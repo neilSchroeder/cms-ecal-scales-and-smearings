@@ -121,6 +121,16 @@ def build_emd_weights(n):
     return weights
 
 
+@numba.njit
+def build_uniform_weights(n):
+    """Flat weight vector of ones — corresponds to a hard fit window defined by hist_min/hist_max."""
+    w = np.empty(n, dtype=np.float64)
+    for i in range(n):
+        w[i] = 1.0
+    return w
+    return weights
+
+
 def _derive_cat_seed(base_seed, lead_index, sublead_index):
     """Deterministic per-category seed (uint32) derived from base seed and indices.
 
@@ -238,7 +248,12 @@ class zcat:
             self._bin_edges = numba_hist.make_bin_edges(
                 self.hist_min, self.hist_max, self._num_bins
             )
-            self._emd_weights = build_emd_weights(self._num_bins)
+            scheme = options.get("loss_weighting", "uniform")
+            if scheme == "triangular":
+                self._emd_weights = build_emd_weights(self._num_bins)
+            else:
+                # "uniform" — hard window. Defaults to uniform if option missing.
+                self._emd_weights = build_uniform_weights(self._num_bins)
             self._randn_lead, self._randn_sublead = _generate_smearing_randn(
                 len(self.mc), self.seed
             )

@@ -103,6 +103,8 @@ class MinimizationConfig:
     hist_max: float = 100.0
     bin_size: float = 0.25
     auto_bin: bool = True
+    # loss weighting: "uniform" (default, hard window) or "triangular" (legacy floor-0.1 kernel)
+    loss_weighting: str = "uniform"
 
     # minimizer settings
     start_style: str = "scan"
@@ -171,4 +173,5 @@ class MinimizationConfig:
             closure_scale_bounds=tuple(args.closure_scale_bounds),
             off_diag_weight_scheme=args.off_diag_weight_scheme,
             off_diag_weight=float(args.off_diag_weight),
+            loss_weighting=args.loss_weighting,
         )
