@@ -110,6 +110,7 @@ class MinimizationConfig:
     scan_max: float = 1.02
     scan_step: float = 0.001
     min_step_size: Optional[str] = None
+    base_seed: int = 3543136929
     # minimizer bounds (defaults reproduce historical hardcoded values)
     scale_bounds: Tuple[float, float] = (0.96, 1.04)
     smear_bounds: Tuple[float, float] = (0.0, 0.05)
@@ -149,6 +150,7 @@ class MinimizationConfig:
             scan_max=float(args.scan_max),
             scan_step=float(args.scan_step),
             min_step_size=args.min_step_size,
+            base_seed=int(args.base_seed),
             _kClosure=args._kClosure,
             _kFixScales=args._kFixScales,
             _kPlot=args._kPlot,

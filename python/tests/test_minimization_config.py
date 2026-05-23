@@ -79,6 +79,7 @@ class TestMinimizationConfigFromArgs:
             scan_max="1.02",
             scan_step="0.001",
             min_step_size=None,
+            base_seed=3543136929,
             _kClosure=False,
             _kFixScales=False,
             _kPlot=False,
@@ -87,6 +88,9 @@ class TestMinimizationConfigFromArgs:
             scales=None,
             ignore=None,
             plot_dir="./",
+            scale_bounds=(0.96, 1.04),
+            smear_bounds=(0.0, 0.05),
+            closure_scale_bounds=(0.99, 1.01),
         )
         defaults.update(overrides)
         return SimpleNamespace(**defaults)

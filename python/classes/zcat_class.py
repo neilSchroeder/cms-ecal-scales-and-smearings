@@ -121,6 +121,30 @@ def build_emd_weights(n):
     return weights
 
 
+def _derive_cat_seed(base_seed, lead_index, sublead_index):
+    """Deterministic per-category seed (uint32) derived from base seed and indices.
+
+    Uses Knuth-style multipliers to mix the base seed with category indices,
+    ensuring different (lead_index, sublead_index) pairs produce independent seeds
+    while remaining bit-reproducible for a fixed base seed.
+
+    Args:
+        base_seed (int): Base RNG seed (e.g., 3543136929)
+        lead_index (int): Index of the leading electron
+        sublead_index (int): Index of the subleading electron
+
+    Returns:
+        int: Derived seed masked to uint32 range [0, 0xFFFFFFFF]
+    """
+    # Two large odd Knuth-style multipliers — independent across (i, j)
+    mixed = (
+        int(base_seed)
+        ^ (int(lead_index) * 0x9E3779B1)
+        ^ (int(sublead_index) * 0x85EBCA77)
+    )
+    return mixed & 0xFFFFFFFF
+
+
 class zcat:
     """
     Produces a 'z category' object to be used in the scales and smearing derivation.
@@ -163,7 +187,8 @@ class zcat:
         self.updated = False
         self.NLL = 0
         self.weight = 1 if i == j else 0.1  #  penalize off diagonal fits
-        self.seed = 3543136929  #  use a fixed random integer for your seed to avoid fluctuations in nll value from smearings
+        base_seed = options.get("base_seed", 3543136929)
+        self.seed = _derive_cat_seed(base_seed, self.lead_index, self.sublead_index)
         self.valid = True
         self.bins = np.array([])
 

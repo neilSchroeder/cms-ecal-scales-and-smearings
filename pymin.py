@@ -195,6 +195,13 @@ def main():
         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.",
     )
     parser.add_argument(
+        "--base-seed",
+        default=3543136929,
+        type=int,
+        dest="base_seed",
+        help="Base RNG seed for smearing draws. Per-category seeds are derived deterministically from (lead_index, sublead_index) and this base.",
+    )
+    parser.add_argument(
         "--scale-bounds",
         nargs=2,
         type=float,
