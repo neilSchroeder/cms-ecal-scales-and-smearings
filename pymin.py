@@ -195,6 +195,33 @@ def main():
         help="Min step size for scipy.optimize.minimize function. This is an advanced option, please use with care.",
     )
     parser.add_argument(
+        "--scale-bounds",
+        nargs=2,
+        type=float,
+        default=(0.96, 1.04),
+        metavar=("MIN", "MAX"),
+        dest="scale_bounds",
+        help="Bounds for residual energy scales. Default: 0.96 1.04 (physical |Δ|<4%%).",
+    )
+    parser.add_argument(
+        "--smear-bounds",
+        nargs=2,
+        type=float,
+        default=(0.0, 0.05),
+        metavar=("MIN", "MAX"),
+        dest="smear_bounds",
+        help="Bounds for smearings. Default: 0.0 0.05.",
+    )
+    parser.add_argument(
+        "--closure-scale-bounds",
+        nargs=2,
+        type=float,
+        default=(0.99, 1.01),
+        metavar=("MIN", "MAX"),
+        dest="closure_scale_bounds",
+        help="Bounds for scales in --closure mode. Default: 0.99 1.01. (Overridden to 0.95/1.05 when fine r9/gain cats are present.)",
+    )
+    parser.add_argument(
         "--fix-scales",
         default=False,
         action="store_true",

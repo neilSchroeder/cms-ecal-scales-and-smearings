@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, asdict
-from typing import Optional
+from typing import Optional, Tuple
 
 
 class SSConfig(object):
@@ -110,6 +110,10 @@ class MinimizationConfig:
     scan_max: float = 1.02
     scan_step: float = 0.001
     min_step_size: Optional[str] = None
+    # minimizer bounds (defaults reproduce historical hardcoded values)
+    scale_bounds: Tuple[float, float] = (0.96, 1.04)
+    smear_bounds: Tuple[float, float] = (0.0, 0.05)
+    closure_scale_bounds: Tuple[float, float] = (0.99, 1.01)
 
     # workflow flags
     _kClosure: bool = False
@@ -154,4 +158,7 @@ class MinimizationConfig:
             scales=args.scales,
             ignore=args.ignore,
             plot_dir=args.plot_dir,
+            scale_bounds=tuple(args.scale_bounds),
+            smear_bounds=tuple(args.smear_bounds),
+            closure_scale_bounds=tuple(args.closure_scale_bounds),
         )

@@ -76,7 +76,7 @@ def target_function_wrapper(initial_guess, __ZCATS__, *args, **kwargs):
     previous_guess = [initial_guess]
 
     def wrapped_target_function(x, *args, **options):
-        (previous, __ZCATS__, __num_scales__, __num_smears__) = args
+        previous, __ZCATS__, __num_scales__, __num_smears__ = args
         ret = target_function(
             x, previous_guess[0], __ZCATS__, __num_scales__, __num_smears__, **options
         )
@@ -106,7 +106,7 @@ def target_function(x, *args, verbose=False, **options):
     """
 
     # unpack args
-    (previous, __ZCATS__, __num_scales__, __num_smears__) = args
+    previous, __ZCATS__, __num_scales__, __num_smears__ = args
 
     # find where __GUESS__ and x differ
     # no use updating categories if they don't need to be updated
@@ -319,19 +319,25 @@ def set_bounds(cats, **options):
     Returns:
         bounds (list): list of bounds for the minimizer
     """
+    scale_b = tuple(options.get("scale_bounds", (0.96, 1.04)))
+    smear_b = tuple(options.get("smear_bounds", (0.0, 0.05)))
+    closure_b = tuple(options.get("closure_scale_bounds", (0.99, 1.01)))
+    wide_closure_b = (0.95, 1.05)  # hardcoded override for fine r9/gain cats
+    fix_pin_b = (0.999999999, 1.000000001)  # hardcoded pin for --fix-scales
+
     bounds = []
     if options["_kClosure"]:
-        bounds = [(0.99, 1.01) for i in range(options["num_scales"])]
+        bounds = [closure_b for _ in range(options["num_scales"])]
         if cats.iloc[1, cc.i_r9_min] != cc.empty or cats.iloc[1, cc.i_gain] != cc.empty:
-            bounds = [(0.95, 1.05) for i in range(options["num_scales"])]
+            bounds = [wide_closure_b for _ in range(options["num_scales"])]
     elif options["_kTestMethodAccuracy"]:
-        bounds = [(0.96, 1.04) for i in range(options["num_scales"])]
-        bounds += [(0.0, 0.05) for i in range(options["num_smears"])]
+        bounds = [scale_b for _ in range(options["num_scales"])]
+        bounds += [smear_b for _ in range(options["num_smears"])]
     elif options["_kFixScales"]:
-        bounds = [(0.999999999, 1.000000001) for i in range(options["num_scales"])]
-        bounds += [(0.0, 0.05) for i in range(options["num_smears"])]
+        bounds = [fix_pin_b for _ in range(options["num_scales"])]
+        bounds += [smear_b for _ in range(options["num_smears"])]
     else:
-        bounds = [(0.96, 1.04) for i in range(options["num_scales"])]
-        bounds += [(0.000, 0.05) for i in range(options["num_smears"])]
+        bounds = [scale_b for _ in range(options["num_scales"])]
+        bounds += [smear_b for _ in range(options["num_smears"])]
 
     return bounds
