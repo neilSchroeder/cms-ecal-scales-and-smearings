@@ -9,15 +9,6 @@ import numba
 
 
 @numba.njit
-def xlogy(x, y):
-    """Compute x * log(y) with special handling for x == 0."""
-    result = np.zeros_like(x)
-    mask = x != 0
-    result[mask] = x[mask] * np.log(y[mask])
-    return result
-
-
-@numba.njit
 def apply_smearing(mc, lead_smear, sublead_smear, seed):
     np.random.seed(seed)
     lead_rand = np.random.normal(0, lead_smear, len(mc))
@@ -42,41 +33,6 @@ def apply_smearing_cached(mc, lead_smear, sublead_smear, randn_lead, randn_suble
     sublead_rand = sublead_smear * randn_sublead
     x = np.sqrt((1 + lead_rand) * (1 + sublead_rand))
     return mc * x
-
-
-@numba.njit
-def compute_nll_chisqr(binned_data, norm_binned_mc, num_bins=80):
-    # Implement NLL and Chi-squared computation here
-    # This is a placeholder, replace with actual implementation
-    scaled_mc = norm_binned_mc * np.sum(binned_data)
-    err_mc = np.sqrt(scaled_mc).astype(np.float32)
-    err_data = np.sqrt(binned_data).astype(np.float32)
-    err = np.sqrt(
-        np.add(
-            np.multiply(err_mc, err_mc).astype(np.float32),
-            np.multiply(err_data, err_data).astype(np.float32),
-        ).astype(np.float32)
-    ).astype(np.float32)
-    chi_sqr = (
-        np.sum(
-            np.divide(
-                np.multiply(binned_data - scaled_mc, binned_data - scaled_mc).astype(
-                    np.float32
-                ),
-                err,
-            ).astype(np.float32)
-        )
-        / num_bins
-    )
-
-    nll = xlogy(binned_data, norm_binned_mc)
-    nll[nll == -np.inf] = 0
-    nll = np.sum(nll) / len(nll)
-    # evaluate penalty
-    penalty = xlogy(np.sum(binned_data) - binned_data, 1 - norm_binned_mc)
-    penalty[penalty == -np.inf] = 0
-    penalty = np.sum(penalty) / len(penalty)
-    return -2 * (nll + penalty) * chi_sqr
 
 
 @numba.njit

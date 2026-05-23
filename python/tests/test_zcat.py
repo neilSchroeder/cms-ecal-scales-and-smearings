@@ -8,9 +8,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from python.classes.zcat_class import (
-    xlogy,
     apply_smearing,
-    compute_nll_chisqr,
     compute_earthmovers_distance,
     zcat,
 )
@@ -19,32 +17,6 @@ from python.classes.zcat_class import (
 # ---------------------------------------------------------------------------
 # Standalone functions
 # ---------------------------------------------------------------------------
-
-
-class TestXlogy:
-    """Test xlogy(x, y) = x * log(y) with x==0 -> 0."""
-
-    def test_basic(self):
-        """Standard values should give x*log(y)."""
-        x = np.array([1.0, 2.0, 3.0])
-        y = np.array([np.e, np.e, np.e])
-        result = xlogy(x, y)
-        np.testing.assert_allclose(result, [1.0, 2.0, 3.0], rtol=1e-6)
-
-    def test_zero_x(self):
-        """x==0 should return 0 regardless of y."""
-        x = np.array([0.0, 0.0])
-        y = np.array([1.0, 0.0])  # y=0 would be log(0)=-inf normally
-        result = xlogy(x, y)
-        np.testing.assert_array_equal(result, [0.0, 0.0])
-
-    def test_mixed(self):
-        """Mix of zero and nonzero x."""
-        x = np.array([0.0, 2.0, 0.0, 1.0])
-        y = np.array([5.0, np.e, 0.1, np.e**2])
-        result = xlogy(x, y)
-        expected = np.array([0.0, 2.0 * np.log(np.e), 0.0, 1.0 * np.log(np.e**2)])
-        np.testing.assert_allclose(result, expected, rtol=1e-6)
 
 
 class TestApplySmearing:
@@ -71,41 +43,6 @@ class TestApplySmearing:
         r1 = apply_smearing(mc, 0.01, 0.02, 12345)
         r2 = apply_smearing(mc, 0.01, 0.02, 12345)
         np.testing.assert_array_equal(r1, r2)
-
-
-class TestComputeNllChisqr:
-    """Test the combined NLL*chi-squared loss function."""
-
-    def test_identical_distributions(self):
-        """Identical data and MC should give low (near-zero) loss."""
-        # Avoid zero-count bins — they cause NaN via log(0) and 0/0.
-        # In production, zcat.update sets mc[mc==0]=1e-15 before calling this.
-        data = np.array([1, 2, 10, 50, 100, 50, 10, 2, 1, 1], dtype=np.float64)
-        mc_norm = data / np.sum(data)
-        result = compute_nll_chisqr(data, mc_norm, num_bins=10)
-        assert not np.isnan(result)
-        assert abs(result) < 1.0
-
-    def test_shifted_gives_larger_loss(self):
-        """Shifted MC should give larger loss than matched MC."""
-        data = np.array([1, 2, 5, 30, 100, 30, 5, 2, 1, 1], dtype=np.float64)
-        mc_matched = data / np.sum(data)
-        mc_shifted = np.array([1, 5, 30, 100, 30, 5, 1, 1, 1, 1], dtype=np.float64)
-        mc_shifted = mc_shifted / np.sum(mc_shifted)
-        loss_matched = compute_nll_chisqr(data, mc_matched, num_bins=10)
-        loss_shifted = compute_nll_chisqr(data, mc_shifted, num_bins=10)
-        assert loss_shifted > loss_matched
-
-    def test_non_negative(self):
-        """Loss should be non-negative for reasonable inputs."""
-        np.random.seed(42)
-        data = np.random.poisson(50, 20).astype(np.float64)
-        data[data == 0] = 1  # avoid zero bins
-        mc_norm = data / np.sum(data)
-        mc_norm[mc_norm == 0] = 1e-15
-        mc_norm = mc_norm / np.sum(mc_norm)
-        result = compute_nll_chisqr(data, mc_norm, num_bins=20)
-        assert result >= 0
 
 
 class TestComputeEarthmoversDistance:

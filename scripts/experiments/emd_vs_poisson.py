@@ -55,16 +55,49 @@ import matplotlib.pyplot as plt
 from scipy import stats
 
 # Use production hot-path functions directly
+import numba
+
 from python.classes.zcat_class import (
     apply_smearing_cached,
     _generate_smearing_randn,
     compute_earthmovers_distance,
-    compute_nll_chisqr,
     build_uniform_weights,
 )
 from python.classes.breit_wigner import bw
 from python.classes.crystal_ball import cb
 from python.utilities import numba_hist
+
+
+# Local copy of the legacy Poisson-NLL*chi^2 loss (removed from production
+# after this experiment; kept here for reproducibility of the comparison).
+@numba.njit
+def _xlogy(x, y):
+    result = np.zeros_like(x)
+    mask = x != 0
+    result[mask] = x[mask] * np.log(y[mask])
+    return result
+
+
+@numba.njit
+def compute_nll_chisqr(binned_data, norm_binned_mc, num_bins=80):
+    scaled_mc = norm_binned_mc * np.sum(binned_data)
+    err_mc = np.sqrt(scaled_mc).astype(np.float32)
+    err_data = np.sqrt(binned_data).astype(np.float32)
+    err = np.sqrt(
+        (err_mc * err_mc).astype(np.float32)
+        + (err_data * err_data).astype(np.float32)
+    ).astype(np.float32)
+    chi_sqr = np.sum(
+        ((binned_data - scaled_mc) * (binned_data - scaled_mc)).astype(np.float32)
+        / err
+    ) / num_bins
+    nll = _xlogy(binned_data, norm_binned_mc)
+    nll[nll == -np.inf] = 0
+    nll = np.sum(nll) / len(nll)
+    penalty = _xlogy(np.sum(binned_data) - binned_data, 1 - norm_binned_mc)
+    penalty[penalty == -np.inf] = 0
+    penalty = np.sum(penalty) / len(penalty)
+    return -2 * (nll + penalty) * chi_sqr
 
 
 # --------------------------------------------------------------------------- #
