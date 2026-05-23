@@ -96,6 +96,13 @@ def minimize(data, mc, cats_df, config: MinimizationConfig):
     del data
     del mc
 
+    # apply the configured off-diagonal weighting scheme
+    helper_minimizer.normalize_off_diagonal_weights(
+        __ZCATS__,
+        options.get("off_diag_weight_scheme", "constant"),
+        options.get("off_diag_weight", 0.1),
+    )
+
     # set up boundaries on starting location of scales
     bounds = helper_minimizer.set_bounds(
         cats_df,

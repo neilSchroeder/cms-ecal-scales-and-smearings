@@ -229,6 +229,20 @@ def main():
         help="Bounds for scales in --closure mode. Default: 0.99 1.01. (Overridden to 0.95/1.05 when fine r9/gain cats are present.)",
     )
     parser.add_argument(
+        "--off-diag-weight-scheme",
+        default="constant",
+        choices=["constant", "sum-normalized"],
+        dest="off_diag_weight_scheme",
+        help="How to weight off-diagonal cats. 'constant': off_diag_weight per cat (legacy, default). 'sum-normalized': scale so sum(off-diag) == off_diag_weight * sum(diag).",
+    )
+    parser.add_argument(
+        "--off-diag-weight",
+        default=0.1,
+        type=float,
+        dest="off_diag_weight",
+        help="Off-diagonal weight value. For 'constant' scheme: per-cat weight (default 0.1, legacy). For 'sum-normalized': ratio of total off-diag mass to total diag mass.",
+    )
+    parser.add_argument(
         "--fix-scales",
         default=False,
         action="store_true",

@@ -116,6 +116,12 @@ class MinimizationConfig:
     smear_bounds: Tuple[float, float] = (0.0, 0.05)
     closure_scale_bounds: Tuple[float, float] = (0.99, 1.01)
 
+    # off-diagonal category weighting
+    # 'constant': use off_diag_weight directly for each off-diag cat (reproduces old behavior with 0.1)
+    # 'sum-normalized': scale off-diag weights so sum(off-diag weight) == off_diag_weight * sum(diag weight)
+    off_diag_weight_scheme: str = "constant"
+    off_diag_weight: float = 0.1
+
     # workflow flags
     _kClosure: bool = False
     _kFixScales: bool = False
@@ -163,4 +169,6 @@ class MinimizationConfig:
             scale_bounds=tuple(args.scale_bounds),
             smear_bounds=tuple(args.smear_bounds),
             closure_scale_bounds=tuple(args.closure_scale_bounds),
+            off_diag_weight_scheme=args.off_diag_weight_scheme,
+            off_diag_weight=float(args.off_diag_weight),
         )

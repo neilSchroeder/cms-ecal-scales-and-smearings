@@ -91,6 +91,8 @@ class TestMinimizationConfigFromArgs:
             scale_bounds=(0.96, 1.04),
             smear_bounds=(0.0, 0.05),
             closure_scale_bounds=(0.99, 1.01),
+            off_diag_weight_scheme="constant",
+            off_diag_weight=0.1,
         )
         defaults.update(overrides)
         return SimpleNamespace(**defaults)

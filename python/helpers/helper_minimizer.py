@@ -38,6 +38,32 @@ def clean_up(data, mc, cats):
     return data, mc
 
 
+def normalize_off_diagonal_weights(__ZCATS__, scheme, ratio):
+    """Apply the configured off-diagonal weighting scheme to a list of zcats.
+
+    'constant': no-op (each off-diag already has weight=off_diag_weight from __init__).
+    'sum-normalized': rescale all off-diag weights so that
+        sum(weight for off-diag cats) == ratio * sum(weight for diag cats).
+    Only valid cats are considered.
+    """
+    if scheme == "constant":
+        return
+    if scheme != "sum-normalized":
+        raise ValueError(f"Unknown off_diag_weight_scheme: {scheme!r}")
+    diag = [c for c in __ZCATS__ if c.valid and c.lead_index == c.sublead_index]
+    off = [c for c in __ZCATS__ if c.valid and c.lead_index != c.sublead_index]
+    if not off:
+        return
+    sum_diag = sum(c.weight for c in diag)
+    sum_off_current = sum(c.weight for c in off)
+    if sum_off_current <= 0 or sum_diag <= 0:
+        return
+    target_total = ratio * sum_diag
+    scale = target_total / sum_off_current
+    for c in off:
+        c.weight *= scale
+
+
 def deactivate_cats(__ZCATS__, ignore_cats):
     """
     Deactivate categories that are in the ignore_cats file. This is rarely necessary.

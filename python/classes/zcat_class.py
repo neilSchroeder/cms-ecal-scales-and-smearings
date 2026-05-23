@@ -186,7 +186,11 @@ class zcat:
         self.bin_size = options["bin_size"] if "bin_size" in options.keys() else 0.25
         self.updated = False
         self.NLL = 0
-        self.weight = 1 if i == j else 0.1  #  penalize off diagonal fits
+        # Diagonal cats get weight 1; off-diag get the configured constant.
+        # For 'sum-normalized' scheme the off-diag weight is renormalized
+        # later by normalize_off_diagonal_weights() once all cats exist.
+        off_diag_w = options.get("off_diag_weight", 0.1)
+        self.weight = 1.0 if i == j else float(off_diag_w)
         base_seed = options.get("base_seed", 3543136929)
         self.seed = _derive_cat_seed(base_seed, self.lead_index, self.sublead_index)
         self.valid = True
