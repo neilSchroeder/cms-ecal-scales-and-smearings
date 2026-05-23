@@ -1,0 +1,48 @@
+[project]
+name = "cms-ecal-scales-and-smearings"
+version = "0.1.0"
+description = "CMS ECAL energy scales and smearings derivation"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "matplotlib>=3.8",
+    "numba>=0.58",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.12",
+    "tqdm>=4.66",
+    "uproot>=5.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=7.1.0",
+]
+
+[project.scripts]
+pymin = "pymin:main"
+pyval = "pyval:main"
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python"]
+
+[tool.coverage.run]
+omit = [
+    "python/plotters/fit_bw_cb.py",
+    "python/plotters/make_plots.py",
+    "python/plotters/plot_cats.py",
+    "python/plotters/plots.py",
+    "python/utilities/condor_handler.py",
+    "python/tools/addMCRunsToScale_newFormat.py",
+    "python/tools/add_uncertainties.py",
+    "python/tools/combine_onlysteps.py",
+    "python/tools/extract_scales.py",
+    "python/tools/validate_pt_y_weights.py",
+]
